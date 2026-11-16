@@ -595,9 +595,7 @@ export default async function RequirementsPage({
           {user ? (
             <p className="mt-1 text-sm text-ink-600">
               {user.name} · {schoolShort(user.school)}
-              {user.grad_year ? ` · class of ${user.grad_year}` : ""} — built from your profile, your
-              planned courses and the requirement definitions in{" "}
-              <span className="kbd">data/requirements/</span>.
+              {user.grad_year ? ` · class of ${user.grad_year}` : ""}
             </p>
           ) : (
             <p className="mt-1 text-sm text-ink-600">
