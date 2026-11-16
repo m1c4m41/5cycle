@@ -309,31 +309,49 @@ export async function getSet(setId: string): Promise<RequirementSet | undefined>
   return { ...set, groups: await getGroups(setId) };
 }
 
+type GroupRow = Omit<RequirementGroup, "rules"> & { rule_json: string | null };
+
+const GROUPS_SELECT = `SELECT g.*, (
+    SELECT json_group_array(r.match) FROM requirement_rules r WHERE r.group_id = g.id
+  ) AS rule_json
+  FROM requirement_groups g`;
+
+function parseGroupRow(g: GroupRow): RequirementGroup {
+  const { rule_json, ...rest } = g;
+  let raw: (string | null)[] = [];
+  try {
+    raw = rule_json ? (JSON.parse(rule_json) as (string | null)[]) : [];
+  } catch {
+    raw = [];
+  }
+  return {
+    ...rest,
+    rules: raw
+      .filter(Boolean)
+      .map((json, i) => ({ id: i, match: JSON.parse(json as string) as Matcher })),
+  };
+}
+
 async function getGroups(setId: string): Promise<RequirementGroup[]> {
-  const groups = await all<
-    Omit<RequirementGroup, "rules"> & { rule_json: string | null }
-  >(
-    `SELECT g.*, (
-        SELECT json_group_array(r.match) FROM requirement_rules r WHERE r.group_id = g.id
-     ) AS rule_json
-     FROM requirement_groups g WHERE g.set_id = ? ORDER BY g.position ASC`,
-    [setId],
+  const rows = await all<GroupRow>(`${GROUPS_SELECT} WHERE g.set_id = ? ORDER BY g.position ASC`, [
+    setId,
+  ]);
+  return rows.map(parseGroupRow);
+}
+
+/** Loads groups + rules for many sets in a SINGLE query (avoids N+1 over HTTP). */
+async function getGroupsForSets(setIds: string[]): Promise<Map<string, RequirementGroup[]>> {
+  const bySet = new Map<string, RequirementGroup[]>();
+  for (const id of setIds) bySet.set(id, []);
+  if (setIds.length === 0) return bySet;
+  const rows = await all<GroupRow>(
+    `${GROUPS_SELECT} WHERE g.set_id IN (${setIds.map(() => "?").join(", ")}) ORDER BY g.set_id ASC, g.position ASC`,
+    setIds,
   );
-  return groups.map((g) => {
-    const { rule_json, ...rest } = g;
-    let raw: (string | null)[] = [];
-    try {
-      raw = rule_json ? (JSON.parse(rule_json) as (string | null)[]) : [];
-    } catch {
-      raw = [];
-    }
-    return {
-      ...rest,
-      rules: raw
-        .filter(Boolean)
-        .map((json, i) => ({ id: i, match: JSON.parse(json as string) as Matcher })),
-    };
-  });
+  for (const r of rows) {
+    bySet.get(r.set_id)?.push(parseGroupRow(r));
+  }
+  return bySet;
 }
 
 export async function listSets(filter: { school?: string; kind?: string } = {}): Promise<RequirementSet[]> {
@@ -348,15 +366,12 @@ export async function listSets(filter: { school?: string; kind?: string } = {}):
     params.push(filter.kind);
   }
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  const rows = await all<RequirementSet>(
+  const rows = await all<Omit<RequirementSet, "groups">>(
     `SELECT * FROM requirement_sets ${clause} ORDER BY kind ASC, name ASC`,
     params,
   );
-  const out: RequirementSet[] = [];
-  for (const r of rows) {
-    out.push({ ...r, groups: await getGroups(r.id) });
-  }
-  return out;
+  const bySet = await getGroupsForSets(rows.map((r) => r.id));
+  return rows.map((r) => ({ ...r, groups: bySet.get(r.id) ?? [] }));
 }
 
 export type UserPrograms = {

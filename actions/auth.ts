@@ -152,13 +152,14 @@ export async function updateProfileAction(
   const majorId = formStr(fd, "majorId") || null;
   const major2Id = formStr(fd, "major2Id") || null;
   const minorId = formStr(fd, "minorId") || null;
-  if (majorId && !(await listSets()).some((s) => s.id === majorId))
+  const allSets = (await listSets()).map((s) => s.id);
+  if (majorId && !allSets.includes(majorId))
     return { ok: false, error: "Unknown major." };
-  if (major2Id && !(await listSets()).some((s) => s.id === major2Id))
+  if (major2Id && !allSets.includes(major2Id))
     return { ok: false, error: "Unknown second major." };
   if (major2Id && major2Id === majorId)
     return { ok: false, error: "The second major must be a different program." };
-  if (minorId && !(await listSets()).some((s) => s.id === minorId))
+  if (minorId && !allSets.includes(minorId))
     return { ok: false, error: "Unknown minor." };
 
   await updateUserProfile(user.id, {
