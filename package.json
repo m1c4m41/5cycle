@@ -1,0 +1,38 @@
+{
+  "name": "5cycle",
+  "version": "0.1.0",
+  "private": true,
+  "description": "5Cycle — academic year & course planner for the Claremont Colleges (CMC, HMC, Pitzer, Pomona, Scripps)",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "sync": "node scripts/sync.mjs",
+    "verify": "node scripts/verify-planner.mjs",
+    "shots": "node scripts/shoot.mjs",
+    "render-check": "node scripts/check-style.mjs",
+    "guest-flow": "node scripts/check-guest-flow.mjs",
+    "autosync-check": "node scripts/check-autosync.mjs",
+    "smoke": "bash scripts/smoke.sh && bash scripts/smoke-content.sh && bash scripts/smoke-mutate.sh",
+    "test": "npm run typecheck && npm run verify && npm run smoke",
+    "reset": "node -e \"require('fs').rmSync('data/db.sqlite',{force:true});require('fs').rmSync('data/db.sqlite-wal',{force:true});require('fs').rmSync('data/db.sqlite-shm',{force:true})\""
+  },
+  "dependencies": {
+    "next": "15.5.29",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.1.16",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.4",
+    "tailwindcss": "4.1.16",
+    "typescript": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

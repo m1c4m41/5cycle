@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   5Cycle design tokens
+   School accents are UI colors only — not official marks or Pantones.
+   ------------------------------------------------------------------ */
+@theme {
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #eceef2;
+  --color-ink-200: #d8dce4;
+  --color-ink-300: #b4bccb;
+  --color-ink-400: #8b96ab;
+  --color-ink-500: #6b7688;
+  --color-ink-600: #545d6d;
+  --color-ink-700: #434a57;
+  --color-ink-800: #2b303a;
+  --color-ink-900: #1a1d24;
+  --color-ink-950: #0e1014;
+
+  --color-brand-300: #9db4ff;
+  --color-brand-400: #6d8cff;
+  --color-brand-500: #4460f0;
+  --color-brand-600: #3049cf;
+  --color-brand-700: #2639a6;
+
+  /* Requested campus palette: Pomona blue, Scripps green, CMC red, Pitzer
+     orange, HMC yellow (deepened slightly so badge text stays legible). */
+  --color-cmc: #b01e24;
+  --color-hmc: #ca8a04;
+  --color-ptz: #ea580c;
+  --color-pom: #1e4b8f;
+  --color-scr: #146b4a;
+  --color-cgu: #35618f;
+  --color-uni: #6b7688;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Roboto Mono", Menlo, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ------------------- school-tinted backgrounds -------------------------
+   A signed-in student sees the app in their home school's color: the page
+   background (ink-50) takes the stronger tint, the white surfaces (cards,
+   nav, footer) a lighter one. Guests and unknown schools keep the neutral
+   palette. data-school is set on <html> from the session in layout.tsx.
+
+   NOTE: the :root defaults below must be literal colors, not
+   var(--color-ink-50) — the @theme inline block below routes
+   --color-ink-50 back through --app-bg, so a var() here would create a
+   circular reference that breaks to transparent on guest pages. */
+:root {
+  --app-bg: #f6f7f9; /* = neutral ink-50 */
+  --app-surface: #ffffff;
+}
+[data-school="cm"] { --school: var(--color-cmc); }
+[data-school="hm"] { --school: var(--color-hmc); }
+[data-school="pz"] { --school: var(--color-ptz); }
+[data-school="po"] { --school: var(--color-pom); }
+[data-school="sc"] { --school: var(--color-scr); }
+[data-school] {
+  --app-bg: color-mix(in srgb, var(--school) 13%, white);
+  --app-surface: color-mix(in srgb, var(--school) 5%, white);
+}
+
+/* Browsers without color-mix() get the neutral palette, not full-strength
+   school color. */
+@supports not (color: color-mix(in srgb, red, white)) {
+  [data-school] {
+    --app-bg: #f6f7f9;
+    --app-surface: #ffffff;
+  }
+}
+
+/* Route the two surface tokens through the theme so every bg-ink-50 /
+   bg-white in the app follows the student's school tint. */
+@theme inline {
+  --color-ink-50: var(--app-bg);
+  --color-white: var(--app-surface);
+}
+
+body {
+  @apply bg-ink-50 text-ink-900 antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Reusable component classes */
+@layer components {
+  .card {
+    @apply rounded-xl border border-ink-200 bg-white shadow-sm;
+  }
+  .card-pad {
+    @apply p-4 sm:p-5;
+  }
+  /* Tailwind v4 can only @apply utilities, never another custom class, so the
+     shared button base is expressed as a grouped selector instead of @apply btn. */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2
+      text-sm font-semibold transition-colors disabled:cursor-not-allowed
+      disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-700;
+  }
+  .btn-secondary {
+    @apply border border-ink-300 bg-white text-ink-800 hover:bg-ink-100;
+  }
+  .btn-ghost {
+    @apply text-ink-600 hover:bg-ink-100;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  .input {
+    @apply w-full rounded-lg border border-ink-300 bg-white px-3 py-2 text-sm
+      text-ink-900 outline-none placeholder:text-ink-400
+      focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-500;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5
+      text-[11px] font-semibold leading-4;
+  }
+  .kbd {
+    @apply rounded border border-ink-300 bg-ink-100 px-1.5 py-0.5 font-mono text-[11px];
+  }
+  .link {
+    @apply text-brand-600 underline decoration-brand-300 underline-offset-2 hover:text-brand-700;
+  }
+}
+
+/* Thin scrollbars inside panels */
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--color-ink-300);
+  border-radius: 8px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}

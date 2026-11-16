@@ -1,0 +1,23 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Local database + downloaded catalog snapshots (regenerable via `npm run sync`)
+data/db.sqlite
+data/db.sqlite-wal
+data/db.sqlite-shm
+data/cache/
+
+.env
+.env.local
+*.log
+.DS_Store
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# headless screenshot output
+shots/
+.vercel
+.env*

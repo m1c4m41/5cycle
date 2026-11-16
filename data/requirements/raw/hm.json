@@ -1,0 +1,2719 @@
+[
+ {
+  "name": "Biology, General Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1021&print",
+  "kind": "major",
+  "poid": 1021,
+  "text": "Major Requirements\nA biology major must successfully complete the following courses:\nBiology Core\n• BIOL054 HM - Experimental Biology Laboratory\n• BIOL154 HM - Biostatistics\n• BIOL101 HM - Comparative Physiology\n• BIOL108 HM - Ecology and Environmental Biology\n• BIOL109 HM - Evolutionary Biology\n• BIOL113 HM - Molecular Genetics\n• CHEM056 HM - Organic Chemistry I\n• CHEM058 HM - Organic Chemistry I Laboratory\n• CHEM105 HM - Organic Chemistry II\nBiology Electives\n• Eleven credits of advanced biology, selected by the student and advisor. Electives must include:\nAt least two Harvey Mudd laboratory courses, selected from:\n• BIOL103 HM - Comparative Physiology Laboratory\n• BIOL110 HM - Experimental Ecology Laboratory\n• BIOL111 HM - Molecular and Cellular Biology Laboratory\n• BIOL184 HM - Biochemistry Laboratory\n•\nand\nOne Harvey Mudd seminar-style course (requiring student presentations and reading from the primary literature), some examples include:\n• BIOL121 HM - Marine Ecology\n• BIOL129 HM - Topics in Human Evolution\n• BIOL183 HM - Topics in Physiology\n• BIOL185 HM - Special Topics in Biology (most offerings)\n• BIOL189 HM - Topics in Biochemistry and Molecular Biology (most offerings)\n•\nRelated non-biology technical courses may be substituted for advanced biology courses with permission of the department. With prior departmental permission, up to two credits of Biology 197 may count as Biology Electives.\n• BIOL197 HM - Directed Reading in Biology\nColloquium\nFour semesters of Biology Colloquium:\n• BIOL191 HM - Biology Colloquium\n•\nThe colloquium requirement is waived for any semester during which a student is away on a study abroad program.\nCapstone Project\n• Two semesters (at least 6 credits total) of Senior Thesis Research:\n• BIOL193 HM - Senior Thesis Research: Biology\n•\nor\n• BIOL195 HM - Intensive Research in Biology\n•\nOr an approved biology-related Clinic:\n• CSCI183 HM - Computer Science Clinic I\n• and\n• CSCI184 HM - Computer Science Clinic II\n•\nor\nTwo from:\n• ENGR111 HM - Engineering Clinic I\n• ENGR112 HM - Engineering Clinic II\n• ENGR113 HM - Engineering Clinic III\n•\nor\n• MATH193 HM - Mathematics Clinic (taken twice)\n•\nor\n• PHYS193 HM - Physics Clinic\n• and\n• PHYS194 HM - Physics Clinic",
+  "courses": [
+   {
+    "code": "BIOL 054 HM",
+    "title": "Experimental Biology Laboratory"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   },
+   {
+    "code": "BIOL 101 HM",
+    "title": "Comparative Physiology"
+   },
+   {
+    "code": "BIOL 108 HM",
+    "title": "Ecology and Environmental Biology"
+   },
+   {
+    "code": "BIOL 109 HM",
+    "title": "Evolutionary Biology"
+   },
+   {
+    "code": "BIOL 113 HM",
+    "title": "Molecular Genetics"
+   },
+   {
+    "code": "CHEM 056 HM",
+    "title": "Organic Chemistry I"
+   },
+   {
+    "code": "CHEM 058 HM",
+    "title": "Organic Chemistry I Laboratory"
+   },
+   {
+    "code": "CHEM 105 HM",
+    "title": "Organic Chemistry II"
+   },
+   {
+    "code": "BIOL 103 HM",
+    "title": "Comparative Physiology Laboratory"
+   },
+   {
+    "code": "BIOL 110 HM",
+    "title": "Experimental Ecology Laboratory"
+   },
+   {
+    "code": "BIOL 111 HM",
+    "title": "Molecular and Cellular Biology Laboratory"
+   },
+   {
+    "code": "BIOL 184 HM",
+    "title": "Biochemistry Laboratory"
+   },
+   {
+    "code": "BIOL 121 HM",
+    "title": "Marine Ecology"
+   },
+   {
+    "code": "BIOL 129 HM",
+    "title": "Topics in Human Evolution"
+   },
+   {
+    "code": "BIOL 183 HM",
+    "title": "Topics in Physiology"
+   },
+   {
+    "code": "BIOL 185 HM",
+    "title": "Special Topics in Biology (most offerings)"
+   },
+   {
+    "code": "BIOL 189 HM",
+    "title": "Topics in Biochemistry and Molecular Biology (most offerings)"
+   },
+   {
+    "code": "BIOL 197 HM",
+    "title": "Directed Reading in Biology"
+   },
+   {
+    "code": "BIOL 191 HM",
+    "title": "Biology Colloquium"
+   },
+   {
+    "code": "BIOL 193 HM",
+    "title": "Senior Thesis Research: Biology"
+   },
+   {
+    "code": "BIOL 195 HM",
+    "title": "Intensive Research in Biology"
+   },
+   {
+    "code": "CSCI 183 HM",
+    "title": "Computer Science Clinic I"
+   },
+   {
+    "code": "CSCI 184 HM",
+    "title": "Computer Science Clinic II"
+   },
+   {
+    "code": "ENGR 111 HM",
+    "title": "Engineering Clinic I"
+   },
+   {
+    "code": "ENGR 112 HM",
+    "title": "Engineering Clinic II"
+   },
+   {
+    "code": "ENGR 113 HM",
+    "title": "Engineering Clinic III"
+   },
+   {
+    "code": "MATH 193 HM",
+    "title": "Mathematics Clinic (taken twice)"
+   },
+   {
+    "code": "PHYS 193 HM",
+    "title": "Physics Clinic"
+   },
+   {
+    "code": "PHYS 194 HM",
+    "title": "Physics Clinic"
+   }
+  ]
+ },
+ {
+  "name": "Biology, Molecular Biology Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=989&print",
+  "kind": "major",
+  "poid": 989,
+  "text": "Students may also select the molecular biology option within the biology major. A student seeking to complete the molecular biology option must satisfactorily complete the following courses:\nMajor Requirements\nA biology major must successfully complete the following courses:\n• BIOL054 HM - Experimental Biology Laboratory\n• BIOL154 HM - Biostatistics\n• BIOL101 HM - Comparative Physiology\n• BIOL108 HM - Ecology and Environmental Biology\n• BIOL109 HM - Evolutionary Biology\n• BIOL111 HM - Molecular and Cellular Biology Laboratory\n• BIOL113 HM - Molecular Genetics\n• BIOL182 HM - Biochemistry\n• CHEM056 HM - Organic Chemistry I\n• CHEM058 HM - Organic Chemistry I Laboratory\n• CHEM105 HM - Organic Chemistry II\n• CHEM111 HM - Organic Chemistry II Laboratory\n•\nand one of:\n• BIOL122 HM - Molecular Cell Biology\n• BIOL160 HM - Molecular Immunology\nElectives\n• Six credits of advanced biology electives, selected by the student and advisor. One chemistry course may be substituted for an advanced biology course with the prior approval of the department. Electives must include:\nAt least one Harvey Mudd laboratory course, selected from:\n• BIOL103 HM - Comparative Physiology Laboratory\n• BIOL110 HM - Experimental Ecology Laboratory\n• BIOL184 HM - Biochemistry Laboratory\n•\nand\nOne Harvey Mudd seminar-style course (requiring student presentations and reading from the primary literature), some examples include:\n• BIOL121 HM - Marine Ecology\n• BIOL129 HM - Topics in Human Evolution\n• BIOL183 HM - Topics in Physiology\n• BIOL185 HM - Special Topics in Biology (most offerings)\n• BIOL189 HM - Topics in Biochemistry and Molecular Biology (most offerings)\nColloquium\nFour semesters of Biology Colloquium or Chemistry Seminar:\n• BIOL191 HM - Biology Colloquium\n• CHEM199 HM - Chemistry Seminar\n•\nThe colloquium requirement is waived for any semester during which a student is away on a study abroad program.\nCapstone Project\n• Two semesters (at least 6 credits total) of Senior Thesis Research:\n• BIOL193 HM - Senior Thesis Research: Biology\n•\nor\n• BIOL195 HM - Intensive Research in Biology\n•\nOr an approved biology-related Clinic:\n• CHEM151 HM - Senior Thesis Research in Chemistry\n• CHEM152 HM - Senior Thesis Research in Chemistry\n•\nor\n• CSCI183 HM - Computer Science Clinic I and\n• CSCI184 HM - Computer Science Clinic II\n•\nor\nTwo from:\n• ENGR111 HM - Engineering Clinic I\n• ENGR112 HM - Engineering Clinic II\n• ENGR113 HM - Engineering Clinic III\n•\nor\n• MATH193 HM - Mathematics Clinic (taken twice)\n•\nor\n• PHYS193 HM - Physics Clinic and\n• PHYS194 HM - Physics Clinic",
+  "courses": [
+   {
+    "code": "BIOL 054 HM",
+    "title": "Experimental Biology Laboratory"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   },
+   {
+    "code": "BIOL 101 HM",
+    "title": "Comparative Physiology"
+   },
+   {
+    "code": "BIOL 108 HM",
+    "title": "Ecology and Environmental Biology"
+   },
+   {
+    "code": "BIOL 109 HM",
+    "title": "Evolutionary Biology"
+   },
+   {
+    "code": "BIOL 111 HM",
+    "title": "Molecular and Cellular Biology Laboratory"
+   },
+   {
+    "code": "BIOL 113 HM",
+    "title": "Molecular Genetics"
+   },
+   {
+    "code": "BIOL 182 HM",
+    "title": "Biochemistry"
+   },
+   {
+    "code": "CHEM 056 HM",
+    "title": "Organic Chemistry I"
+   },
+   {
+    "code": "CHEM 058 HM",
+    "title": "Organic Chemistry I Laboratory"
+   },
+   {
+    "code": "CHEM 105 HM",
+    "title": "Organic Chemistry II"
+   },
+   {
+    "code": "CHEM 111 HM",
+    "title": "Organic Chemistry II Laboratory"
+   },
+   {
+    "code": "BIOL 122 HM",
+    "title": "Molecular Cell Biology"
+   },
+   {
+    "code": "BIOL 160 HM",
+    "title": "Molecular Immunology"
+   },
+   {
+    "code": "BIOL 103 HM",
+    "title": "Comparative Physiology Laboratory"
+   },
+   {
+    "code": "BIOL 110 HM",
+    "title": "Experimental Ecology Laboratory"
+   },
+   {
+    "code": "BIOL 184 HM",
+    "title": "Biochemistry Laboratory"
+   },
+   {
+    "code": "BIOL 121 HM",
+    "title": "Marine Ecology"
+   },
+   {
+    "code": "BIOL 129 HM",
+    "title": "Topics in Human Evolution"
+   },
+   {
+    "code": "BIOL 183 HM",
+    "title": "Topics in Physiology"
+   },
+   {
+    "code": "BIOL 185 HM",
+    "title": "Special Topics in Biology (most offerings)"
+   },
+   {
+    "code": "BIOL 189 HM",
+    "title": "Topics in Biochemistry and Molecular Biology (most offerings)"
+   },
+   {
+    "code": "BIOL 191 HM",
+    "title": "Biology Colloquium"
+   },
+   {
+    "code": "CHEM 199 HM",
+    "title": "Chemistry Seminar"
+   },
+   {
+    "code": "BIOL 193 HM",
+    "title": "Senior Thesis Research: Biology"
+   },
+   {
+    "code": "BIOL 195 HM",
+    "title": "Intensive Research in Biology"
+   },
+   {
+    "code": "CHEM 151 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   },
+   {
+    "code": "CHEM 152 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   },
+   {
+    "code": "CSCI 183 HM",
+    "title": "Computer Science Clinic I and"
+   },
+   {
+    "code": "CSCI 184 HM",
+    "title": "Computer Science Clinic II"
+   },
+   {
+    "code": "ENGR 111 HM",
+    "title": "Engineering Clinic I"
+   },
+   {
+    "code": "ENGR 112 HM",
+    "title": "Engineering Clinic II"
+   },
+   {
+    "code": "ENGR 113 HM",
+    "title": "Engineering Clinic III"
+   },
+   {
+    "code": "MATH 193 HM",
+    "title": "Mathematics Clinic (taken twice)"
+   },
+   {
+    "code": "PHYS 193 HM",
+    "title": "Physics Clinic and"
+   },
+   {
+    "code": "PHYS 194 HM",
+    "title": "Physics Clinic"
+   }
+  ]
+ },
+ {
+  "name": "Chemistry Major",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=991&print",
+  "kind": "major",
+  "poid": 991,
+  "text": "Foundation Courses\n• CHEM051 HM - Foundations of Physical Chemistry\n• CHEM056 HM - Organic Chemistry I\n• CHEM103 HM - Chemical Analysis\n• CHEM104 HM - Inorganic Chemistry\n• CHEM182 HM - Biochemistry\n• PHYS051 HM - Electromagnetic Theory and Optics\nOne Mathematics Course\nOne mathematics course chosen from the following:\n• BIOL154 HM - Biostatistics\n• MATH062 HM - Introduction to Statistics\n• MATH082 HM - Differential Equations\n• MATH151 HM - Probability\nFoundation Laboratories\nFour Laboratory Courses taken from:\n• CHEM053 HM - Physical Chemistry Laboratory\n• CHEM058 HM - Organic Chemistry I Laboratory\n• CHEM109 HM - Chemical Analysis Laboratory\n• CHEM110 HM - Inorganic Chemistry Laboratory\n• CHEM184 HM - Biochemistry Laboratory\nChemistry Electives\nEight credits taken from:\n• CHEM047 HM - The Chemistry of Cooking\n• CHEM048 HM - Computations in Chemistry\n• CHEM080 HM - Numerical Methods for the Central Science\n• CHEM105 HM - Organic Chemistry II\n• CHEM106 HM - Physical Chemistry IIA Quantum Chemistry\n• CHEM111 HM - Organic Chemistry II Laboratory\n• CHEM112 HM - Instrumental Analysis Laboratory\n• CHEM114 HM - Advanced Analytical Chemistry\n• CHEM116 HM - Physical Chemistry IIB Materials Chemistry\n• CHEM122 HM - Nanomaterials\n• CHEM161 HM - Advanced Physical Chemistry: Classical and Statistical Thermodynamics\n• CHEM163 HM - Advanced Physical Chemistry: Advanced Group Theory\n• CHEM164 HM - Advanced Physical Chemistry: Electronic Structure Theory\n• CHEM165 HM - Organometallic Chemistry\n• CHEM166 HM - Industrial Chemistry\n• CHEM167 HM - Biophysical Chemistry\n• CHEM168 HM - Lasers in Chemistry\n• CHEM170 HM - Chemistry of the Oceans and Atmosphere\n• CHEM171 HM - Advanced Organic Chemistry: Organic Synthesis\n• CHEM173 HM - Advanced Organic Chemistry: Pericyclic Reactions\n• CHEM187 HM - HIV-Aids: Science, Society, and Service\n• CHEM189 HM - Topics in Biochemistry and Molecular Biology\n• CHEM190 HM - Bioinorganic Chemistry\n• CHEM192 HM - Material Science of Energy Conversion and Storage\n• CHEM193 HM - Special Topics in Chemistry\n• CHEM194 HM - Chemistry of Modern Materials\n• CHEM195 HM - Physics and Chemistry of Stuff\n• CLES101 HM - Climate Dynamics\nChemistry Seminar\nFour semesters of chemistry seminar:\n• CHEM199 HM - Chemistry Seminar\n•\nThe requirement for one semester of chemistry seminar can be waived for students studying abroad in their junior or senior years.\nCapstone\nFour to six credits of:\n• CHEM151 HM - Senior Thesis Research in Chemistry\n• and\n• CHEM152 HM - Senior Thesis Research in Chemistry\n•\nWith approval of the chemistry department chair, students may substitute ENGR112 HM\nand ENGR113 HM\nfor CHEM151 HM\nand CHEM152 HM\n.\nClose\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry"
+   },
+   {
+    "code": "CHEM 056 HM",
+    "title": "Organic Chemistry I"
+   },
+   {
+    "code": "CHEM 103 HM",
+    "title": "Chemical Analysis"
+   },
+   {
+    "code": "CHEM 104 HM",
+    "title": "Inorganic Chemistry"
+   },
+   {
+    "code": "CHEM 182 HM",
+    "title": "Biochemistry"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   },
+   {
+    "code": "MATH 062 HM",
+    "title": "Introduction to Statistics"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "MATH 151 HM",
+    "title": "Probability"
+   },
+   {
+    "code": "CHEM 053 HM",
+    "title": "Physical Chemistry Laboratory"
+   },
+   {
+    "code": "CHEM 058 HM",
+    "title": "Organic Chemistry I Laboratory"
+   },
+   {
+    "code": "CHEM 109 HM",
+    "title": "Chemical Analysis Laboratory"
+   },
+   {
+    "code": "CHEM 110 HM",
+    "title": "Inorganic Chemistry Laboratory"
+   },
+   {
+    "code": "CHEM 184 HM",
+    "title": "Biochemistry Laboratory"
+   },
+   {
+    "code": "CHEM 047 HM",
+    "title": "The Chemistry of Cooking"
+   },
+   {
+    "code": "CHEM 048 HM",
+    "title": "Computations in Chemistry"
+   },
+   {
+    "code": "CHEM 080 HM",
+    "title": "Numerical Methods for the Central Science"
+   },
+   {
+    "code": "CHEM 105 HM",
+    "title": "Organic Chemistry II"
+   },
+   {
+    "code": "CHEM 106 HM",
+    "title": "Physical Chemistry IIA Quantum Chemistry"
+   },
+   {
+    "code": "CHEM 111 HM",
+    "title": "Organic Chemistry II Laboratory"
+   },
+   {
+    "code": "CHEM 112 HM",
+    "title": "Instrumental Analysis Laboratory"
+   },
+   {
+    "code": "CHEM 114 HM",
+    "title": "Advanced Analytical Chemistry"
+   },
+   {
+    "code": "CHEM 116 HM",
+    "title": "Physical Chemistry IIB Materials Chemistry"
+   },
+   {
+    "code": "CHEM 122 HM",
+    "title": "Nanomaterials"
+   },
+   {
+    "code": "CHEM 161 HM",
+    "title": "Advanced Physical Chemistry: Classical and Statistical Thermodynamics"
+   },
+   {
+    "code": "CHEM 163 HM",
+    "title": "Advanced Physical Chemistry: Advanced Group Theory"
+   },
+   {
+    "code": "CHEM 164 HM",
+    "title": "Advanced Physical Chemistry: Electronic Structure Theory"
+   },
+   {
+    "code": "CHEM 165 HM",
+    "title": "Organometallic Chemistry"
+   },
+   {
+    "code": "CHEM 166 HM",
+    "title": "Industrial Chemistry"
+   },
+   {
+    "code": "CHEM 167 HM",
+    "title": "Biophysical Chemistry"
+   },
+   {
+    "code": "CHEM 168 HM",
+    "title": "Lasers in Chemistry"
+   },
+   {
+    "code": "CHEM 170 HM",
+    "title": "Chemistry of the Oceans and Atmosphere"
+   },
+   {
+    "code": "CHEM 171 HM",
+    "title": "Advanced Organic Chemistry: Organic Synthesis"
+   },
+   {
+    "code": "CHEM 173 HM",
+    "title": "Advanced Organic Chemistry: Pericyclic Reactions"
+   },
+   {
+    "code": "CHEM 187 HM",
+    "title": "HIV-Aids: Science, Society, and Service"
+   },
+   {
+    "code": "CHEM 189 HM",
+    "title": "Topics in Biochemistry and Molecular Biology"
+   },
+   {
+    "code": "CHEM 190 HM",
+    "title": "Bioinorganic Chemistry"
+   },
+   {
+    "code": "CHEM 192 HM",
+    "title": "Material Science of Energy Conversion and Storage"
+   },
+   {
+    "code": "CHEM 193 HM",
+    "title": "Special Topics in Chemistry"
+   },
+   {
+    "code": "CHEM 194 HM",
+    "title": "Chemistry of Modern Materials"
+   },
+   {
+    "code": "CHEM 195 HM",
+    "title": "Physics and Chemistry of Stuff"
+   },
+   {
+    "code": "CLES 101 HM",
+    "title": "Climate Dynamics"
+   },
+   {
+    "code": "CHEM 199 HM",
+    "title": "Chemistry Seminar"
+   },
+   {
+    "code": "CHEM 151 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   },
+   {
+    "code": "CHEM 152 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   }
+  ]
+ },
+ {
+  "name": "Computer Science",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=992&print",
+  "kind": "major",
+  "poid": 992,
+  "text": "Major Requirements\nA computer science major must complete the following courses:\nMathematics Requirements\nStudents must take Multivariable Calculus and Linear Algebra. HMC students fulfill these requirements through the Core Curriculum. Students from the other Claremont Colleges must fulfill these requirements by taking the following courses at the 5Cs:\n• Calculus III (MATH032 CM / PO / PZ / SC or MATH032S PO)\n• Linear Algebra (MATH060 CM / PO / PZ / SC)\nComputer Science Foundation\n• CSCI060 HM - Principles of Computer Science\n• or\n• CSCI042 HM - Principles and Practice of Computer Science\n•\nand\n• MATH055 HM - Discrete Mathematics\n• CSCI070 HM - Data Structures and Program Development\n• CSCI081 HM - Computability and Logic\nComputer Science Kernel\n• CSCI105 HM - Computer Systems\n• CSCI123 HM - Computing Practices, Projects, and People\n• CSCI140 HM - Algorithms\nComputer Science Clinic\nTwo consecutive semesters of Computer Science Clinic, taken in order:\n• CSCI183 HM - Computer Science Clinic I\n• and\n• CSCI184 HM - Computer Science Clinic II\nComputer Science Colloquium\nFour semesters of Computer Science colloquium are required and must be taken in the junior and senior years:\n• CSCI195 HM - Computer Science Colloquium\n•\nStudents studying abroad during their junior or senior years are excused from one semester of the colloquium requirement for each semester abroad.\n9 Credits of Computer Science Electives\nThe major requires nine credits of upper-division Computer Science electives. Courses with a CSCI course code and a course number above 100 that do not fulfill specific major requirements count as CS electives.\nThe following courses have been approved to be taken as electives toward the Computer Science major. This list is not exhaustive, and students should discuss other possible elective courses with their faculty advisor:\n• BIOL188 HM - Advanced Computational Biology\n• CHEM080 HM - Numerical Methods for the Central Science\n• CLES120 HM - Games for Climate Change Literacy\n• CLES121 HM - Climate Justice: Disability Lens\n• CLES122 HM - Prototyping Climate Tech Futures\n• ENGR085A HM - Digital Electronics\n• ENGR085 HM - Digital Electronics and Computer Engineering\n• ENGR151 HM - Analog Circuit Design\n• ENGR155 HM - Microprocessor-Based Systems: Design and Applications\n• ENGR205 HM - State Estimation\n• MATH104 HM - Graph Theory\n• MATH106 HM - Combinatorics\n• MATH164 HM - Scientific Computing\n• MATH165 HM - Numerical Analysis\n• MATH167 HM - Complexity Theory\n• MATH187 HM - Operations Research\n• MCBI118A HM - Introduction to Mathematical Biology\n• MCBI118B HM - Introduction to Computational Biology\n• PHYS084 HM - Quantum Information\n• PHYS170 HM - Computational Methods in Physics\n• PSYC183 SC - Human Data Science Ethics",
+  "courses": [
+   {
+    "code": "CSCI 060 HM",
+    "title": "Principles of Computer Science"
+   },
+   {
+    "code": "CSCI 042 HM",
+    "title": "Principles and Practice of Computer Science"
+   },
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "CSCI 070 HM",
+    "title": "Data Structures and Program Development"
+   },
+   {
+    "code": "CSCI 081 HM",
+    "title": "Computability and Logic"
+   },
+   {
+    "code": "CSCI 105 HM",
+    "title": "Computer Systems"
+   },
+   {
+    "code": "CSCI 123 HM",
+    "title": "Computing Practices, Projects, and People"
+   },
+   {
+    "code": "CSCI 140 HM",
+    "title": "Algorithms"
+   },
+   {
+    "code": "CSCI 183 HM",
+    "title": "Computer Science Clinic I"
+   },
+   {
+    "code": "CSCI 184 HM",
+    "title": "Computer Science Clinic II"
+   },
+   {
+    "code": "CSCI 195 HM",
+    "title": "Computer Science Colloquium"
+   },
+   {
+    "code": "BIOL 188 HM",
+    "title": "Advanced Computational Biology"
+   },
+   {
+    "code": "CHEM 080 HM",
+    "title": "Numerical Methods for the Central Science"
+   },
+   {
+    "code": "CLES 120 HM",
+    "title": "Games for Climate Change Literacy"
+   },
+   {
+    "code": "CLES 121 HM",
+    "title": "Climate Justice: Disability Lens"
+   },
+   {
+    "code": "CLES 122 HM",
+    "title": "Prototyping Climate Tech Futures"
+   },
+   {
+    "code": "ENGR 85A HM",
+    "title": "Digital Electronics"
+   },
+   {
+    "code": "ENGR 085 HM",
+    "title": "Digital Electronics and Computer Engineering"
+   },
+   {
+    "code": "ENGR 151 HM",
+    "title": "Analog Circuit Design"
+   },
+   {
+    "code": "ENGR 155 HM",
+    "title": "Microprocessor-Based Systems: Design and Applications"
+   },
+   {
+    "code": "ENGR 205 HM",
+    "title": "State Estimation"
+   },
+   {
+    "code": "MATH 104 HM",
+    "title": "Graph Theory"
+   },
+   {
+    "code": "MATH 106 HM",
+    "title": "Combinatorics"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 165 HM",
+    "title": "Numerical Analysis"
+   },
+   {
+    "code": "MATH 167 HM",
+    "title": "Complexity Theory"
+   },
+   {
+    "code": "MATH 187 HM",
+    "title": "Operations Research"
+   },
+   {
+    "code": "MCBI 118A HM",
+    "title": "Introduction to Mathematical Biology"
+   },
+   {
+    "code": "MCBI 118B HM",
+    "title": "Introduction to Computational Biology"
+   },
+   {
+    "code": "PHYS 084 HM",
+    "title": "Quantum Information"
+   },
+   {
+    "code": "PHYS 170 HM",
+    "title": "Computational Methods in Physics"
+   }
+  ]
+ },
+ {
+  "name": "Engineering",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1022&print",
+  "kind": "major",
+  "poid": 1022,
+  "text": "To keep the option open for majoring in engineering, a student should have taken Engineering 4 and 79 before the fourth semester. Any proposed variation from this program must be discussed in advance with an engineering advisor.\nAn engineering major must satisfactorily complete the following required courses for the bachelor’s degree:\nEngineering Science Stem\n• The engineering science stem consists of five required courses that collectively embody the fundamental “applied science” knowledge base needed by a broadly educated engineer practicing in the foreseeable future:\n• ENGR082 HM - Chemical and Thermal Processes\n• ENGR083 HM - Continuum Mechanics\n• ENGR084 HM - Electronic and Magnetic Circuits and Devices\n• ENGR085 HM - Digital Electronics and Computer Engineering\n• ENGR086 HM - Materials Engineering\n•\nTwo courses in engineering mathematics are also required for the engineering major:\n• MATH062 HM - Introduction to Statistics Note: Students who have taken AP Statistics may petition the Engineering department to take either MATH055 HM\n, MATH082 HM\n, PHYS051 HM\n, or a 3-credit upper-division (numbered 100+) math course instead. Students who do not yet have an Engineering advisor should list the Engineering Department Chair as their advisor on the petition.\n• ENGR072 HM - Applied Mathematics for Engineering\nSystems Stem\n• The systems stem is a sequence of three required courses that provides analysis and design tools to model and interpret the behavior of general engineering systems. The sequence is multidisciplinary in approach, enabling students to gain a unified view of the entire spectrum of engineering disciplines:\n• ENGR079 HM - Introduction to Engineering Systems\n• ENGR101 HM - Advanced Systems Engineering I\n• ENGR102 HM - Advanced Systems Engineering II\nDesign and Professional Practice Stem\n• The design and professional practice stem includes five required courses that focus on working in teams on open-ended, externally-driven design projects that, over the course of the curriculum, encompass conceptual design, preliminary (or embodiment) design, and detailed design.\nHands-on exposure to professional practice begins with students undertaking challenging design problems in the first year with an introduction to conceptual design, engineering drawings, and manufacturing techniques:\n• ENGR004 HM - Introduction to Engineering Design and Manufacturing\n•\nContinues with a laboratory course in experimental engineering:\n• ENGR080 HM - Experimental Engineering\n•\nAnd culminates with three semesters of Engineering Clinic (seniors must submit a final Clinic report that is acceptable to the project’s faculty advisor):\n• ENGR111 HM - Engineering Clinic I\n• ENGR112 HM - Engineering Clinic II\n• ENGR113 HM - Engineering Clinic III\nEngineering Seminar\n• ENGR122 HM - Engineering Seminar\n• ENGR124 HM - Engineering Seminar\nThree Upper Division Electives\n• Three upper division engineering technical electives (numbered higher than 100, others by petition. Not to include courses listed above). By petition, one advanced technical course outside Engineering with a prereq beyond Core may be counted as a technical elective. CSCI070 HM\nis routinely accepted as an engineering technical elective, but a petition is required for record keeping.\nStudents should note that many electives are offered in alternate years.\nClose\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "ENGR 082 HM",
+    "title": "Chemical and Thermal Processes"
+   },
+   {
+    "code": "ENGR 083 HM",
+    "title": "Continuum Mechanics"
+   },
+   {
+    "code": "ENGR 084 HM",
+    "title": "Electronic and Magnetic Circuits and Devices"
+   },
+   {
+    "code": "ENGR 085 HM",
+    "title": "Digital Electronics and Computer Engineering"
+   },
+   {
+    "code": "ENGR 086 HM",
+    "title": "Materials Engineering"
+   },
+   {
+    "code": "MATH 062 HM",
+    "title": "Introduction to Statistics Note: Students who have taken AP Statistics may petit"
+   },
+   {
+    "code": "ENGR 072 HM",
+    "title": "Applied Mathematics for Engineering"
+   },
+   {
+    "code": "ENGR 079 HM",
+    "title": "Introduction to Engineering Systems"
+   },
+   {
+    "code": "ENGR 101 HM",
+    "title": "Advanced Systems Engineering I"
+   },
+   {
+    "code": "ENGR 102 HM",
+    "title": "Advanced Systems Engineering II"
+   },
+   {
+    "code": "ENGR 004 HM",
+    "title": "Introduction to Engineering Design and Manufacturing"
+   },
+   {
+    "code": "ENGR 080 HM",
+    "title": "Experimental Engineering"
+   },
+   {
+    "code": "ENGR 111 HM",
+    "title": "Engineering Clinic I"
+   },
+   {
+    "code": "ENGR 112 HM",
+    "title": "Engineering Clinic II"
+   },
+   {
+    "code": "ENGR 113 HM",
+    "title": "Engineering Clinic III"
+   },
+   {
+    "code": "ENGR 122 HM",
+    "title": "Engineering Seminar"
+   },
+   {
+    "code": "ENGR 124 HM",
+    "title": "Engineering Seminar"
+   }
+  ]
+ },
+ {
+  "name": "Mathematics",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=993&print",
+  "kind": "major",
+  "poid": 993,
+  "text": "The course of study for a mathematics degree has five components: The Major Core, Computational Mathematics, Clinic or Thesis, Mathematics Forum, and the Elective Program. Each of these components to the major program is described below.\nThe Major Core\nA set of core courses is required of each mathematics major:\n• MATH055 HM - Discrete Mathematics\n• MATH062 HM - Introduction to Statistics or MATH151 HM - Probability\n• MATH082 HM - Differential Equations\n• MATH131 HM - Mathematical Analysis I\n• MATH171 HM - Abstract Algebra I\n• MATH180 HM - Introduction to Partial Differential Equations\n•\nThese courses cover a range of fundamental fields of mathematics and position the student to pursue any one of a variety of elective programs to finish the degree. It is expected that the Major Core will be completed before the senior year.\nComputational Mathematics\nOne course in computational mathematics is required of all mathematics majors, selected from the following list:\n• CSCI081 HM - Computability and Logic\n• CSCI142 HM - Complexity Theory\n• MATH164 HM - Scientific Computing\n• MATH165 HM - Numerical Analysis\n• MATH168 HM - Algorithms\n•\nComputational techniques are essential to many fields of modern mathematics and to most mathematical applications in business and industry.\nClinic or Thesis\nTwo semesters of Mathematics Clinic or two semesters of Senior Thesis are required and taken in the senior year:\n• MATH193 HM - Mathematics Clinic (taken twice)\n•\nor\n• MATH197 HM - Senior Thesis in Mathematics (taken twice)\n•\nClinic and thesis are important capstone experiences for each mathematics major: they represent sustained efforts to engage with a complex problem from industry or mathematical research. Clinic teams are formed in the fall according to the requirements of the projects and student preferences. Students who do Clinic must work on the same Clinic project both semesters.\nMathematics Forum\nAll mathematics majors must take:\n• One semester of Mathematics Forum:\n• MATH198 HM - Undergraduate Mathematics Forum (generally in the junior year)\nThe Elective Program\nTo complete the degree, three elective mathematics courses totaling at least seven credits are required. All electives must be numbered over 100 (some off-campus math courses numbered in the 100s that replicate HMC Core course content may not be counted toward the elective requirement).\nThe elective program will be designed by the student in consultation with their advisor. Courses outside of mathematics may be counted toward the elective program if approved by petition to the department. Courses that are cross-listed between computer science and mathematics, such as Complexity Theory, which appears as both MATH167 HM\nand CSCI142 HM\n, can be taken under either course number.\nTo assist students in designing their elective program, the department has prepared a variety of sample programs. These sample programs list courses that support a wide range of career goals in academia, business, or industry, and our students receive offers from competitive graduate programs and employment in the workforce.. Several sample elective programs are listed below. In each of these samples, the first two courses are strongly recommended; at least one additional course is to be selected in order to complete the elective program. We emphasize that sample elective programs are advisory. Students may follow a sample program or design one of their own.\nTheoretical Mathematics:\n• At least one advanced course in analysis:\n• MATH132 HM - Mathematical Analysis II\n• MATH136 HM - Complex Variables and Integral Transforms\n•\nat least one advanced course in algebra:\n• MATH172 HM - Abstract Algebra II: Galois Theory\n• MATH174 HM - Abstract Algebra II: Representation Theory\n• MATH176 HM - Algebraic Geometry\n•\nand at least one advanced course in geometry or topology:\n• MATH142 HM - Differential Geometry\n• MATH143 HM - Seminar in Differential Geometry\n• MATH147 HM - Topology\nApplied Mathematics:\n• MATH136 HM - Complex Variables and Integral Transforms\n• MATH181 HM - Dynamical Systems\n•\nand at least one elective from:\n• MATH119 HM - Advanced Mathematical Biology\n• MATH127 HM - Mathematical Methods in Data Science\n• MATH132 HM - Mathematical Analysis II\n• MATH164 HM - Scientific Computing\n• MATH165 HM - Numerical Analysis\n• MATH173 HM - Advanced Linear Algebra\n• MATH184 HM - Graduate Partial Differential Equations\n• MATH187 HM - Operations Research\n• MATH362 CG - Numerical Methods for Differential Equations\n• MATH368 CG - Numerical Methods for Matrix Computations\n• MATH382 CG - Perturbation and Asymptotic Analysis\n•\n• MCBI118A HM - Introduction to Mathematical Biology\n• and\n• MCBI118B HM - Introduction to Computational Biology\nProbability and Statistics:\n• MATH152 HM - Statistical Inference\n• MATH156 HM - Stochastic Processes\n•\nand at least one elective from:\n• MATH106 HM - Combinatorics\n• MATH127 HM - Mathematical Methods in Data Science\n• MATH132 HM - Mathematical Analysis II\n• MATH153 HM - Bayesian Statistics\n• MATH155 HM - Time Series\n• MATH158 HM - Statistical Linear Models\n• MATH173 HM - Advanced Linear Algebra\n• MATH187 HM - Operations Research\n• MATH351 CG - Time Series Analysis\n• MATH355 CG - Linear Statistical Models\nOperations Research:\n• MATH156 HM - Stochastic Processes\n• MATH187 HM - Operations Research\n•\nand at least one elective from:\n• MATH104 HM - Graph Theory\n• MATH106 HM - Combinatorics\n• MATH127 HM - Mathematical Methods in Data Science\n• MATH129 HM - Mathematics of Big Data\n• MATH152 HM - Statistical Inference\n• MATH153 HM - Bayesian Statistics\n• MATH155 HM - Time Series\n• MATH158 HM - Statistical Linear Models\n• MATH165 HM - Numerical Analysis\n• MATH168 HM - Algorithms\n• MATH188 HM - Social Choice and Decision Making\nActuarial or Financial Mathematics:\n• MATH156 HM - Stochastic Processes\n•\nand at least one elective from:\n• MATH152 HM - Statistical Inference\n• MATH155 HM - Time Series\n• MATH158 HM - Statistical Linear Models\n• MATH165 HM - Numerical Analysis\n• MATH187 HM - Operations Research\n• MATH355 CG - Linear Statistical Models\nScientific Computing:\n• MATH164 HM - Scientific Computing\n• MATH165 HM - Numerical Analysis\n•\nand at least one elective from:\n• MATH119 HM - Advanced Mathematical Biology\n• MATH127 HM - Mathematical Methods in Data Science\n• MATH136 HM - Complex Variables and Integral Transforms\n• MATH168 HM - Algorithms\n• MATH173 HM - Advanced Linear Algebra\n• MATH181 HM - Dynamical Systems\n• MATH184 HM - Graduate Partial Differential Equations\n• MATH362 CG - Numerical Methods for Differential Equations\n• MATH368 CG - Numerical Methods for Matrix Computations\n• MATH382 CG - Perturbation and Asymptotic Analysis\n•\n• MCBI118A HM - Introduction to Mathematical Biology\n• and\n• MCBI118B HM - Introduction to Computational Biology\nTheoretical Computer Science:\n• CSCI081 HM - Computability and Logic\n• MATH168 HM - Algorithms\n•\nand at least one elective from:\n• CSCI151 HM - Artificial Intelligence\n• CSCI152 HM - Neural Networks\n• MATH104 HM - Graph Theory\n• MATH106 HM - Combinatorics\n• MATH165 HM - Numerical Analysis\n• MATH167 HM - Complexity Theory\n• MATH172 HM - Abstract Algebra II: Galois Theory\n• MATH175 HM - Number Theory\nMathematical Biology:\n• MCBI118A HM - Introduction to Mathematical Biology\n• and\n• MCBI118B HM - Introduction to Computational Biology\n• MATH119 HM - Advanced Mathematical Biology\n•\nand at least one elective from:\n• MATH152 HM - Statistical Inference\n• MATH156 HM - Stochastic Processes\n• MATH158 HM - Statistical Linear Models\n• MATH164 HM - Scientific Computing\n• MATH168 HM - Algorithms\n• MATH173 HM - Advanced Linear Algebra\n• MATH181 HM - Dynamical Systems\n• MATH184 HM - Graduate Partial Differential Equations\n• MATH187 HM - Operations Research\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "MATH 062 HM",
+    "title": "Introduction to Statistics or MATH151 HM - Probability"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "MATH 131 HM",
+    "title": "Mathematical Analysis I"
+   },
+   {
+    "code": "MATH 171 HM",
+    "title": "Abstract Algebra I"
+   },
+   {
+    "code": "MATH 180 HM",
+    "title": "Introduction to Partial Differential Equations"
+   },
+   {
+    "code": "CSCI 081 HM",
+    "title": "Computability and Logic"
+   },
+   {
+    "code": "CSCI 142 HM",
+    "title": "Complexity Theory"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 165 HM",
+    "title": "Numerical Analysis"
+   },
+   {
+    "code": "MATH 168 HM",
+    "title": "Algorithms"
+   },
+   {
+    "code": "MATH 193 HM",
+    "title": "Mathematics Clinic (taken twice)"
+   },
+   {
+    "code": "MATH 197 HM",
+    "title": "Senior Thesis in Mathematics (taken twice)"
+   },
+   {
+    "code": "MATH 198 HM",
+    "title": "Undergraduate Mathematics Forum (generally in the junior year)"
+   },
+   {
+    "code": "MATH 132 HM",
+    "title": "Mathematical Analysis II"
+   },
+   {
+    "code": "MATH 136 HM",
+    "title": "Complex Variables and Integral Transforms"
+   },
+   {
+    "code": "MATH 172 HM",
+    "title": "Abstract Algebra II: Galois Theory"
+   },
+   {
+    "code": "MATH 174 HM",
+    "title": "Abstract Algebra II: Representation Theory"
+   },
+   {
+    "code": "MATH 176 HM",
+    "title": "Algebraic Geometry"
+   },
+   {
+    "code": "MATH 142 HM",
+    "title": "Differential Geometry"
+   },
+   {
+    "code": "MATH 143 HM",
+    "title": "Seminar in Differential Geometry"
+   },
+   {
+    "code": "MATH 147 HM",
+    "title": "Topology"
+   },
+   {
+    "code": "MATH 181 HM",
+    "title": "Dynamical Systems"
+   },
+   {
+    "code": "MATH 119 HM",
+    "title": "Advanced Mathematical Biology"
+   },
+   {
+    "code": "MATH 127 HM",
+    "title": "Mathematical Methods in Data Science"
+   },
+   {
+    "code": "MATH 173 HM",
+    "title": "Advanced Linear Algebra"
+   },
+   {
+    "code": "MATH 184 HM",
+    "title": "Graduate Partial Differential Equations"
+   },
+   {
+    "code": "MATH 187 HM",
+    "title": "Operations Research"
+   },
+   {
+    "code": "MCBI 118A HM",
+    "title": "Introduction to Mathematical Biology"
+   },
+   {
+    "code": "MCBI 118B HM",
+    "title": "Introduction to Computational Biology"
+   },
+   {
+    "code": "MATH 152 HM",
+    "title": "Statistical Inference"
+   },
+   {
+    "code": "MATH 156 HM",
+    "title": "Stochastic Processes"
+   },
+   {
+    "code": "MATH 106 HM",
+    "title": "Combinatorics"
+   },
+   {
+    "code": "MATH 153 HM",
+    "title": "Bayesian Statistics"
+   },
+   {
+    "code": "MATH 155 HM",
+    "title": "Time Series"
+   },
+   {
+    "code": "MATH 158 HM",
+    "title": "Statistical Linear Models"
+   },
+   {
+    "code": "MATH 104 HM",
+    "title": "Graph Theory"
+   },
+   {
+    "code": "MATH 129 HM",
+    "title": "Mathematics of Big Data"
+   },
+   {
+    "code": "MATH 188 HM",
+    "title": "Social Choice and Decision Making"
+   },
+   {
+    "code": "CSCI 151 HM",
+    "title": "Artificial Intelligence"
+   },
+   {
+    "code": "CSCI 152 HM",
+    "title": "Neural Networks"
+   },
+   {
+    "code": "MATH 167 HM",
+    "title": "Complexity Theory"
+   },
+   {
+    "code": "MATH 175 HM",
+    "title": "Number Theory"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Standard Program",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=994&print",
+  "kind": "major",
+  "poid": 994,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nStandard Program\n• Two Physics half-courses\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• PHYS181 HM - Advanced Laboratory\n•\nand\n4 to 6 credits of Physics Thesis:\n• PHYS199 HM - Senior Thesis in Physics",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 181 HM",
+    "title": "Advanced Laboratory"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Applied Physics Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=995&print",
+  "kind": "major",
+  "poid": 995,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nApplied Physics Option\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• PHYS181 HM - Advanced Laboratory\n• Two physics half courses\n•\nand\n4 to 6 credits of Physics Thesis:\n• PHYS199 HM - Senior Thesis in Physics\n•\nor\nTwo semesters of an approved Clinic:\n• PHYS193 HM - Physics Clinic\n• PHYS194 HM - Physics Clinic",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 181 HM",
+    "title": "Advanced Laboratory"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics"
+   },
+   {
+    "code": "PHYS 193 HM",
+    "title": "Physics Clinic"
+   },
+   {
+    "code": "PHYS 194 HM",
+    "title": "Physics Clinic"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Astrophysics Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=996&print",
+  "kind": "major",
+  "poid": 996,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nAstrophysics Option\n• ASTR062 HM - Introduction to Astrophysics\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• Two astronomy or physics half courses\nand\n• PHYS181 HM - Advanced Laboratory\n• or\n• ASTR101 HM - Observational Astronomy\n•\nand\n4 to 6 credits of Physics Thesis:\n• PHYS199 HM - Senior Thesis in Physics",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "ASTR 062 HM",
+    "title": "Introduction to Astrophysics"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 181 HM",
+    "title": "Advanced Laboratory"
+   },
+   {
+    "code": "ASTR 101 HM",
+    "title": "Observational Astronomy"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Biophysics Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=997&print",
+  "kind": "major",
+  "poid": 997,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nBiophysics Option\n• PHYS174 HM - Biophysics\n•\nand\n• PHYS181 HM - Advanced Laboratory\n• or\n• An approved biology laboratory\n•\nand\n• Three of the following:\n• CHEM056 HM - Organic Chemistry I\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• Two approved biology courses\n•\nand\n4 to 6 credits of:\n• PHYS199 HM - Senior Thesis in Physics\n•\nor\n6 credits from:\n• BIOL193 HM - Senior Thesis Research: Biology\n• (in lieu of BIOL193 HM\nand students may take 12 credits of BIOL195 HM\nand with permission of the Biology Department)\nClose\nClose",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "PHYS 174 HM",
+    "title": "Biophysics"
+   },
+   {
+    "code": "PHYS 181 HM",
+    "title": "Advanced Laboratory"
+   },
+   {
+    "code": "CHEM 056 HM",
+    "title": "Organic Chemistry I"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics"
+   },
+   {
+    "code": "BIOL 193 HM",
+    "title": "Senior Thesis Research: Biology"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Chemical Physics Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=998&print",
+  "kind": "major",
+  "poid": 998,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nChemical Physics Option\n• CHEM051 HM - Foundations of Physical Chemistry\n• CHEM161 HM - Advanced Physical Chemistry: Classical and Statistical Thermodynamics or CHEM163 HM\nor CHEM164 HM\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• PHYS161 HM - Topics in Quantum Theory\n• PHYS181 HM - Advanced Laboratory or an approved chemistry laboratory\n•\nand\n4 to 6 credits from:\n• PHYS199 HM - Senior Thesis in Physics\n•\nor\n• CHEM151 HM - Senior Thesis Research in Chemistry\n• CHEM152 HM - Senior Thesis Research in Chemistry\nClose\nClose",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry"
+   },
+   {
+    "code": "CHEM 161 HM",
+    "title": "Advanced Physical Chemistry: Classical and Statistical Thermodynamics or CHEM163"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 161 HM",
+    "title": "Topics in Quantum Theory"
+   },
+   {
+    "code": "PHYS 181 HM",
+    "title": "Advanced Laboratory or an approved chemistry laboratory"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics"
+   },
+   {
+    "code": "CHEM 151 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   },
+   {
+    "code": "CHEM 152 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Education Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=999&print",
+  "kind": "major",
+  "poid": 999,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nEducation Option\n• EDUC170G CG - Introduction to Public School Teaching (to be taken in the junior year or earlier)\n•\nand\nAt least 3 credits of:\n• PHYS183 HM - Teaching Internship (taken in lieu of thesis or clinic)\n•\nand\n9 credits of approved technical electives to add breadth. Recommended courses include:\n• ASTR062 HM - Introduction to Astrophysics\n• BIOL108 HM - Ecology and Environmental Biology\n• CHEM051 HM - Foundations of Physical Chemistry\n• CHEM103 HM - Chemical Analysis\n• CSCI042 HM - Principles and Practice of Computer Science\n• CSCI060 HM - Principles of Computer Science\n• PHYS166 HM - Geophysics\n• PHYS170 HM - Computational Methods in Physics",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "PHYS 183 HM",
+    "title": "Teaching Internship (taken in lieu of thesis or clinic)"
+   },
+   {
+    "code": "ASTR 062 HM",
+    "title": "Introduction to Astrophysics"
+   },
+   {
+    "code": "BIOL 108 HM",
+    "title": "Ecology and Environmental Biology"
+   },
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry"
+   },
+   {
+    "code": "CHEM 103 HM",
+    "title": "Chemical Analysis"
+   },
+   {
+    "code": "CSCI 042 HM",
+    "title": "Principles and Practice of Computer Science"
+   },
+   {
+    "code": "CSCI 060 HM",
+    "title": "Principles of Computer Science"
+   },
+   {
+    "code": "PHYS 166 HM",
+    "title": "Geophysics"
+   },
+   {
+    "code": "PHYS 170 HM",
+    "title": "Computational Methods in Physics"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Geophysics Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1000&print",
+  "kind": "major",
+  "poid": 1000,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nGeophysics Option\n• PHYS166 HM - Geophysics\n• PHYS181 HM - Advanced Laboratory\n•\nand\n• PHYS154 HM - Fields and Waves\n• or\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n•\nand\n4 to 6 credits of Physics Thesis:\n• PHYS199 HM - Senior Thesis in Physics\n•\nand\nOne approved Geology course",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "PHYS 166 HM",
+    "title": "Geophysics"
+   },
+   {
+    "code": "PHYS 181 HM",
+    "title": "Advanced Laboratory"
+   },
+   {
+    "code": "PHYS 154 HM",
+    "title": "Fields and Waves"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Mathematical Physics Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1001&print",
+  "kind": "major",
+  "poid": 1001,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nMathematical Physics Option\nNote: Physics 170 can be substituted for Physics 133 in this option provided Physics 170 is not used to meet the physics half-course requirement.\n• One physics half-course\n•\nand\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• or\n• PHYS154 HM - Fields and Waves\n• or\n• PHYS156 HM - Foundations of Field Theory\n•\nand\n4 to 6 credits of:\n• PHYS199 HM - Senior Thesis in Physics (taken twice)\n•\nor\n6 credits of:\n• MATH197 HM - Senior Thesis in Mathematics (taken twice)\n•\nor\n• An approved Clinic\nand\nTwo additional courses to be chosen from:\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• PHYS154 HM - Fields and Waves\n• PHYS156 HM - Foundations of Field Theory\n• 3-credit mathematics courses numbered 100 or higher that are not included in the physics major requirements",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 154 HM",
+    "title": "Fields and Waves"
+   },
+   {
+    "code": "PHYS 156 HM",
+    "title": "Foundations of Field Theory"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics (taken twice)"
+   },
+   {
+    "code": "MATH 197 HM",
+    "title": "Senior Thesis in Mathematics (taken twice)"
+   }
+  ]
+ },
+ {
+  "name": "Physics, Computational Physics Option",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1002&print",
+  "kind": "major",
+  "poid": 1002,
+  "text": "Physics Core\nA physics major must satisfactorily complete the following courses: Physics 51, 52, 54, 64, 111, 116, 133, 134, 151, 195 (taken four times), and Mathematics 82. In addition, a physics major must satisfactorily complete the courses in the standard program or in one of the Physics options. A final oral and written report of completed research, Clinic, or independent project work is required for all physics majors. The Physics 195 Colloquium requirement is waived for any semester during which a student is away on a study abroad program.\n• MATH082 HM - Differential Equations\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS133 HM - Electronics Laboratory\n• PHYS134 HM - Optics Laboratory\n• PHYS151 HM - Electromagnetic Fields\n• PHYS195 HM - Physics Colloquium (taken four times)\nPhysics and Computers Option\nStudents planning a career or graduate studies in computer applications to problems in physics and engineering would particularly benefit from Physics 117 and Mathematics 165. Students planning graduate studies in computer science should take Computer Science 105 and additional computer science courses as time permits.\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• or\n• Two physics half-courses\n•\nand\n• PHYS170 HM - Computational Methods in Physics\n•\nand\n• CSCI042 HM - Principles and Practice of Computer Science\n• or\n• CSCI060 HM - Principles of Computer Science\n•\nand\nTwo electives chosen from:\n• ENGR155 HM - Microprocessor-Based Systems: Design and Applications\n• MATH165 HM - Numerical Analysis\n• Any computer science course numbered 70 or higher\n•\nand\n4 to 6 credits of:\n• PHYS199 HM - Senior Thesis in Physics (taken twice)\n•\nor\n• A full year of an approved Clinic",
+  "courses": [
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken four times)"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 170 HM",
+    "title": "Computational Methods in Physics"
+   },
+   {
+    "code": "CSCI 042 HM",
+    "title": "Principles and Practice of Computer Science"
+   },
+   {
+    "code": "CSCI 060 HM",
+    "title": "Principles of Computer Science"
+   },
+   {
+    "code": "ENGR 155 HM",
+    "title": "Microprocessor-Based Systems: Design and Applications"
+   },
+   {
+    "code": "MATH 165 HM",
+    "title": "Numerical Analysis"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics (taken twice)"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Biology and Climate",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1038&print",
+  "kind": "major",
+  "poid": 1038,
+  "text": "Joint Major in Biology and Climate\nClimate change is one of the grand challenges of our time and the field of biology has important intersections with climate science, impacts, and solutions. Insights from the field of biology are essential to advancing many key areas of climate action and research such as nature-based climate solutions, incorporation of biological systems into global climate models, and the rapidly developing field of carbon offsets. Conversely, knowledge of the physical and social dimensions of climate change can advance work in traditional biological subdisciplines, given the wide-ranging impacts of climate change on biological systems. Our philosophy supports graduates who are practiced in systems thinking, computationally skilled, and impact literate.\nStudents pursuing the joint major in biology and climate will complete foundational coursework in biostatistics, ecology, and at least one other subdiscipline of biology. Students will select biology electives that support their intended career path. Students will also choose from a menu of climate courses that fulfill requirements across several dimensions of climate change. Foundational coursework in thermodynamics and computational or numerical methods, along with a choice of additional STEM breadth will ensure students are prepared for advanced study in climate or related programs. And, joint majors will complete a second course in statistics, supporting the philosophical goals of this program.\nOur program is distinct from an environmental biology program - like all Hixon Center joint majors in climate, coursework in the joint major is designed to help students develop a holistic understanding of climate change, with emphasis on the interaction of physical, biological, and human systems.\nBiology Courses\n• BIOL054 HM - Experimental Biology Laboratory\n• BIOL154 HM - Biostatistics\n• BIOL108 HM - Ecology and Environmental Biology\n• BIOL110 HM - Experimental Ecology Laboratory\n•\nAnd one of:\n• BIOL101 HM - Comparative Physiology\n• BIOL109 HM - Evolutionary Biology\n• BIOL113 HM - Molecular Genetics\n•\nAnd one Harvey Mudd seminar-style course (requiring student presentations and reading from the primary literature), some examples include:\n• BIOL121 HM - Marine Ecology\n• BIOL129 HM - Topics in Human Evolution\n• BIOL183 HM - Topics in Physiology\n• BIOL185 HM - Special Topics in Biology (most offerings)\n• BIOL189 HM - Topics in Biochemistry and Molecular Biology (most offerings)\n•\nAnd 3 credits of upper division Biology elective (has BIOL046 HM\nas a prerequisite and has a course number &gt;100 for HMC courses). Off-campus courses are permitted. Related non-biology technical courses may be substituted for advanced biology courses with permission of the department.\nClimate Foundations\nStudents will complete a total of 9 credits of coursework in climate foundations.\n• 3 credits in thermodynamics. Choose one course from among:\n• CHEM051 HM - Foundations of Physical Chemistry\n• ENGR082 HM - Chemical and Thermal Processes\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n•\nand\n3 credits in computational/numerical methods and/or scientific computing. Choose one course from among:\n• CHEM080 HM - Numerical Methods for the Central Science\n• CSCI144 HM - Scientific Computing\n• MATH164 HM - Scientific Computing\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n•\nand the remaining 3 credits can be selected from one of the following two areas: (1) the physics of electricity and magnetism or (2) differential equations. Electricity and Magnetism can be satisfied with PHYS051 HM\n. Differential Equations can be satisfied with MATH082 HM\nPlease visit our Course Descriptions page for a full list of approved courses, including off-campus courses.\nClimate Kernel\nStudents will complete 3 credits of coursework addressing each of the following areas: Climate Dynamics, Climate Impacts, Climate Interventions, Climate Contexts, and Advanced Statistics for a total of 15 credits. Each climate joint major has a unique climate kernel tailored to the needs of the discipline.\n• CLES101 HM - Climate Dynamics\n• CLES131 HM - Data Science for Global Change Biology\n•\nand\n3 credits in Climate Interventions. See our Course Descriptions page for a list of approved Interventions courses.\nand\n3 credits in Climate Contexts, which double count toward the HMC HSA requirement. See our Course Descriptions page for a list of approved Contexts courses.\nand\n3 credits in advanced statistics. Courses satisfying this requirement will have introductory statistics as a prerequisite. See our Course Descriptions page for a list of approved advanced statistics courses. Examples include MATH153 HM\nand MATH155 HM\n.\nColloquia & Capstone\n• Two semesters of\nBIOL191 HM - Biology Colloquium\n• Two semesters of\nCLES199 HM - Climate and Environment Colloquium (should be taken in the junior and senior year, fall only)\n•\nand\nCapstone (6 Credits): Students will complete 3 credits in each semester of the fourth year.\n• BIOL193 HM - Senior Thesis Research: Biology\n•\nOr an approved biology-related Clinic:\n• CSCI183 HM\nand CSCI184 HM\nor\n• Two from: ENGR111 HM\n, ENGR112 HM\n, ENGR113 HM\nor\n• MATH193 HM\n(taken twice)\nor\n• PHYS193 HM\nand PHYS194 HM\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "BIOL 054 HM",
+    "title": "Experimental Biology Laboratory"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   },
+   {
+    "code": "BIOL 108 HM",
+    "title": "Ecology and Environmental Biology"
+   },
+   {
+    "code": "BIOL 110 HM",
+    "title": "Experimental Ecology Laboratory"
+   },
+   {
+    "code": "BIOL 101 HM",
+    "title": "Comparative Physiology"
+   },
+   {
+    "code": "BIOL 109 HM",
+    "title": "Evolutionary Biology"
+   },
+   {
+    "code": "BIOL 113 HM",
+    "title": "Molecular Genetics"
+   },
+   {
+    "code": "BIOL 121 HM",
+    "title": "Marine Ecology"
+   },
+   {
+    "code": "BIOL 129 HM",
+    "title": "Topics in Human Evolution"
+   },
+   {
+    "code": "BIOL 183 HM",
+    "title": "Topics in Physiology"
+   },
+   {
+    "code": "BIOL 185 HM",
+    "title": "Special Topics in Biology (most offerings)"
+   },
+   {
+    "code": "BIOL 189 HM",
+    "title": "Topics in Biochemistry and Molecular Biology (most offerings)"
+   },
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry"
+   },
+   {
+    "code": "ENGR 082 HM",
+    "title": "Chemical and Thermal Processes"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "CHEM 080 HM",
+    "title": "Numerical Methods for the Central Science"
+   },
+   {
+    "code": "CSCI 144 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "CLES 101 HM",
+    "title": "Climate Dynamics"
+   },
+   {
+    "code": "CLES 131 HM",
+    "title": "Data Science for Global Change Biology"
+   },
+   {
+    "code": "BIOL 191 HM",
+    "title": "Biology Colloquium"
+   },
+   {
+    "code": "CLES 199 HM",
+    "title": "Climate and Environment Colloquium (should be taken in the junior and senior yea"
+   },
+   {
+    "code": "BIOL 193 HM",
+    "title": "Senior Thesis Research: Biology"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Chemistry and Biology",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1018&print",
+  "kind": "major",
+  "poid": 1018,
+  "text": "Joint Major in Chemistry and Biology\nThe disciplines of biology and chemistry are undergoing remarkable and converging transformations. In response to these new developments, Harvey Mudd College has established a unique opportunity for undergraduate students at the interface of biology and chemistry.\nThe goal is to enable students to think at the interface, to effortlessly move back and forth between chemistry and biology. They will have the background to appreciate the biological context of their research questions and they will have mastered the chemistry fundamentals that underlie the properties and reactions of biomolecules. These successful students will be able to make connections and have insights that are difficult to obtain without thorough training in both chemistry and biology. The program in chemistry and biology will capture the imaginations of talented Harvey Mudd students and reinforce their abilities to think across disciplines.\nMany schools have used the terms “biochemistry” or “biological chemistry” and some of the newer programs call themselves “chemical biology.” But since the boundaries between chemistry and biology as separate disciplines are rapidly dissolving, and students can choose to steer their studies in many directions, we chose to call it simply the “Joint Major in Chemistry and Biology.”\nThe Joint Major\n• CHEM051 HM - Foundations of Physical Chemistry\n• CHEM056 HM - Organic Chemistry I\n• CHEM105 HM - Organic Chemistry II\n• BIOL054 HM - Experimental Biology Laboratory\n• BIOL154 HM - Biostatistics\n• BIOL111 HM - Molecular and Cellular Biology Laboratory\n• BIOL113 HM - Molecular Genetics\n•\nand\n• CHEM103 HM - Chemical Analysis\n• or\n• CHEM104 HM - Inorganic Chemistry\n•\nand\n• BIOL182 HM - Biochemistry\n• or\n• CHEM182 HM - Biochemistry\n•\nand\n• BIOL189 HM - Topics in Biochemistry and Molecular Biology\n• or\n• CHEM189 HM - Topics in Biochemistry and Molecular Biology\nLaboratories:\n• CHEM058 HM - Organic Chemistry I Laboratory\n•\nand\n• BIOL184 HM - Biochemistry Laboratory\n• or\n• CHEM184 HM - Biochemistry Laboratory\n•\nand\nTwo courses selected from:\n• CHEM053 HM - Physical Chemistry Laboratory\n• CHEM109 HM - Chemical Analysis Laboratory\n• CHEM110 HM - Inorganic Chemistry Laboratory\n• CHEM111 HM - Organic Chemistry II Laboratory\nOne Course Selected From:\n• BIOL101 HM - Comparative Physiology\n• BIOL108 HM - Ecology and Environmental Biology\n• BIOL109 HM - Evolutionary Biology\nThree Credits of Upper Division Biology Electives\n• Three elective credits of upper level Biology courses, to be selected by the student in consultation with her or his advisor.\nBiology Colloquium and Chemistry Seminar\n• Two successive semesters of Biology Colloquium:\n• BIOL191 HM - Biology Colloquium\n•\nand\nTwo successive semesters of Chemistry Seminar:\n• CHEM199 HM - Chemistry Seminar\n•\nJoint chemistry and biology majors who study abroad may waive one semester of Chemistry Seminar. The student must request the waiver from the Chemistry department chair, and the waiver must be communicated by the department chair to the registrar.\nSenior Thesis Research\n• Two semesters (at least 6 credits total) of Senior Thesis Research:\n• BIOL193 HM - Senior Thesis Research: Biology\n•\nor\n• BIOL195 HM - Intensive Research in Biology\n•\nor\n• CHEM151 HM - Senior Thesis Research in Chemistry\n• and\n• CHEM152 HM - Senior Thesis Research in Chemistry\n•\nWith approval of the biology and chemistry department chairs, students may substitute ENGR112 HM\nand ENGR113 HM\nfor the senior thesis research requirement.\nNote:\nIn order to optimize their opportunities and to enable individual flexibility, students may request to count other courses not currently listed as biology electives. These other courses might include new biology courses developed at Harvey Mudd, cross-listed Harvey Mudd courses (e.g., topics in biological engineering), and appropriate courses offered by other Claremont Colleges. Prior approval, granted by the chairs of biology and chemistry, will be required to substitute electives.\nClose\nClose",
+  "courses": [
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry"
+   },
+   {
+    "code": "CHEM 056 HM",
+    "title": "Organic Chemistry I"
+   },
+   {
+    "code": "CHEM 105 HM",
+    "title": "Organic Chemistry II"
+   },
+   {
+    "code": "BIOL 054 HM",
+    "title": "Experimental Biology Laboratory"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   },
+   {
+    "code": "BIOL 111 HM",
+    "title": "Molecular and Cellular Biology Laboratory"
+   },
+   {
+    "code": "BIOL 113 HM",
+    "title": "Molecular Genetics"
+   },
+   {
+    "code": "CHEM 103 HM",
+    "title": "Chemical Analysis"
+   },
+   {
+    "code": "CHEM 104 HM",
+    "title": "Inorganic Chemistry"
+   },
+   {
+    "code": "BIOL 182 HM",
+    "title": "Biochemistry"
+   },
+   {
+    "code": "CHEM 182 HM",
+    "title": "Biochemistry"
+   },
+   {
+    "code": "BIOL 189 HM",
+    "title": "Topics in Biochemistry and Molecular Biology"
+   },
+   {
+    "code": "CHEM 189 HM",
+    "title": "Topics in Biochemistry and Molecular Biology"
+   },
+   {
+    "code": "CHEM 058 HM",
+    "title": "Organic Chemistry I Laboratory"
+   },
+   {
+    "code": "BIOL 184 HM",
+    "title": "Biochemistry Laboratory"
+   },
+   {
+    "code": "CHEM 184 HM",
+    "title": "Biochemistry Laboratory"
+   },
+   {
+    "code": "CHEM 053 HM",
+    "title": "Physical Chemistry Laboratory"
+   },
+   {
+    "code": "CHEM 109 HM",
+    "title": "Chemical Analysis Laboratory"
+   },
+   {
+    "code": "CHEM 110 HM",
+    "title": "Inorganic Chemistry Laboratory"
+   },
+   {
+    "code": "CHEM 111 HM",
+    "title": "Organic Chemistry II Laboratory"
+   },
+   {
+    "code": "BIOL 101 HM",
+    "title": "Comparative Physiology"
+   },
+   {
+    "code": "BIOL 108 HM",
+    "title": "Ecology and Environmental Biology"
+   },
+   {
+    "code": "BIOL 109 HM",
+    "title": "Evolutionary Biology"
+   },
+   {
+    "code": "BIOL 191 HM",
+    "title": "Biology Colloquium"
+   },
+   {
+    "code": "CHEM 199 HM",
+    "title": "Chemistry Seminar"
+   },
+   {
+    "code": "BIOL 193 HM",
+    "title": "Senior Thesis Research: Biology"
+   },
+   {
+    "code": "BIOL 195 HM",
+    "title": "Intensive Research in Biology"
+   },
+   {
+    "code": "CHEM 151 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   },
+   {
+    "code": "CHEM 152 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Chemistry and Climate",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1033&print",
+  "kind": "major",
+  "poid": 1033,
+  "text": "Joint Major in Chemistry and Climate\nClimate change is one of the grand challenges of our time and the field of chemistry has enormous potential to shape our collective future. Chemistry is central to many critical aspects of climate science and climate solutions, including innovations in clean energy technology, green materials, and improved representations of atmospheric and ocean systems in climate models across all scales. Chemical intuition supports the development of climate literacy, while coursework in climate science, impacts, interventions, and contexts adds breadth and perspective for students who wish to become knowledgeable in this highly interdisciplinary space.\nStudents pursuing the joint major in chemistry and climate will complete foundational coursework in chemistry, including laboratories, and will select chemistry electives that support their intended career path. Students will choose from a menu of climate courses that fulfill requirements across several dimensions of climate change. Foundational coursework in mathematics, computation, and physics will ensure students are prepared for advanced study in climate or chemistry programs.\nOur program is distinct from an environmental chemistry or earth science program - like all Hixon Center joint majors in climate, coursework in the joint major is designed to help students develop a holistic understanding of climate change, with emphasis on the interaction of physical and human systems.\nChemistry Courses\n• CHEM051 HM - Foundations of Physical Chemistry\n• CHEM056 HM - Organic Chemistry I\n• CHEM103 HM - Chemical Analysis\n• CHEM109 HM - Chemical Analysis Laboratory\n•\nand\nOne chemistry laboratory chosen from:\n• CHEM053 HM - Physical Chemistry Laboratory\n• CHEM058 HM - Organic Chemistry I Laboratory\n• CHEM110 HM - Inorganic Chemistry Laboratory\n• CHEM112 HM - Instrumental Analysis Laboratory\n• CHEM184 HM - Biochemistry Laboratory\n•\nand\nSix additional credits of chemistry coursework, where at least three credits are taken from advanced courses. Advanced courses have a non-Core chemistry prerequisite or require junior/senior standing. Courses cannot double count with courses taken to satisfy the Climate Impacts or Interventions requirement. Chemistry electives can be found on the Chemistry Major page. For students who take CHEM192 HM\n, one additional credit of advanced coursework will need to be completed to fulfill the major requirement.\nClimate Courses\n• Students will complete 3 credits of coursework addressing each of the following areas: the physics of electricity and magnetism, differential equations, probability and/or statistics, and computational/numerical methods and/or scientific computing. The catalog lists HMC courses which satisfy each requirement. Please visit our course descriptions page for a full list of approved courses, including off-campus courses.\n• PHYS051 HM - Electromagnetic Theory and Optics\n•\nand\n• MATH082 HM - Differential Equations\n•\nand\n3 credits from Probability and/or Statistics:\n• MATH062 HM - Introduction to Statistics\n• MATH151 HM - Probability\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• BIOL154 HM - Biostatistics\n•\nand\n• 3 credits from Computational/Numerical Methods/Scientific Computing:\n• CHEM080 HM - Numerical Methods for the Central Science\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• CSCI144 HM - Scientific Computing\n• MATH164 HM - Scientific Computing\n•\nChemistry Climate Kernel\nStudents will complete 3 credits of coursework addressing each of the following areas: Climate Dynamics, Climate Impacts, Climate Interventions, and Climate Contexts for a total of 12 credits. Each climate joint major has a unique climate kernel tailored to the needs of the discipline.\n• CLES101 HM - Climate Dynamics\n•\nand\n• CHEM170 HM - Chemistry of the Oceans and Atmosphere\n•\nand\n3 credits in Climate Interventions. See our Course Descriptions page for a list of approved Interventions courses.\nand\n3 credits in Climate Contexts, which double count toward the HMC HSA requirement. See our Course Descriptions page for a list of approved Contexts courses.\nClimate Colloquium and Chemistry Seminar\n• Two semesters of:\n• CHEM199 HM - Chemistry Seminar\n•\nand\n• Two semesters of:\n• CLES199 HM - Climate and Environment Colloquium (should be taken in the junior and senior year, fall only)\nCapstone (6 Credits)\nStudents will complete 3 credits in each semester of the fourth year.\n• CHEM151 HM - Senior Thesis Research in Chemistry\n• and\n• CHEM152 HM - Senior Thesis Research in Chemistry\nNote:\nNew courses are coming online each year that expand the possible courses a student can take to fulfill major requirements. Major advisors have the full list of courses that can fulfill these requirements. Students are encouraged to speak with their major advisor to determine if a course will satisfy a requirement. These courses might include new climate courses developed at Harvey Mudd (primarily with the CLES course code), and appropriate courses offered by other Claremont Colleges.\nThe Chemistry and Climate major meets the program-level learning outcomes and basic components of a bachelor’s in atmospheric science, as defined by the American Meteorological Society. This major is not an ACS-certified major; students wishing to obtain ACS certification can do so by taking both CHEM104 HM\nand CHEM182 HM\n, a total of four chemistry laboratories, and a total of 8 credits of ACS in-depth chemistry electives. Students who wish to receive ACS accreditation in the joint major should speak with the Chemistry Department chair or associate chair.\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry"
+   },
+   {
+    "code": "CHEM 056 HM",
+    "title": "Organic Chemistry I"
+   },
+   {
+    "code": "CHEM 103 HM",
+    "title": "Chemical Analysis"
+   },
+   {
+    "code": "CHEM 109 HM",
+    "title": "Chemical Analysis Laboratory"
+   },
+   {
+    "code": "CHEM 053 HM",
+    "title": "Physical Chemistry Laboratory"
+   },
+   {
+    "code": "CHEM 058 HM",
+    "title": "Organic Chemistry I Laboratory"
+   },
+   {
+    "code": "CHEM 110 HM",
+    "title": "Inorganic Chemistry Laboratory"
+   },
+   {
+    "code": "CHEM 112 HM",
+    "title": "Instrumental Analysis Laboratory"
+   },
+   {
+    "code": "CHEM 184 HM",
+    "title": "Biochemistry Laboratory"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "MATH 062 HM",
+    "title": "Introduction to Statistics"
+   },
+   {
+    "code": "MATH 151 HM",
+    "title": "Probability"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   },
+   {
+    "code": "CHEM 080 HM",
+    "title": "Numerical Methods for the Central Science"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "CSCI 144 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "CLES 101 HM",
+    "title": "Climate Dynamics"
+   },
+   {
+    "code": "CHEM 170 HM",
+    "title": "Chemistry of the Oceans and Atmosphere"
+   },
+   {
+    "code": "CHEM 199 HM",
+    "title": "Chemistry Seminar"
+   },
+   {
+    "code": "CLES 199 HM",
+    "title": "Climate and Environment Colloquium (should be taken in the junior and senior yea"
+   },
+   {
+    "code": "CHEM 151 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   },
+   {
+    "code": "CHEM 152 HM",
+    "title": "Senior Thesis Research in Chemistry"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Computer Science and Climate",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1031&print",
+  "kind": "major",
+  "poid": 1031,
+  "text": "Joint Major in Computer Science and Climate\nClimate change is one of the grand challenges of our time and the field of computer science has enormous potential to shape our collective future. Computer science innovation expands the possibilities for many climate-relevant areas including climate justice, clean energy system infrastructure, earth system data retrieval, and climate prediction. Given the prevalence of large, complex datasets in climate science, computational thinking supports the development of climate literacy, while complementary coursework in climate science, impacts, interventions, and contexts adds breadth and perspective for students who wish to become knowledgeable in this highly interdisciplinary space. Our philosophy supports graduates who are human-factor conscious, ethics aware, and impact literate.\nStudents pursuing the joint major in computer science and climate will complete foundational coursework in the principles of computer science, data structures, discrete mathematics, and professional computing practices as well as either computer systems or algorithms, and will select computer science electives that support their intended career path. Students will also choose from a menu of climate courses that fulfill requirements across several dimensions of climate change. Foundational coursework in thermodynamics, along with a choice of additional STEM breadth will ensure students are prepared for advanced study in climate or related programs. And, joint majors will complete a course in human-centered thinking, supporting the philosophical goals of this program.\nOur program is distinct from a green computing program - like all Hixon Center joint majors in climate, coursework in the joint major is designed to help students develop a holistic understanding of climate change, with emphasis on the interaction of physical and human systems.\nComputer Science Foundations\n• CSCI042 HM - Principles and Practice of Computer Science or CSCI060 HM - Principles of Computer Science\n• and\n• CSCI070 HM - Data Structures and Program Development\n• and\n• MATH055 HM - Discrete Mathematics\nTwo Kernel Courses in Computer Science\n• CSCI105 HM - Computer Systems or CSCI140 HM - Algorithms\n• and\n• CSCI123 HM - Computing Practices, Projects, and People\n3 Credits of Computer Science Electives\nThe joint major requires three credits of upper-division Computer Science electives (numbered 100 or higher, and other than colloquium and Clinic which are also required for the major). A student taking CSCI144 HM\n/MATH164 HM\nmust decide whether they would like to count it toward fulfilling their Computer Science elective requirement or their Climate foundational requirement; it cannot be used to satisfy both requirements. Courses cannot be double counted within the major.\nThe following courses have been approved to be taken as electives toward the Computer Science and Climate joint major. This list is not exhaustive, and students should discuss other possible elective courses with their faculty advisor:\n• BIOL188 HM - Advanced Computational Biology\n• CHEM080 HM - Numerical Methods for the Central Science\n• ENGR085 HM - Digital Electronics and Computer Engineering\n• ENGR085A HM - Digital Electronics\n• ENGR151 HM - Analog Circuit Design\n• ENGR155 HM - Microprocessor-Based Systems: Design and Applications\n• ENGR205 HM - State Estimation\n• MATH104 HM - Graph Theory\n• MATH106 HM - Combinatorics\n• MATH151 HM - Probability\n• MATH164 HM - Scientific Computing\n• MATH165 HM - Numerical Analysis\n• MATH167 HM - Complexity Theory\n• MATH187 HM - Operations Research\n• MCBI118A HM - Introduction to Mathematical Biology\n• MCBI118B HM - Introduction to Computational Biology\n• PHYS084 HM - Quantum Information\n• PHYS170 HM - Computational Methods in Physics\n• PSYC183 SC - Human Data Science Ethics\nClimate Foundations\n• Similar to other joint majors, students will complete a total of 9 credits of coursework in climate foundations.\n• 3 credits in thermodynamics. Choose one course from among:\nCHEM051 HM - Foundations of Physical Chemistry , ENGR082 HM\n, or PHYS117 HM\n• The remaining 6 credits can be selected from two of the following four areas: the physics of electricity and magnetism, differential equations, probability and/or statistics, and computational/numerical methods and/or scientific computing. The catalog lists HMC courses which satisfy each requirement. Please visit our Course Descriptions page for a full list of approved courses, including off-campus courses.\n-Probability and/or Statistics: BIOL154 HM\n, MATH062 HM\n, MATH151 HM\n, or PHYS117 HM\n-Electricity and Magnetism: PHYS051 HM\n-Differential Equations: MATH082 HM\n-Computational/Numerical Methods/Scientific Computing: CHEM080 HM\n, CSCI144 HM\n, MATH164 HM\n, or PHYS064 HM\n•\nComputer Science and Climate Kernel: Students will complete 3 credits of coursework addressing each of the following areas: Climate Dynamics, Climate Impacts, Climate Interventions, Climate Contexts, and Human-Centered Thinking for a total of 15 credits. Each climate joint major has a unique climate kernel tailored to the needs of the discipline.\n-CLES101 HM\n-3 credits in Climate Impacts. See our Course Descriptions page for a list of approved Impacts courses.\n-3 credits in Climate Interventions. See our Course Descriptions page for a list of approved Interventions courses.\n-3 credits in Climate Contexts, which double count toward the HMC HSA requirement. See our Course Descriptions page for a list of approved Contexts courses.\n-3 credits in Human-Centered Thinking from among: CSCI120 HM\n, ENGR180 HM\n, or EA 185 PO\nColloquia & Capstone\n• Two semesters of Computer Science Colloquium:\n• CSCI195 HM - Computer Science Colloquium (should be taken in the junior or senior year)\n• and\n• Two semesters of Climate and Environmental Science Colloquium:\n• CLES199 HM - Climate and Environment Colloquium (should be taken in the junior and senior year, fall only)\n•\nStudents studying abroad during their junior or senior years are excused from one semester of the Colloquium requirement for each semester abroad.\n•\nand\nTwo semesters of computer science clinic, which must be taken during the last full academic year of enrollment (i.e., in consecutive Fall-Spring semesters):\n• CSCI183 HM - Computer Science Clinic I\n• CSCI184 HM - Computer Science Clinic II\nNote:\nNew courses are coming online each year that expand the possible courses a student can take to fulfill major requirements. Major advisors have the full list of courses that can fulfill these requirements. Students are encouraged to speak with their major advisor to determine if a course will satisfy a requirement. These courses might include new climate courses developed at Harvey Mudd (primarily with the CLES course code), and appropriate courses offered by other Claremont Colleges.\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "CSCI 042 HM",
+    "title": "Principles and Practice of Computer Science or CSCI060 HM - Principles of Comput"
+   },
+   {
+    "code": "CSCI 070 HM",
+    "title": "Data Structures and Program Development"
+   },
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "CSCI 105 HM",
+    "title": "Computer Systems or CSCI140 HM - Algorithms"
+   },
+   {
+    "code": "CSCI 123 HM",
+    "title": "Computing Practices, Projects, and People"
+   },
+   {
+    "code": "BIOL 188 HM",
+    "title": "Advanced Computational Biology"
+   },
+   {
+    "code": "CHEM 080 HM",
+    "title": "Numerical Methods for the Central Science"
+   },
+   {
+    "code": "ENGR 085 HM",
+    "title": "Digital Electronics and Computer Engineering"
+   },
+   {
+    "code": "ENGR 85A HM",
+    "title": "Digital Electronics"
+   },
+   {
+    "code": "ENGR 151 HM",
+    "title": "Analog Circuit Design"
+   },
+   {
+    "code": "ENGR 155 HM",
+    "title": "Microprocessor-Based Systems: Design and Applications"
+   },
+   {
+    "code": "ENGR 205 HM",
+    "title": "State Estimation"
+   },
+   {
+    "code": "MATH 104 HM",
+    "title": "Graph Theory"
+   },
+   {
+    "code": "MATH 106 HM",
+    "title": "Combinatorics"
+   },
+   {
+    "code": "MATH 151 HM",
+    "title": "Probability"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 165 HM",
+    "title": "Numerical Analysis"
+   },
+   {
+    "code": "MATH 167 HM",
+    "title": "Complexity Theory"
+   },
+   {
+    "code": "MATH 187 HM",
+    "title": "Operations Research"
+   },
+   {
+    "code": "MCBI 118A HM",
+    "title": "Introduction to Mathematical Biology"
+   },
+   {
+    "code": "MCBI 118B HM",
+    "title": "Introduction to Computational Biology"
+   },
+   {
+    "code": "PHYS 084 HM",
+    "title": "Quantum Information"
+   },
+   {
+    "code": "PHYS 170 HM",
+    "title": "Computational Methods in Physics"
+   },
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry , ENGR082 HM"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Electricity and Magnetism: PHYS051 HM"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Computational/Numerical Methods/Scientific Computing: CHEM080 HM"
+   },
+   {
+    "code": "CLES 101 HM",
+    "title": "3 credits in Climate Impacts. See our Course Descriptions page for a list of app"
+   },
+   {
+    "code": "CSCI 195 HM",
+    "title": "Computer Science Colloquium (should be taken in the junior or senior year)"
+   },
+   {
+    "code": "CLES 199 HM",
+    "title": "Climate and Environment Colloquium (should be taken in the junior and senior yea"
+   },
+   {
+    "code": "CSCI 183 HM",
+    "title": "Computer Science Clinic I"
+   },
+   {
+    "code": "CSCI 184 HM",
+    "title": "Computer Science Clinic II"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Computer Science and Mathematics",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1016&print",
+  "kind": "major",
+  "poid": 1016,
+  "text": "Joint Major in Computer Science and Mathematics\nThe Joint Major in Computer Science and Mathematics is cooperatively administered by the Computer Science and Mathematics departments, and students will have faculty advisors from both departments. The purpose of the joint major is to provide a program of study tailored to students who are interested in the interdisciplinary connections between computer science and mathematics. Depending on how electives are selected, the program described below would position successful majors for graduate studies in either computer science or mathematics, or for immediate employment.\nThe Joint Computer Science and Mathematics degree program has various components: the kernel courses in computer science and mathematics; more advanced courses in computer science and in mathematics; Clinic; and electives. Each of these components is described as follows.\nFour Kernel Courses in Computer Science and Mathematics\n• MATH055 HM - Discrete Mathematics\n•\nand\n• CSCI060 HM - Principles of Computer Science\n• or\n• CSCI042 HM - Principles and Practice of Computer Science\n•\nand\n• CSCI081 HM - Computability and Logic\n•\nand\n• MATH168 HM - Algorithms\n• or\n• CSCI140 HM - Algorithms\nOne Computer Science Course\n• CSCI070 HM - Data Structures and Program Development\nFour Mathematics Courses\n• MATH062 HM - Introduction to Statistics or MATH151 HM\n• MATH082 HM - Differential Equations\n• MATH131 HM - Mathematical Analysis I\n• MATH171 HM - Abstract Algebra I\n• Students from the other Claremont Colleges who have not completed the HMC Core Curriculum must also take: Multivariable Calculus (MATH032 CM / PO / PZ / SC, or MATH032S PO) and Linear Algebra (MATH060 CM / PO / PZ / SC)\nElectives\n• 12 credits of upper-division technical electives. These electives can be from math, computer science, or other departments, but must include at least 6 credits of mathematics and at least 6 credits of computer science, and must be chosen with the approval of the faculty advisors so that a coherent program is formed. All electives must be numbered over 100. (Certain off-campus math courses numbered in the 100s that replicate HMC Core course content cannot be counted toward the elective requirement.) Courses that are cross-listed between computer science and mathematics, such as Complexity Theory, which appears as both MATH167 HM\nand CSCI142 HM\n, can be taken under either course number.\nColloquia\n• Two semesters of Computer Science Colloquium:\n• CSCI195 HM - Computer Science Colloquium (should be taken in the junior or senior year)\n•\nand\nOne semester of Mathematics Forum:\n• MATH198 HM - Undergraduate Mathematics Forum (should be taken in the junior year)\nClinic\nTwo semesters are required, taken during the senior year. Joint majors will work on a Clinic project from either mathematics, computer science, joint computer science and mathematics, or on an interdisciplinary project. Computing Practices, Projects, and People (CSCI123 HM\n) is strongly recommended for students wishing to take Computer Science Clinic.\n• CSMT183 HM - Computer Science and Mathematics Clinic I\n• and\n• CSMT184 HM - Computer Science and Mathematics Clinic II\nClose\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "CSCI 060 HM",
+    "title": "Principles of Computer Science"
+   },
+   {
+    "code": "CSCI 042 HM",
+    "title": "Principles and Practice of Computer Science"
+   },
+   {
+    "code": "CSCI 081 HM",
+    "title": "Computability and Logic"
+   },
+   {
+    "code": "MATH 168 HM",
+    "title": "Algorithms"
+   },
+   {
+    "code": "CSCI 140 HM",
+    "title": "Algorithms"
+   },
+   {
+    "code": "CSCI 070 HM",
+    "title": "Data Structures and Program Development"
+   },
+   {
+    "code": "MATH 062 HM",
+    "title": "Introduction to Statistics or MATH151 HM"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "MATH 131 HM",
+    "title": "Mathematical Analysis I"
+   },
+   {
+    "code": "MATH 171 HM",
+    "title": "Abstract Algebra I"
+   },
+   {
+    "code": "CSCI 195 HM",
+    "title": "Computer Science Colloquium (should be taken in the junior or senior year)"
+   },
+   {
+    "code": "MATH 198 HM",
+    "title": "Undergraduate Mathematics Forum (should be taken in the junior year)"
+   },
+   {
+    "code": "CSMT 183 HM",
+    "title": "Computer Science and Mathematics Clinic I"
+   },
+   {
+    "code": "CSMT 184 HM",
+    "title": "Computer Science and Mathematics Clinic II"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Computer Science and Physics",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1027&print",
+  "kind": "major",
+  "poid": 1027,
+  "text": "Joint Major in Computer Science and Physics\nThe Computer Science and Physics departments cooperatively administer the Joint Major in Computer Science and Physics, and students will have faculty advisors from both departments. The Joint CS-Physics major will serve students whose interests lie at the intersection of physics and computer science. Students will learn about advances in quantum computing and information science and how computational tools such as high-performance computing or machine learning enable discoveries in complex physical systems.\nThe Joint Computer Science and Physics degree program has various components: the kernel courses in computer science and physics; more advanced courses in computer science and physics; a Clinic or Physics thesis; and electives. Each of these components is described as follows.\nComputer Science Courses\n• CSCI060 HM - Principles of Computer Science or CSCI042 HM - Principles and Practice of Computer Science\n• CSCI070 HM - Data Structures and Program Development\n• CSCI081 HM - Computability and Logic or CSCI105 HM - Computer Systems\n• CSCI140 HM - Algorithms\n• One 3.0 credit Computer Science Elective (Note: a student wishing to take CS clinic should take CSCI123 HM\n)\n• CSCI195 HM - Computer Science Colloquium (taken twice)\nMathematics Courses\n• MATH055 HM - Discrete Mathematics\n• MATH082 HM - Differential Equations\n• Students from the other Claremont Colleges who have not completed the HMC Core Curriculum must also take: Multivariable Calculus (MATH032 CM / PO / PZ / SC, or MATH032S PO) and Linear Algebra (MATH060 CM / PO / PZ / SC)\nPhysics Courses\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS064 HM - Mathematical and Computational Methods for Physicists\n• PHYS084 HM - Quantum Information or PHYS116 HM - Quantum Mechanics\n• PHYS111 HM - Theoretical Mechanics\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• PHYS133 HM - Electronics Laboratory or PHYS134 HM - Optics Laboratory\n• PHYS195 HM - Physics Colloquium (taken twice)\nPhysics or Computer Science Elective\n• PHYS170X HM - Computational Physics or a 3.0 credit Computer Science elective (chosen in consultation with the major advisor)\nCapstone\n• CSCI183 HM - Computer Science Clinic I and CSCI184 HM - Computer Science Clinic II\n•\nor\n• PHYS193 HM - Physics Clinic and PHYS194 HM - Physics Clinic\n•\nor\n• PHYS199 HM - Senior Thesis in Physics (taken twice, 6.0 credits total)\nClose\nClose\nClose\nClose\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "CSCI 060 HM",
+    "title": "Principles of Computer Science or CSCI042 HM - Principles and Practice of Comput"
+   },
+   {
+    "code": "CSCI 070 HM",
+    "title": "Data Structures and Program Development"
+   },
+   {
+    "code": "CSCI 081 HM",
+    "title": "Computability and Logic or CSCI105 HM - Computer Systems"
+   },
+   {
+    "code": "CSCI 140 HM",
+    "title": "Algorithms"
+   },
+   {
+    "code": "CSCI 195 HM",
+    "title": "Computer Science Colloquium (taken twice)"
+   },
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 064 HM",
+    "title": "Mathematical and Computational Methods for Physicists"
+   },
+   {
+    "code": "PHYS 084 HM",
+    "title": "Quantum Information or PHYS116 HM - Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 133 HM",
+    "title": "Electronics Laboratory or PHYS134 HM - Optics Laboratory"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken twice)"
+   },
+   {
+    "code": "PHYS 170X HM",
+    "title": "Computational Physics or a 3.0 credit Computer Science elective (chosen in consu"
+   },
+   {
+    "code": "CSCI 183 HM",
+    "title": "Computer Science Clinic I and CSCI184 HM - Computer Science Clinic II"
+   },
+   {
+    "code": "PHYS 193 HM",
+    "title": "Physics Clinic and PHYS194 HM - Physics Clinic"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics (taken twice, 6.0 credits total)"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Mathematics and Climate",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1052&print",
+  "kind": "major",
+  "poid": 1052,
+  "text": "Joint Major in Mathematics and Climate\nMathematical models underpin both our understanding of global climate change and the assessment of potential paths forward. Mathematical tools help us model, classify, analyze, and predict complex climate phenomena. And mathematical approaches generate new perspectives for decision making and climate risk analysis. Graduates of our program will be skilled in applying mathematical theory to solve interdisciplinary problems, while also being mindful of the societal impact of their work.\nStudents pursuing the joint major in mathematics and climate will complete foundational coursework in: discrete math, statistics, differential equations, and analysis. Students will select advanced mathematics electives that support their intended career path such as statistical theory, partial differential equations, dynamical systems, or operations research. Students will choose from a menu of climate courses that fulfill requirements across several dimensions of climate change. Foundational coursework in thermodynamics and an additional climate elective will ensure students are prepared for advanced study in climate science or related programs.\nOur program is distinct from an atmospheric and oceanic dynamics program - like all Hixon Center joint majors in climate, coursework in the joint major is designed to help students develop a holistic understanding of climate change, with emphasis on the interactions within and between physical and human systems.\nMathematics Courses\n• MATH055 HM - Discrete Mathematics\n• MATH062 HM - Introduction to Statistics or MATH151 HM - Probability\n• MATH082 HM - Differential Equations\n• MATH131 HM - Mathematical Analysis I\n•\nAnd choose an additional 3 credits of applied mathematic from:\n• MATH152 HM - Statistical Inference\n• MATH156 HM - Stochastic Processes\n• MATH158 HM - Statistical Linear Models\n• MATH180 HM - Introduction to Partial Differential Equations\n• MATH181 HM - Dynamical Systems\n• MATH187 HM - Operations Research\n•\nAnd choose an additional 3 credits of computational mathematics from:\n• MATH164 HM - Scientific Computing\n• MATH165 HM - Numerical Analysis\n•\nAnd choose additional 6 credits of upper-division mathematics electives (&gt;100) including from MCB course offerings such as:\n• MCBI117 HM - Game Theory and the Evolution of Cooperation\n• MCBI118A HM - Introduction to Mathematical Biology\n• MCBI118B HM - Introduction to Computational Biology\nClimate Foundations\nStudents will complete a total of 3 credits of coursework in thermodynamics. Choose one course from among:\n• CHEM051 HM - Foundations of Physical Chemistry\n• ENGR082 HM - Chemical and Thermal Processes\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\nClimate Kernel\nStudents will complete 3 credits of coursework addressing each of the following areas: Climate Dynamics, Climate Impacts, Climate Interventions, Climate Contexts for a total of 15 credits of coursework. Each climate joint major has a unique climate kernel tailored to the needs of the discipline.\n• CLES101 HM - Climate Dynamics\n• 3 credits in Climate Impacts. See our Course Descriptions page for a list of approved Impacts courses.\n• 3 credits in Climate Interventions. See our Course Descriptions page for a list of approved Interventions courses.\n• 3 credits in Climate Contexts, which double count toward the HMC HSA requirement. See our Course Descriptions page for a list of approved Contexts courses.\n• 3 credits of a Climate elective including, but not limited to, those from either the Impacts or Interventions lists and (PHYS051 HM\nor PHYS154 HM\n).\nForum and Colloquia\nStudents will complete:\n• MATH198 HM\n(generally in the junior year)\n• Two semesters of CLES199 HM\n(should be taken in the junior and senior year, fall only)\nCapstone\n• Two semesters of MATH193 HM\nor two semesters of MATH197 HM\n.\nClinic and thesis are important capstone experiences for each mathematics major: they represent sustained efforts to engage with a complex problem from industry or mathematical research. Clinic teams are formed in the fall according to the requirements of the projects and student preferences. Students who do Clinic must work on the same Clinic project both semesters.\nClose\nClose\nClose\nClose\nClose\nClose\nClose",
+  "courses": [
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "MATH 062 HM",
+    "title": "Introduction to Statistics or MATH151 HM - Probability"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "MATH 131 HM",
+    "title": "Mathematical Analysis I"
+   },
+   {
+    "code": "MATH 152 HM",
+    "title": "Statistical Inference"
+   },
+   {
+    "code": "MATH 156 HM",
+    "title": "Stochastic Processes"
+   },
+   {
+    "code": "MATH 158 HM",
+    "title": "Statistical Linear Models"
+   },
+   {
+    "code": "MATH 180 HM",
+    "title": "Introduction to Partial Differential Equations"
+   },
+   {
+    "code": "MATH 181 HM",
+    "title": "Dynamical Systems"
+   },
+   {
+    "code": "MATH 187 HM",
+    "title": "Operations Research"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 165 HM",
+    "title": "Numerical Analysis"
+   },
+   {
+    "code": "MCBI 117 HM",
+    "title": "Game Theory and the Evolution of Cooperation"
+   },
+   {
+    "code": "MCBI 118A HM",
+    "title": "Introduction to Mathematical Biology"
+   },
+   {
+    "code": "MCBI 118B HM",
+    "title": "Introduction to Computational Biology"
+   },
+   {
+    "code": "CHEM 051 HM",
+    "title": "Foundations of Physical Chemistry"
+   },
+   {
+    "code": "ENGR 082 HM",
+    "title": "Chemical and Thermal Processes"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "CLES 101 HM",
+    "title": "Climate Dynamics"
+   }
+  ]
+ },
+ {
+  "name": "Joint Major in Mathematics and Physics",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1024&print",
+  "kind": "major",
+  "poid": 1024,
+  "text": "Joint Major in Mathematics and Physics\nThe fields of physics and mathematics have been closely intertwined, with significant influences on each other, for hundreds of years. Numerous courses and research programs at Harvey Mudd draw heavily on both disciplines. The Joint Major in Mathematics and Physics highlights the intersections between physics and mathematics while preparing a student with solid foundations in both fields. Graduates of this program should be well positioned for further study in physics or mathematics, or for immediate employment.\nThe major is cooperatively administered by the Mathematics and Physics departments, and students have faculty advisors in both departments. Students complete courses from the mathematics and physics major sequences, as well as a required course in computational techniques relevant to the field. Each student must complete a capstone (thesis or clinic), which may be chosen from either department’s offerings.\nMathematics Courses\n• MATH055 HM - Discrete Mathematics\n• MATH082 HM - Differential Equations\n• MATH131 HM - Mathematical Analysis I\n• MATH151 HM - Probability\n• MATH171 HM - Abstract Algebra I\n• MATH180 HM - Introduction to Partial Differential Equations\n• MATH198 HM - Undergraduate Mathematics Forum\nPhysics Courses\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n• PHYS054 HM - Modern Physics Laboratory\n• PHYS111 HM - Theoretical Mechanics\n• PHYS116 HM - Quantum Mechanics\n• PHYS117 HM - Statistical Mechanics and Thermodynamics\n• PHYS134 HM - Optics Laboratory\n•\nand\n• PHYS151 HM - Electromagnetic Fields\n• or\n• PHYS154 HM - Fields and Waves\n• or\n• PHYS156 HM - Foundations of Field Theory\n•\nand\n• PHYS195 HM - Physics Colloquium (taken twice)\nScientific Computation Requirement\n• MATH164 HM - Scientific Computing\n• or\n• MATH165 HM - Numerical Analysis\n• or\n• PHYS170 HM - Computational Methods in Physics\nCapstone\nTwo semesters of capstone, either thesis or clinic (2 semesters x 3 units). Students completing a thesis follow the practices and guidelines of the thesis advisor’s department.\n• PHYS199 HM - Senior Thesis in Physics (taken twice)\n•\nor\n• MATH197 HM - Senior Thesis in Mathematics (taken twice)\n•\nor\n•\n• PHYS193 HM - Physics Clinic\n• and\n• PHYS194 HM - Physics Clinic\n•\nor\n•\n• MATH193 HM - Mathematics Clinic (taken twice)",
+  "courses": [
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "MATH 131 HM",
+    "title": "Mathematical Analysis I"
+   },
+   {
+    "code": "MATH 151 HM",
+    "title": "Probability"
+   },
+   {
+    "code": "MATH 171 HM",
+    "title": "Abstract Algebra I"
+   },
+   {
+    "code": "MATH 180 HM",
+    "title": "Introduction to Partial Differential Equations"
+   },
+   {
+    "code": "MATH 198 HM",
+    "title": "Undergraduate Mathematics Forum"
+   },
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   },
+   {
+    "code": "PHYS 054 HM",
+    "title": "Modern Physics Laboratory"
+   },
+   {
+    "code": "PHYS 111 HM",
+    "title": "Theoretical Mechanics"
+   },
+   {
+    "code": "PHYS 116 HM",
+    "title": "Quantum Mechanics"
+   },
+   {
+    "code": "PHYS 117 HM",
+    "title": "Statistical Mechanics and Thermodynamics"
+   },
+   {
+    "code": "PHYS 134 HM",
+    "title": "Optics Laboratory"
+   },
+   {
+    "code": "PHYS 151 HM",
+    "title": "Electromagnetic Fields"
+   },
+   {
+    "code": "PHYS 154 HM",
+    "title": "Fields and Waves"
+   },
+   {
+    "code": "PHYS 156 HM",
+    "title": "Foundations of Field Theory"
+   },
+   {
+    "code": "PHYS 195 HM",
+    "title": "Physics Colloquium (taken twice)"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 165 HM",
+    "title": "Numerical Analysis"
+   },
+   {
+    "code": "PHYS 170 HM",
+    "title": "Computational Methods in Physics"
+   },
+   {
+    "code": "PHYS 199 HM",
+    "title": "Senior Thesis in Physics (taken twice)"
+   },
+   {
+    "code": "MATH 197 HM",
+    "title": "Senior Thesis in Mathematics (taken twice)"
+   },
+   {
+    "code": "PHYS 193 HM",
+    "title": "Physics Clinic"
+   },
+   {
+    "code": "PHYS 194 HM",
+    "title": "Physics Clinic"
+   },
+   {
+    "code": "MATH 193 HM",
+    "title": "Mathematics Clinic (taken twice)"
+   }
+  ]
+ },
+ {
+  "name": "Mathematical and Computational Biology",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=990&print",
+  "kind": "major",
+  "poid": 990,
+  "text": "Mathematical and Computational Biology\nMathematical and computational methods are vital to many areas of contemporary biological research, such as genomics, molecular modeling, structural biology, ecology, evolutionary biology, neurobiology, and systems biology. Conversely, biology is providing new challenges that can drive the development of novel mathematical and computational methods.\nHarvey Mudd students interested in the interface between biology, mathematics, and computer science may pursue the Mathematical and Computational Biology Major, which is jointly administered by the biology, mathematics, and computer science departments.\nThis major prepares students for graduate studies in areas including applied mathematics, bioinformatics, computational biology, data science, genome science, mathematical biology, and diverse areas of biology, as well as employment in industry.\nHarvey Mudd’s Core curriculum provides mathematical and computational biology majors with a strong multidisciplinary foundation, and the College offers many opportunities for students to engage in interdisciplinary research in biomathematics, computational biology, and quantitative biology.\nStudents who choose this major become immersed in the scientific and intellectual cultures of biology, computer science, and mathematics, and the major is sufficiently flexible to allow students to concentrate in a particular area of interest. Students in this major have an advisor from the biology department. The advisor will help the student plan a coherent program tailored to the student’s interests and goals.\nIntroductory Sequence\n• BIOL054 HM - Experimental Biology Laboratory\n• BIOL154 HM - Biostatistics\n• MATH055 HM - Discrete Mathematics\n• MATH082 HM - Differential Equations\n• MCBI118A HM - Introduction to Mathematical Biology\n• MCBI118B HM - Introduction to Computational Biology\nBiology Foundations\n• Any two of the following:\n• BIOL101 HM - Comparative Physiology\n• BIOL108 HM - Ecology and Environmental Biology\n• BIOL109 HM - Evolutionary Biology\n• BIOL113 HM - Molecular Genetics\n•\nand\n• One biology seminar\n• One biology laboratory\nMathematical and Computation Courses\n• One of:\n• BIOL119 HM - Advanced Mathematical Biology\n• MATH119 HM - Advanced Mathematical Biology\n• BIOL188 HM - Advanced Computational Biology\n•\nand\n• One 3-credit mathematics course chosen with the advisor. Suggested mathematics course options include, but are not limited to:\n• MATH152 HM - Statistical Inference\n• MATH156 HM - Stochastic Processes\n• MATH158 HM - Statistical Linear Models\n• MATH164 HM - Scientific Computing\n• MATH168 HM - Algorithms\n• MATH173 HM - Advanced Linear Algebra\n• MATH180 HM - Introduction to Partial Differential Equations\n• MATH187 HM - Operations Research\n•\nand\n• One 3 credit computer science course chosen with the advisor. Suggested computer science course options include, but are not limited to:\n• CSCI060 HM - Principles of Computer Science\n• CSCI070 HM - Data Structures and Program Development\n• CSCI081 HM - Computability and Logic\n• CSCI123 HM - Computing Practices, Projects, and People\n• CSCI133 HM - Database Systems\n• CSCI140 HM - Algorithms\n• CSCI144 HM - Scientific Computing\n• CSCI152 HM - Neural Networks\n• CSCI153 HM - Computer Vision\n• CSCI155 HM - Computer Graphics\n•\nand\n• Five credits of additional coursework in mathematics or computer science\n• Students from the other Claremont Colleges who have not completed the HMC Core Curriculum must also take: Multivariable Calculus (MATH032 CM / PO / PZ / SC, or MATH032S PO) and Linear Algebra (MATH060 CM / PO / PZ / SC)\nTechnical Elective\n• One technical elective chosen with the advisor (3 credits): Any course related to the student’s interests in the major. Possible courses satisfying this requirement could be in biology, computer science, or mathematics or in another field including (but not limited to), chemistry, bioengineering, cognitive science, neuroscience, biophysics, or linguistics.\nColloquium and Forum\n• BIOL191 HM - Biology Colloquium (taken twice)\n• MATH198 HM - Undergraduate Mathematics Forum (preferably taken in the junior year)\n• MCBI199 HM - Joint Colloquium for the Mathematical and Computational Biology Major\nCapstone\n• Two semesters of senior thesis or Clinic, selected in consultation with the student’s academic advisors (6 credits)",
+  "courses": [
+   {
+    "code": "BIOL 054 HM",
+    "title": "Experimental Biology Laboratory"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   },
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   },
+   {
+    "code": "MCBI 118A HM",
+    "title": "Introduction to Mathematical Biology"
+   },
+   {
+    "code": "MCBI 118B HM",
+    "title": "Introduction to Computational Biology"
+   },
+   {
+    "code": "BIOL 101 HM",
+    "title": "Comparative Physiology"
+   },
+   {
+    "code": "BIOL 108 HM",
+    "title": "Ecology and Environmental Biology"
+   },
+   {
+    "code": "BIOL 109 HM",
+    "title": "Evolutionary Biology"
+   },
+   {
+    "code": "BIOL 113 HM",
+    "title": "Molecular Genetics"
+   },
+   {
+    "code": "BIOL 119 HM",
+    "title": "Advanced Mathematical Biology"
+   },
+   {
+    "code": "MATH 119 HM",
+    "title": "Advanced Mathematical Biology"
+   },
+   {
+    "code": "BIOL 188 HM",
+    "title": "Advanced Computational Biology"
+   },
+   {
+    "code": "MATH 152 HM",
+    "title": "Statistical Inference"
+   },
+   {
+    "code": "MATH 156 HM",
+    "title": "Stochastic Processes"
+   },
+   {
+    "code": "MATH 158 HM",
+    "title": "Statistical Linear Models"
+   },
+   {
+    "code": "MATH 164 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "MATH 168 HM",
+    "title": "Algorithms"
+   },
+   {
+    "code": "MATH 173 HM",
+    "title": "Advanced Linear Algebra"
+   },
+   {
+    "code": "MATH 180 HM",
+    "title": "Introduction to Partial Differential Equations"
+   },
+   {
+    "code": "MATH 187 HM",
+    "title": "Operations Research"
+   },
+   {
+    "code": "CSCI 060 HM",
+    "title": "Principles of Computer Science"
+   },
+   {
+    "code": "CSCI 070 HM",
+    "title": "Data Structures and Program Development"
+   },
+   {
+    "code": "CSCI 081 HM",
+    "title": "Computability and Logic"
+   },
+   {
+    "code": "CSCI 123 HM",
+    "title": "Computing Practices, Projects, and People"
+   },
+   {
+    "code": "CSCI 133 HM",
+    "title": "Database Systems"
+   },
+   {
+    "code": "CSCI 140 HM",
+    "title": "Algorithms"
+   },
+   {
+    "code": "CSCI 144 HM",
+    "title": "Scientific Computing"
+   },
+   {
+    "code": "CSCI 152 HM",
+    "title": "Neural Networks"
+   },
+   {
+    "code": "CSCI 153 HM",
+    "title": "Computer Vision"
+   },
+   {
+    "code": "CSCI 155 HM",
+    "title": "Computer Graphics"
+   },
+   {
+    "code": "BIOL 191 HM",
+    "title": "Biology Colloquium (taken twice)"
+   },
+   {
+    "code": "MATH 198 HM",
+    "title": "Undergraduate Mathematics Forum (preferably taken in the junior year)"
+   },
+   {
+    "code": "MCBI 199 HM",
+    "title": "Joint Colloquium for the Mathematical and Computational Biology Major"
+   }
+  ]
+ },
+ {
+  "name": "Biology Minor",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1005&print",
+  "kind": "minor",
+  "poid": 1005,
+  "text": "Minor Requirements\n• BIOL054 HM - Experimental Biology Laboratory\n• BIOL154 HM - Biostatistics\n• Three additional biology courses (these courses are chosen with the approval of the student’s biology advisor and are normally taken at Harvey Mudd).",
+  "courses": [
+   {
+    "code": "BIOL 054 HM",
+    "title": "Experimental Biology Laboratory"
+   },
+   {
+    "code": "BIOL 154 HM",
+    "title": "Biostatistics"
+   }
+  ]
+ },
+ {
+  "name": "Chemistry Minor",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1006&print",
+  "kind": "minor",
+  "poid": 1006,
+  "text": "Minor Requirements\nA minor in chemistry shall consist of a coherent group of at least four non-laboratory courses beyond the required Core in two or more areas of chemistry, i.e. analytical, biochemistry, inorganic, organic and physical.\nIn addition, the minor must include laboratories in at least two different areas beyond Core chemistry (CHEM024 HM\n).\nThe minor must be approved by the minor advisor.\nClose",
+  "courses": []
+ },
+ {
+  "name": "Computer Science Minor",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1020&print",
+  "kind": "minor",
+  "poid": 1020,
+  "text": "Minor Requirements\n• MATH055 HM - Discrete Mathematics\n•\nand\n• CSCI060 HM - Principles of Computer Science\n• or\n• CSCI042 HM - Principles and Practice of Computer Science\n•\nand\n• CSCI070 HM - Data Structures and Program Development\nOne of the Following:\n• CSCI105 HM - Computer Systems\n• CSCI123 HM - Computing Practices, Projects, and People\n• CSCI131 HM - Programming Languages\n• CSCI140 HM - Algorithms\nThree Credits of Upper Division Computer Science Electives\n• Chosen with the consultation and approval of the minor advisor.",
+  "courses": [
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "CSCI 060 HM",
+    "title": "Principles of Computer Science"
+   },
+   {
+    "code": "CSCI 042 HM",
+    "title": "Principles and Practice of Computer Science"
+   },
+   {
+    "code": "CSCI 070 HM",
+    "title": "Data Structures and Program Development"
+   },
+   {
+    "code": "CSCI 105 HM",
+    "title": "Computer Systems"
+   },
+   {
+    "code": "CSCI 123 HM",
+    "title": "Computing Practices, Projects, and People"
+   },
+   {
+    "code": "CSCI 131 HM",
+    "title": "Programming Languages"
+   },
+   {
+    "code": "CSCI 140 HM",
+    "title": "Algorithms"
+   }
+  ]
+ },
+ {
+  "name": "Engineering Minor",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1007&print",
+  "kind": "minor",
+  "poid": 1007,
+  "text": "Minor Requirements\nThe Engineering minor follows the same three-part model as the major. Students must complete six engineering courses beyond the Core, as follows:\nEngineering Sciences:\n• One of the following courses:\n• ENGR082 HM - Chemical and Thermal Processes\n• ENGR083 HM - Continuum Mechanics\n• ENGR084 HM - Electronic and Magnetic Circuits and Devices\n• ENGR085 HM - Digital Electronics and Computer Engineering\n• ENGR086 HM - Materials Engineering\n•\nand\n• One follow-on course in the same discipline as the first\nEngineering Systems:\n• ENGR072 HM - Applied Mathematics for Engineering\n• ENGR101 HM - Advanced Systems Engineering I\nDesign and Professional Practice:\n• ENGR004 HM - Introduction to Engineering Design and Manufacturing\n• or\n• ENGR111 HM - Engineering Clinic I\n•\nand\n• ENGR080 HM - Experimental Engineering",
+  "courses": [
+   {
+    "code": "ENGR 082 HM",
+    "title": "Chemical and Thermal Processes"
+   },
+   {
+    "code": "ENGR 083 HM",
+    "title": "Continuum Mechanics"
+   },
+   {
+    "code": "ENGR 084 HM",
+    "title": "Electronic and Magnetic Circuits and Devices"
+   },
+   {
+    "code": "ENGR 085 HM",
+    "title": "Digital Electronics and Computer Engineering"
+   },
+   {
+    "code": "ENGR 086 HM",
+    "title": "Materials Engineering"
+   },
+   {
+    "code": "ENGR 072 HM",
+    "title": "Applied Mathematics for Engineering"
+   },
+   {
+    "code": "ENGR 101 HM",
+    "title": "Advanced Systems Engineering I"
+   },
+   {
+    "code": "ENGR 004 HM",
+    "title": "Introduction to Engineering Design and Manufacturing"
+   },
+   {
+    "code": "ENGR 111 HM",
+    "title": "Engineering Clinic I"
+   },
+   {
+    "code": "ENGR 080 HM",
+    "title": "Experimental Engineering"
+   }
+  ]
+ },
+ {
+  "name": "Mathematics Minor",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1008&print",
+  "kind": "minor",
+  "poid": 1008,
+  "text": "Minor Requirements\nThe student will propose a program designed in consultation with her or his mathematics advisor.\nProposals must be approved by the Department of Mathematics Curriculum Committee and should consist of six upper-division Mathematics courses which form a coherent concentration or survey program:\n• MATH055 HM - Discrete Mathematics\n• MATH082 HM - Differential Equations\n• Four additional mathematics courses totaling 12 credits (must be Harvey Mudd or Harvey Mudd cooperative courses, Mathematics Clinic and Mathematics Senior Thesis are normally excluded)",
+  "courses": [
+   {
+    "code": "MATH 055 HM",
+    "title": "Discrete Mathematics"
+   },
+   {
+    "code": "MATH 082 HM",
+    "title": "Differential Equations"
+   }
+  ]
+ },
+ {
+  "name": "Physics Minor",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1009&print",
+  "kind": "minor",
+  "poid": 1009,
+  "text": "Minor Requirements\n• PHYS051 HM - Electromagnetic Theory and Optics\n• PHYS052 HM - Quantum Physics\n•\nand\n• At least nine additional credits of physics or astronomy chosen with the help of a physics advisor",
+  "courses": [
+   {
+    "code": "PHYS 051 HM",
+    "title": "Electromagnetic Theory and Optics"
+   },
+   {
+    "code": "PHYS 052 HM",
+    "title": "Quantum Physics"
+   }
+  ]
+ },
+ {
+  "name": "Emphasis in Data Science",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1030&print",
+  "kind": "emphasis",
+  "poid": 1030,
+  "text": "Harvey Mudd College has long been a leader in educating students in subjects fundamental to data science and is guided by our mission to educate leaders who understand the impact of their work on society. The Emphasis in Data Science guides students toward data-scientific curriculum opportunities and practical data-rich experiences across the college in a coherent and cohesive manner.\nThe Emphasis in Data Science is not a major. Rather, it is a coordinated program of study that allows students majoring in the sciences, engineering, and mathematics the opportunity to apply data-scientific approaches across a variety of applications and understand their work from a range of perspectives, so they may best evaluate their impact on society and the world.\nEmphasis Structure: An Emphasis in Data Science requires a minimum of six courses beyond the Core, including a capstone project. The emphasis requires three credits (on or off campus) be chosen from each of the Computing Fluency, Introduction to Probability and Statistics, and Data Science and Values course categories, six credits chosen from the Electives course category, and a capstone experience (4-6 credits). A single course cannot be used to satisfy two requirements in the emphasis, but courses satisfying requirements for a student’s major may also satisfy a single emphasis requirement. It is expected that all courses satisfying EDS requirements will be taken for letter grade.\nRequirement: Students must declare their intention to pursue an Emphasis in Data Science in or before their sixth semester.",
+  "courses": []
+ },
+ {
+  "name": "Emphasis in Environmental Analysis",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1010&print",
+  "kind": "emphasis",
+  "poid": 1010,
+  "text": "Emphasis in Environmental Analysis\nEnvironmental analysis (EA) fits exceptionally well within the Harvey Mudd College mission to train students who combine technical rigor and engagement with pressing social issues. The HMC Emphasis in Environmental Analysis (EEA) provides a curricular framework to help students move through their environmental studies in a coherent and cumulative fashion.\nThe Emphasis in Environmental Analysis is not a major or a minor. Rather, it is a coordinated program of study that allows students of any major the opportunity to address environmental issues from a range of perspectives so that they may better understand the impact of their work.\nEmphasis Structure: An Emphasis in Environmental Analysis consists of five courses beyond the Core with significant environmental analysis content taken on- or off-campus, including at least two courses in recognized humanities, social sciences, and arts disciplines and two courses within science, engineering, or mathematical disciplines. At least three of the five courses must be at the upper-division level. Upon approval by the Hixon Center for Climate and the Environment, two summer research, yearlong research, or yearlong Clinic experience with a substantial environmental analysis component may be counted towards the five-course total, and are categorized depending on the topic of that research or experience.\nRequirement: Students should declare their intention to pursue an Emphasis in Environmental Analysis in or before their fifth semester.\nFor more information on the EEA, visit: https://www.hmc.edu/hixon-center/environmental-analysis-at-harvey-mudd/",
+  "courses": []
+ },
+ {
+  "name": "3-2 Program in Economics and Engineering with CMC",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1011&print",
+  "kind": "other",
+  "poid": 1011,
+  "text": "Harvey Mudd offers a 3-2 Program in Economics and Engineering in cooperation with Claremont McKenna College. The program is designed for students who want a liberal arts background, with emphasis on economics and management, and an engineering major. The students spend their first three years at Claremont McKenna College studying mathematics, science, economics, management, and general education courses. At the end of the junior year, they may apply as transfer students. Accepted students must complete Harvey Mudd’s requirements for general education and for the engineering major. Because curricular expectations for the 3-2 transfer program are specific, potential applicants are strongly encouraged to consult with the Harvey Mudd College Office of Admission as well as the chair of the Department of Engineering.",
+  "courses": []
+ },
+ {
+  "name": "3-2 Program in Engineering with Scripps College",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1012&print",
+  "kind": "other",
+  "poid": 1012,
+  "text": "Harvey Mudd also has a 3-2 program in Engineering with Scripps College. The 3-2 Program with Scripps College does not include the emphasis on economics. The students reside at Scripps College for their first three years and cover a broad range of courses with emphasis in mathematics and science. Students accepted into the 3-2 program must complete Harvey Mudd’s requirements for general education and for the engineering major. Because curricular expectations for the 3-2 transfer program are specific, potential applicants are strongly encouraged to consult with the Harvey Mudd Office of Admission as well as the chair of the Department of Engineering.",
+  "courses": []
+ },
+ {
+  "name": "Claremont Scholars Program",
+  "url": "https://catalog.hmc.edu/preview_program.php?catoid=28&poid=1013&print",
+  "kind": "other",
+  "poid": 1013,
+  "text": "Accelerated bachelor’s to master’s degree options are available for students of The Claremont Colleges. These programs are designed to allow undergraduate students to begin working toward master’s degree requirements simultaneously with the completion of their bachelor’s degrees.\nStudents should apply to the accelerated program at CGU as early as possible, usually in their junior year. The Graduate Record Examination (GRE) is waived. Early application allows coordination of course planning between the student, the CGU school or department, and the undergraduate advisor. Transferable credit can be earned upon admission to a CGU master’s degree program; the number of credits varies by program. Additional information can be found by visiting the Claremont Scholars Program website.",
+  "courses": []
+ }
+]
