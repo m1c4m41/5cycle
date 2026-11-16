@@ -293,7 +293,7 @@ for (let i = 0; i < 40; i++) {
 stopAutoSync();
 if (runsAfter <= runsBefore) fail(`background loop did not run a tick (runs ${runsBefore} → ${runsAfter})`);
 ok(`loop tick landed (runs ${runsBefore} → ${runsAfter})`);
-const st = getAutoSyncStatus();
+const st = await getAutoSyncStatus();
 if (!st.enabled) fail("status.enabled should be true");
 if (st.lastOk !== true) fail(`status.lastOk = ${st.lastOk}`);
 ok(`status: enabled, last ok, ${st.runs} runs, sections @ ${st.lastSectionsAt}`);

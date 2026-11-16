@@ -137,7 +137,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   // login. (Signed-in students still cannot act — every form requires the
   // admin token, checked fail-closed in actions/admin.ts.)
   if (!user) redirect("/login?next=%2Fadmin");
-  const snap = adminSnapshot();
+  const snap = await adminSnapshot();
   const stats = snap.stats;
 
   /* ---- inline server actions (allowed in Server Components) ---- */
@@ -163,7 +163,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   }
 
   /* ------------------------------- queries ------------------------------- */
-  const terms = all<{ id: string; label: string; is_current: number; synced_at: string | null; n: number }>(
+  const terms = await all<{ id: string; label: string; is_current: number; synced_at: string | null; n: number }>(
     `SELECT t.id, t.label, t.is_current, t.synced_at,
             (SELECT COUNT(*) FROM sections s WHERE s.term_id = t.id) AS n
      FROM terms t
@@ -172,7 +172,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const populated = terms.filter((t) => Number(t.n) > 0);
   const emptyTermCount = terms.length - populated.length;
 
-  const reqRows = all<{
+  const reqRows = await all<{
     id: string;
     school: string;
     kind: string;
@@ -203,7 +203,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const sectionsBySchool = new Map(stats.bySchool.map((r) => [r.school, Number(r.n)]));
   const rmpCached = Number(snap.rmpCached);
   const instructors = Number(stats.instructors);
-  const autoSync = getAutoSyncStatus();
+  const autoSync = await getAutoSyncStatus();
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">

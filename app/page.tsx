@@ -75,7 +75,7 @@ const STEPS: { title: string; body: string }[] = [
 ];
 
 export default async function HomePage() {
-  const snap = adminSnapshot();
+  const snap = await adminSnapshot();
   const stats = snap.stats;
 
   const sectionsBySchool = new Map(stats.bySchool.map((r) => [r.school, Number(r.n)]));

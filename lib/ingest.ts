@@ -54,10 +54,10 @@ export type SyncReport = {
 
 /* ------------------------------ course areas ----------------------------- */
 
-export function syncCourseAreasFrom(upstream: { area: string; description: string }[]) {
-  return tx(() => {
+export async function syncCourseAreasFrom(upstream: { area: string; description: string }[]) {
+  return tx(async () => {
     for (const a of upstream) {
-      run(
+      await run(
         `INSERT INTO course_areas(code, description, school, kind)
          VALUES(?,?,?,?)
          ON CONFLICT(code) DO UPDATE SET
@@ -67,22 +67,22 @@ export function syncCourseAreasFrom(upstream: { area: string; description: strin
         [a.area, a.description, areaSchool(a.area), areaKind(a.area)],
       );
     }
-    setMeta("course_areas_synced_at", nowIso());
+    await setMeta("course_areas_synced_at", nowIso());
     return upstream.length;
   });
 }
 
 export async function syncCourseAreas(force = false) {
   const areas = await getCourseAreas(force);
-  const n = syncCourseAreasFrom(areas);
+  const n = await syncCourseAreasFrom(areas);
   // Make sure every code that actually shows up on a section exists too.
-  const orphans = all<{ area_code: string }>(
+  const orphans = await all<{ area_code: string }>(
     `SELECT DISTINCT sa.area_code FROM section_areas sa
      LEFT JOIN course_areas ca ON ca.code = sa.area_code
      WHERE ca.code IS NULL`,
   );
   for (const o of orphans) {
-    run("INSERT OR IGNORE INTO course_areas(code, description, school, kind) VALUES(?,?,?,?)", [
+    await run("INSERT OR IGNORE INTO course_areas(code, description, school, kind) VALUES(?,?,?,?)", [
       o.area_code,
       o.area_code,
       areaSchool(o.area_code),
@@ -100,10 +100,10 @@ export async function syncCourseAreas(force = false) {
  * sole owner of that flag for existing rows, so ingesting the current term
  * cannot clobber it back to 0.
  */
-export function upsertTerm(termId: string, isCurrent: boolean) {
+export async function upsertTerm(termId: string, isCurrent: boolean) {
   const m = /^(FA|SP|SU)(\d{4})$/.exec(termId);
   if (!m) throw new Error(`bad term id ${termId}`);
-  run(
+  await run(
     `INSERT INTO terms(id, year, term, label, is_current, synced_at)
      VALUES(?,?,?,?,?,?)
      ON CONFLICT(id) DO UPDATE SET
@@ -126,16 +126,16 @@ export function seasonalTermId(d: Date = new Date()): string {
 }
 
 /** Store an already-fetched upstream term list (used by auto-sync). */
-export function syncTermListFrom(terms: HS_Term[]) {
+export async function syncTermListFrom(terms: HS_Term[]) {
   const currentId = seasonalTermId();
-  tx(() => {
+  await tx(async () => {
     for (const t of terms) {
       const id = termIdOf(t);
-      const exists = get<{ id: string }>("SELECT id FROM terms WHERE id = ?", [id]);
+      const exists = await get<{ id: string }>("SELECT id FROM terms WHERE id = ?", [id]);
       if (exists) {
-        run("UPDATE terms SET is_current = ? WHERE id = ?", [id === currentId ? 1 : 0, id]);
+        await run("UPDATE terms SET is_current = ? WHERE id = ?", [id === currentId ? 1 : 0, id]);
       } else {
-        run("INSERT INTO terms(id, year, term, label, is_current) VALUES(?,?,?,?,?)", [
+        await run("INSERT INTO terms(id, year, term, label, is_current) VALUES(?,?,?,?,?)", [
           id,
           t.year,
           t.term,
@@ -147,37 +147,37 @@ export function syncTermListFrom(terms: HS_Term[]) {
     // The seasonal term is the sole owner of the flag. Make sure its row
     // exists even when upstream hasn't listed it yet, and clear any stale
     // flags (e.g. last season's term dropping off the list).
-    upsertTerm(currentId, true);
-    run("UPDATE terms SET is_current = 0 WHERE is_current = 1 AND id != ?", [currentId]);
-    setMeta("current_term", currentId);
-    setMeta("terms_synced_at", nowIso());
+    await upsertTerm(currentId, true);
+    await run("UPDATE terms SET is_current = 0 WHERE is_current = 1 AND id != ?", [currentId]);
+    await setMeta("current_term", currentId);
+    await setMeta("terms_synced_at", nowIso());
   });
   return { currentId, count: terms.length };
 }
 
 /** Refresh the term list we offer in the UI, from /v4/term/all. */
 export async function syncTermList(force = false) {
-  return syncTermListFrom(await getAllTerms(force));
+  return await syncTermListFrom(await getAllTerms(force));
 }
 
-export function currentTermId(): string {
+export async function currentTermId(): Promise<string> {
   // The calendar wins: once the seasonal term's row exists, every page is on
   // the right term immediately — even before the first sync after a
   // season change flips the is_current flag.
   const seasonal = seasonalTermId();
-  if (get<{ id: string }>("SELECT id FROM terms WHERE id = ?", [seasonal])?.id) return seasonal;
+  if ((await get<{ id: string }>("SELECT id FROM terms WHERE id = ?", [seasonal]))?.id) return seasonal;
   return (
-    getMetaSafe("current_term") ??
-    get<{ id: string }>("SELECT id FROM terms WHERE is_current = 1 ORDER BY id DESC LIMIT 1")
+    (await getMetaSafe("current_term")) ??
+    (await get<{ id: string }>("SELECT id FROM terms WHERE is_current = 1 ORDER BY id DESC LIMIT 1"))
       ?.id ??
-    get<{ id: string }>("SELECT id FROM terms ORDER BY id DESC LIMIT 1")?.id ??
+    (await get<{ id: string }>("SELECT id FROM terms ORDER BY id DESC LIMIT 1"))?.id ??
     ""
   );
 }
 
-function getMetaSafe(key: string): string | undefined {
+async function getMetaSafe(key: string): Promise<string | undefined> {
   try {
-    return get<{ value: string }>("SELECT value FROM meta WHERE key = ?", [key])?.value;
+    return (await get<{ value: string }>("SELECT value FROM meta WHERE key = ?", [key]))?.value;
   } catch {
     return undefined;
   }
@@ -185,21 +185,21 @@ function getMetaSafe(key: string): string | undefined {
 
 /* ------------------------------- sections ------------------------------- */
 
-function upsertInstructor(name: string, school: string): string {
+async function upsertInstructor(name: string, school: string): Promise<string> {
   const normalized = normalizeName(name);
   if (!normalized) return "";
-  const existing = get<{ id: string; home_school: string | null }>(
+  const existing = await get<{ id: string; home_school: string | null }>(
     "SELECT id, home_school FROM instructors WHERE normalized = ?",
     [normalized],
   );
   if (existing) {
     if (!existing.home_school && school) {
-      run("UPDATE instructors SET home_school = ? WHERE id = ?", [school, existing.id]);
+      await run("UPDATE instructors SET home_school = ? WHERE id = ?", [school, existing.id]);
     }
     return existing.id;
   }
   const id = "ins-" + normalized.replace(/[^a-z0-9]+/g, "-").slice(0, 48) + "-" + newId().slice(0, 6);
-  run(
+  await run(
     "INSERT INTO instructors(id, name, normalized, home_school) VALUES(?,?,?,?)",
     [id, name.trim(), normalized, school || null],
   );
@@ -289,7 +289,7 @@ export function sectionToRows(s: HS_Section, termId: string) {
   return { sectionRow, meetings, instNames, areas: s.courseAreas, search };
 }
 
-export function ingestSections(upstream: HS_Section[], termId: string): SyncReport {
+export async function ingestSections(upstream: HS_Section[], termId: string): Promise<SyncReport> {
   const t0 = Date.now();
   let sections = 0;
   let meetings = 0;
@@ -301,8 +301,8 @@ export function ingestSections(upstream: HS_Section[], termId: string): SyncRepo
   const built = upstream.map((s) => sectionToRows(s, termId));
   const incoming = new Set(built.map((b) => b.sectionRow.id));
 
-  tx(() => {
-    upsertTerm(termId, false);
+  await tx(async () => {
+    await upsertTerm(termId, false);
     // An empty payload is treated as an upstream failure, not as "this term has
     // no courses". Rewriting a real term is safe; blanking it is not.
     if (incoming.size === 0) {
@@ -316,21 +316,31 @@ export function ingestSections(upstream: HS_Section[], termId: string): SyncRepo
     // student's saved plan for that term on every sync. Only sections upstream
     // actually dropped go away — a course that stopped being offered *should*
     // leave the plan.
-    const vanished = all<{ id: string }>("SELECT id FROM sections WHERE term_id = ?", [
-      termId,
-    ]).filter((r) => !incoming.has(r.id));
-    for (const r of vanished) run("DELETE FROM sections WHERE id = ?", [r.id]);
-    dropped = vanished.length;
+    const vanished = (
+      await all<{ id: string }>("SELECT id FROM sections WHERE term_id = ?", [
+        termId,
+      ])
+    ).filter((r) => !incoming.has(r.id));
+    const goneIds = vanished.map((r) => r.id);
+    if (goneIds.length > 0) {
+      const ph = goneIds.map(() => "?").join(",");
+      // enrollments + requirement_assignments cascade; reviews SET NULL
+      await run(`DELETE FROM enrollments WHERE section_id IN (${ph})`, goneIds);
+      await run(`DELETE FROM requirement_assignments WHERE section_id IN (${ph})`, goneIds);
+      await run(`UPDATE reviews SET section_id = NULL WHERE section_id IN (${ph})`, goneIds);
+      await run(`DELETE FROM sections WHERE id IN (${ph})`, goneIds);
+    }
+    dropped = goneIds.length;
 
     for (const table of ["section_instructors", "section_areas", "section_schedules"]) {
       // Child rows carry no user data; rebuild them for the surviving sections.
-      run(
+      await run(
         `DELETE FROM ${table} WHERE section_id IN (SELECT id FROM sections WHERE term_id = ?)`,
         [termId],
       );
     }
     for (const { sectionRow, meetings: ms, instNames, areas, search } of built) {
-      run(
+      await run(
         // NOT `INSERT OR REPLACE`: SQLite resolves a conflict that way by
         // DELETE-ing the row first, and enrollments/reviews hang off
         // sections(id) ON DELETE CASCADE — so a routine re-sync of a section a
@@ -390,7 +400,7 @@ export function ingestSections(upstream: HS_Section[], termId: string): SyncRepo
       sections++;
 
       for (const m of ms) {
-        run(
+        await run(
           `INSERT INTO section_schedules(section_id, days, start_time, end_time, locations)
            VALUES(?,?,?,?,?)`,
           [sectionRow.id, m.days, m.start_time, m.end_time, m.locations],
@@ -399,9 +409,9 @@ export function ingestSections(upstream: HS_Section[], termId: string): SyncRepo
       }
 
       for (const name of instNames) {
-        const iid = upsertInstructor(name, sectionRow.school);
+        const iid = await upsertInstructor(name, sectionRow.school);
         if (!iid) continue;
-        run("INSERT OR IGNORE INTO section_instructors(section_id, instructor_id) VALUES(?,?)", [
+        await run("INSERT OR IGNORE INTO section_instructors(section_id, instructor_id) VALUES(?,?)", [
           sectionRow.id,
           iid,
         ]);
@@ -409,13 +419,13 @@ export function ingestSections(upstream: HS_Section[], termId: string): SyncRepo
       }
 
       for (const a of areas) {
-        run("INSERT OR IGNORE INTO course_areas(code, description, school, kind) VALUES(?,?,?,?)", [
+        await run("INSERT OR IGNORE INTO course_areas(code, description, school, kind) VALUES(?,?,?,?)", [
           a,
           a,
           areaSchool(a),
           areaKind(a),
         ]);
-        run("INSERT OR IGNORE INTO section_areas(section_id, area_code) VALUES(?,?)", [
+        await run("INSERT OR IGNORE INTO section_areas(section_id, area_code) VALUES(?,?)", [
           sectionRow.id,
           a,
         ]);
@@ -426,14 +436,14 @@ export function ingestSections(upstream: HS_Section[], termId: string): SyncRepo
     // Denormalized teaching load, used to rank the professor directory. Must be
     // recomputed across *every* synced term: an instructor who also teaches in
     // another term's catalog would otherwise be zeroed out by this term's sync.
-    run("UPDATE instructors SET section_count = 0");
-    for (const r of all<{ instructor_id: string; n: number }>(
+    await run("UPDATE instructors SET section_count = 0");
+    for (const r of await all<{ instructor_id: string; n: number }>(
       "SELECT instructor_id, COUNT(*) n FROM section_instructors GROUP BY instructor_id",
     )) {
-      run("UPDATE instructors SET section_count = ? WHERE id = ?", [r.n, r.instructor_id]);
+      await run("UPDATE instructors SET section_count = ? WHERE id = ?", [r.n, r.instructor_id]);
     }
 
-    setMeta(`synced_${termId}`, nowIso());
+    await setMeta(`synced_${termId}`, nowIso());
   });
 
   return {
@@ -450,7 +460,7 @@ export function ingestSections(upstream: HS_Section[], termId: string): SyncRepo
 /** Download + store one term. */
 export async function syncTerm(termId: string, force = true): Promise<SyncReport> {
   const sections = await getSections(termId, force);
-  const report = ingestSections(sections, termId);
+  const report = await ingestSections(sections, termId);
   await syncCourseAreas(false);
   return report;
 }
@@ -464,10 +474,10 @@ export async function bootstrap(): Promise<{
   reports: SyncReport[];
 }> {
   await syncTermList(true);
-  const current = currentTermId();
+  const current = await currentTermId();
   // Newest first in *calendar* order: string-sorting term ids puts every Spring
   // after every Fall, which silently skips the term students are actually in.
-  const available = all<{ id: string }>("SELECT id FROM terms")
+  const available = (await all<{ id: string }>("SELECT id FROM terms"))
     .map((r) => r.id)
     .sort((a, b) => termChronoKey(b) - termChronoKey(a));
   // The current term, then the newest ones listed (registration) and the most
@@ -484,20 +494,20 @@ export async function bootstrap(): Promise<{
   return { current, reports };
 }
 
-export function catalogStats() {
-  const num = (q: string, p: (string | number | null)[] = []) =>
-    Number(get<{ n: number }>(q, p)?.n ?? 0);
+export async function catalogStats() {
+  const num = async (q: string, p: (string | number | null)[] = []) =>
+    Number((await get<{ n: number }>(q, p))?.n ?? 0);
   return {
-    sections: num("SELECT COUNT(*) n FROM sections"),
-    courses: num("SELECT COUNT(DISTINCT course_code) n FROM sections"),
-    instructors: num("SELECT COUNT(*) n FROM instructors"),
-    areas: num("SELECT COUNT(*) n FROM course_areas"),
-    terms: all<{ id: string; label: string; is_current: number; synced_at: string | null }>(
+    sections: await num("SELECT COUNT(*) n FROM sections"),
+    courses: await num("SELECT COUNT(DISTINCT course_code) n FROM sections"),
+    instructors: await num("SELECT COUNT(*) n FROM instructors"),
+    areas: await num("SELECT COUNT(*) n FROM course_areas"),
+    terms: await all<{ id: string; label: string; is_current: number; synced_at: string | null }>(
       "SELECT id, label, is_current, synced_at FROM terms ORDER BY id DESC",
     ),
-    reviews: num("SELECT COUNT(*) n FROM reviews"),
-    users: num("SELECT COUNT(*) n FROM users"),
-    bySchool: all<{ school: string; n: number }>(
+    reviews: await num("SELECT COUNT(*) n FROM reviews"),
+    users: await num("SELECT COUNT(*) n FROM users"),
+    bySchool: await all<{ school: string; n: number }>(
       "SELECT school, COUNT(*) n FROM sections GROUP BY school ORDER BY n DESC",
     ),
   };

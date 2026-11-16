@@ -225,12 +225,12 @@ export async function autoSyncTickOnce(reason: string): Promise<AutoSyncTickResu
   }
 
   try {
-    setMeta("autosync_last_run", nowIso());
-    setMeta("autosync_last_ok", res.ok ? "1" : "0");
-    setMeta("autosync_last_reason", res.reason);
-    setMeta("autosync_last_error", res.error ?? res.skipped ?? "");
-    setMeta("autosync_last_report", JSON.stringify(res.terms));
-    setMeta("autosync_runs", String(Number(getMeta("autosync_runs") ?? "0") + 1));
+    await setMeta("autosync_last_run", nowIso());
+    await setMeta("autosync_last_ok", res.ok ? "1" : "0");
+    await setMeta("autosync_last_reason", res.reason);
+    await setMeta("autosync_last_error", res.error ?? res.skipped ?? "");
+    await setMeta("autosync_last_report", JSON.stringify(res.terms));
+    await setMeta("autosync_runs", String(Number((await getMeta("autosync_runs")) ?? "0") + 1));
   } catch {
     /* status persistence is best-effort */
   }
@@ -272,10 +272,10 @@ async function runTick(reason: string, t0: number): Promise<AutoSyncTickResult> 
   };
 
   const priorTerms = new Set(
-    all<{ id: string }>("SELECT id FROM terms").map((r) => r.id),
+    (await all<{ id: string }>("SELECT id FROM terms")).map((r) => r.id),
   );
-  const priorCurrent = getMeta("current_term") ?? "";
-  const priorReport = lastReportFromMeta();
+  const priorCurrent = (await getMeta("current_term")) ?? "";
+  const priorReport = await lastReportFromMeta();
   const hadPending = priorReport.some((t) => t.status === "pending");
 
   // 1) Fresh term list from upstream — force=true bypasses the 1-day cache
@@ -285,12 +285,12 @@ async function runTick(reason: string, t0: number): Promise<AutoSyncTickResult> 
   //    is still going).
   const upAll = await getAllTerms(true);
   const currentId = seasonalTermId();
-  syncTermListFrom(upAll);
+  await syncTermListFrom(upAll);
 
   out.newTerms = upAll.map(termIdOf).filter((id) => !priorTerms.has(id));
   out.currentChanged = priorCurrent !== "" && priorCurrent !== currentId;
 
-  const lastSections = getMeta("autosync_last_sections");
+  const lastSections = await getMeta("autosync_last_sections");
   const sectionsStale =
     !lastSections ||
     Date.now() - new Date(lastSections).getTime() > sectionHours() * 3600_000;
@@ -302,7 +302,7 @@ async function runTick(reason: string, t0: number): Promise<AutoSyncTickResult> 
     sectionsStale;
 
   if (!due) {
-    setMeta("autosync_last_probe", nowIso());
+    await setMeta("autosync_last_probe", nowIso());
     logEvent("probe", {
       current: currentId,
       newTerms: out.newTerms,
@@ -337,11 +337,11 @@ async function runTick(reason: string, t0: number): Promise<AutoSyncTickResult> 
     }
   }
 
-  setMeta("autosync_last_probe", nowIso());
+  await setMeta("autosync_last_probe", nowIso());
   // If anything is still pending, don't stamp "sections fresh" — the next
   // probe must retry before the hour is up.
   if (!out.terms.some((t) => t.status === "pending")) {
-    setMeta("autosync_last_sections", nowIso());
+    await setMeta("autosync_last_sections", nowIso());
   }
   out.ms = Date.now() - t0;
   return out;
@@ -372,11 +372,11 @@ export async function manualSync(
       current = boot.current;
     }
     try {
-      setMeta("autosync_last_run", nowIso());
-      setMeta("autosync_last_ok", "1");
-      setMeta("autosync_last_error", "");
-      setMeta("autosync_last_reason", term ? "manual:" + term : "manual");
-      setMeta("autosync_last_sections", nowIso());
+      await setMeta("autosync_last_run", nowIso());
+      await setMeta("autosync_last_ok", "1");
+      await setMeta("autosync_last_error", "");
+      await setMeta("autosync_last_reason", term ? "manual:" + term : "manual");
+      await setMeta("autosync_last_sections", nowIso());
     } catch {
       /* best-effort */
     }
@@ -461,8 +461,8 @@ export type AutoSyncStatus = {
   lastReport: AutoSyncTermResult[];
 };
 
-function lastReportFromMeta(): AutoSyncTermResult[] {
-  const raw = getMeta("autosync_last_report");
+async function lastReportFromMeta(): Promise<AutoSyncTermResult[]> {
+  const raw = await getMeta("autosync_last_report");
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as AutoSyncTermResult[];
@@ -472,21 +472,21 @@ function lastReportFromMeta(): AutoSyncTermResult[] {
   }
 }
 
-export function getAutoSyncStatus(): AutoSyncStatus {
-  const okRaw = getMeta("autosync_last_ok");
+export async function getAutoSyncStatus(): Promise<AutoSyncStatus> {
+  const okRaw = await getMeta("autosync_last_ok");
   return {
     enabled: autoSyncEnabled(),
     running: busy,
     lock: lockHolder(),
     probeMinutes: probeMinutes(),
     sectionHours: sectionHours(),
-    lastRunAt: getMeta("autosync_last_run") ?? null,
+    lastRunAt: (await getMeta("autosync_last_run")) ?? null,
     lastOk: okRaw === undefined ? null : okRaw === "1",
-    lastReason: getMeta("autosync_last_reason") ?? null,
-    lastError: getMeta("autosync_last_error") || null,
-    lastSectionsAt: getMeta("autosync_last_sections") ?? null,
-    lastProbeAt: getMeta("autosync_last_probe") ?? null,
-    runs: Number(getMeta("autosync_runs") ?? "0"),
-    lastReport: lastReportFromMeta(),
+    lastReason: (await getMeta("autosync_last_reason")) ?? null,
+    lastError: (await getMeta("autosync_last_error")) || null,
+    lastSectionsAt: (await getMeta("autosync_last_sections")) ?? null,
+    lastProbeAt: (await getMeta("autosync_last_probe")) ?? null,
+    runs: Number((await getMeta("autosync_runs")) ?? "0"),
+    lastReport: await lastReportFromMeta(),
   };
 }

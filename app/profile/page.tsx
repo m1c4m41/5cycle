@@ -50,23 +50,23 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const ok = one(sp.ok);
   const v = (k: string, fallback: string) => one(sp[`keep_${k}`]) || fallback;
 
-  const majors = listSets({ kind: "major" });
-  const minors = listSets({ kind: "minor" });
+  const majors = await listSets({ kind: "major" });
+  const minors = await listSets({ kind: "minor" });
   const campus = SCHOOL_BY_CODE[user.school] ? user.school : "";
   const majorGroups = byCampus(majors, campus);
   const minorGroups = byCampus(minors, campus);
-  const majorName = user.major_id ? getSet(user.major_id)?.name : undefined;
-  const major2Name = user.major2_id ? getSet(user.major2_id)?.name : undefined;
-  const minorName = user.minor_id ? getSet(user.minor_id)?.name : undefined;
+  const majorName = user.major_id ? (await getSet(user.major_id))?.name : undefined;
+  const major2Name = user.major2_id ? (await getSet(user.major2_id))?.name : undefined;
+  const minorName = user.minor_id ? (await getSet(user.minor_id))?.name : undefined;
 
-  const term = currentTermId();
-  const stats = catalogStats();
+  const term = await currentTermId();
+  const stats = await catalogStats();
   const terms = stats.terms.length
     ? stats.terms
     : [{ id: term, label: term ? termLabel(term) : "no terms synced", is_current: 1, synced_at: null }];
 
-  const planned = enrolledSections(user.id);
-  const progress = progressForUser(user, planned);
+  const planned = await enrolledSections(user.id);
+  const progress = await progressForUser(user, planned);
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-5">

@@ -99,18 +99,18 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   const user = await currentUser();
   const sp = await searchParams;
 
-  const synced = facets().terms;
-  const term = one(sp.term) || currentTermId() || synced[0]?.id || "";
+  const synced = (await facets()).terms;
+  const term = one(sp.term) || (await currentTermId()) || synced[0]?.id || "";
   const selfHref = `/planner?term=${term}`;
 
   // Guests browse a live-but-empty plan; every user-owned state degrades to
   // its empty form so the same markup renders for both.
-  const enrollments = user ? listEnrollments(user.id, term) : [];
+  const enrollments = user ? await listEnrollments(user.id, term) : [];
   const sections = enrollments.map((e) => e.section);
   // Manually entered courses (study-abroad classes, transfer credit,
   // create-your-own) show up alongside catalog sections for this term.
   const manualSections = user
-    ? manualCoursesFor(user.id)
+    ? (await manualCoursesFor(user.id))
         .filter((m) => m.term_id === term)
         .map((m) => manualPseudoSection(m, user.school))
     : [];
@@ -118,8 +118,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   const manualCredits = Number(
     manualSections.reduce((a, s) => a + s.credits_5c, 0).toFixed(2),
   );
-  const abroad = user ? abroadFlagsFor(user.id).get(term) === true : false;
-  const summary = user ? summarizeTerm(user.id, term, user.school) : emptySummary(term);
+  const abroad = user ? (await abroadFlagsFor(user.id)).get(term) === true : false;
+  const summary = user ? await summarizeTerm(user.id, term, user.school) : emptySummary(term);
   const conflicts = findConflicts(sections);
   const conflicting = new Set<string>();
   for (const c of conflicts) {
@@ -127,9 +127,9 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
     conflicting.add(c.b.id);
   }
   const plannedIds = new Set(sections.map((s) => s.id));
-  const sets = user ? setsForUser(user) : [];
+  const sets = user ? await setsForUser(user) : [];
   // Checklist includes the manual pseudo-sections so entered credits count.
-  const progress = user ? progressForUser(user, allSections) : [];
+  const progress = user ? await progressForUser(user, allSections) : [];
 
   const notices = {
     ok: one(sp.ok),

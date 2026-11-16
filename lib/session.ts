@@ -68,7 +68,7 @@ export async function startSession(userId: string): Promise<void> {
   // — and, critically, the lookup below asks for exactly this value. Storing
   // the signed string meant the query never matched and sessions silently
   // failed for every user.
-  run("INSERT INTO sessions(token, user_id, expires_at) VALUES(?,?,?)", [
+  await run("INSERT INTO sessions(token, user_id, expires_at) VALUES(?,?,?)", [
     stored,
     userId,
     Date.now() + SESSION_TTL,
@@ -88,7 +88,7 @@ export async function endSession(): Promise<void> {
   const raw = jar.get(COOKIE)?.value;
   if (raw) {
     const token = parseToken(raw);
-    if (token) run("DELETE FROM sessions WHERE token = ?", [token]);
+    if (token) await run("DELETE FROM sessions WHERE token = ?", [token]);
   }
   jar.delete(COOKIE);
 }
@@ -99,13 +99,13 @@ export async function currentUserId(): Promise<string | null> {
   if (!raw) return null;
   const token = parseToken(raw);
   if (!token) return null;
-  const row = get<{ user_id: string; expires_at: number }>(
+  const row = await get<{ user_id: string; expires_at: number }>(
     "SELECT user_id, expires_at FROM sessions WHERE token = ?",
     [token],
   );
   if (!row) return null;
   if (Number(row.expires_at) < Date.now()) {
-    run("DELETE FROM sessions WHERE token = ?", [token]);
+    await run("DELETE FROM sessions WHERE token = ?", [token]);
     return null;
   }
   return row.user_id;
@@ -115,11 +115,11 @@ export async function currentUser(): Promise<UserRow | null> {
   const id = await currentUserId();
   if (!id) return null;
   return (
-    get<UserRow>(
+    (await get<UserRow>(
       `SELECT id, email, name, school, grad_year, major_id, major2_id, minor_id, advisor
        FROM users WHERE id = ?`,
       [id],
-    ) ?? null
+    )) ?? null
   );
 }
 
@@ -148,16 +148,16 @@ export type SignupInput = {
   minorId?: string | null;
 };
 
-export function createUser(input: SignupInput): { ok: true; id: string } | { ok: false; error: string } {
+export async function createUser(input: SignupInput): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const email = input.email.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: "Enter a valid email address." };
   if (input.password.length < 8) return { ok: false, error: "Password must be at least 8 characters." };
   if (!input.name.trim()) return { ok: false, error: "Name is required." };
-  if (get("SELECT id FROM users WHERE email = ?", [email]))
+  if (await get("SELECT id FROM users WHERE email = ?", [email]))
     return { ok: false, error: "An account with that email already exists." };
 
   const id = newId("usr-");
-  run(
+  await run(
     `INSERT INTO users(id, email, name, password_hash, school, grad_year, major_id, major2_id, minor_id, created_at)
      VALUES(?,?,?,?,?,?,?,?,?,?)`,
     [
@@ -176,11 +176,11 @@ export function createUser(input: SignupInput): { ok: true; id: string } | { ok:
   return { ok: true, id };
 }
 
-export function checkCredentials(
+export async function checkCredentials(
   email: string,
   password: string,
-): { ok: true; id: string } | { ok: false } {
-  const row = get<{ id: string; password_hash: string }>(
+): Promise<{ ok: true; id: string } | { ok: false }> {
+  const row = await get<{ id: string; password_hash: string }>(
     "SELECT id, password_hash FROM users WHERE email = ?",
     [email.trim().toLowerCase()],
   );
@@ -189,7 +189,7 @@ export function checkCredentials(
   return { ok: true, id: row.id };
 }
 
-export function updateUserProfile(
+export async function updateUserProfile(
   userId: string,
   patch: Partial<
     Pick<UserRow, "name" | "school" | "grad_year" | "major_id" | "major2_id" | "minor_id" | "advisor">
@@ -202,9 +202,9 @@ export function updateUserProfile(
     params.push(v === undefined ? null : (v as string | number | null));
   }
   if (!cols.length) return;
-  run(`UPDATE users SET ${cols.join(", ")} WHERE id = ?`, [...params, userId]);
+  await run(`UPDATE users SET ${cols.join(", ")} WHERE id = ?`, [...params, userId]);
 }
 
-export function sessionsReport() {
-  return all<{ n: number }>("SELECT COUNT(*) n FROM sessions")[0]?.n ?? 0;
+export async function sessionsReport() {
+  return (await all<{ n: number }>("SELECT COUNT(*) n FROM sessions"))[0]?.n ?? 0;
 }

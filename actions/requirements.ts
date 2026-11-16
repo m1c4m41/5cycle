@@ -64,13 +64,13 @@ export async function saveCourseCounting(fd: FormData): Promise<void> {
 
   const label =
     courseKind === "manual"
-      ? getManualCourse(courseId, user.id)?.title ?? "That course"
-      : getSection(courseId)?.code_string ?? "That course";
+      ? (await getManualCourse(courseId, user.id))?.title ?? "That course"
+      : (await getSection(courseId))?.code_string ?? "That course";
 
   if (!courseId) redirect(withNotice(next, "err", "Pick the course to count first."));
   if (fd.has("release")) groupIds = [];
 
-  const res = setCourseAssignments(user.id, courseId, courseKind, groupIds, note || null);
+  const res = await setCourseAssignments(user.id, courseId, courseKind, groupIds, note || null);
   if (!res.ok) redirect(withNotice(next, "err", res.error));
   revalidateSchedule();
 
@@ -79,7 +79,9 @@ export async function saveCourseCounting(fd: FormData): Promise<void> {
       withNotice(next, "ok", `${label} is back on automatic — the engine decides where it counts.`),
     );
   }
-  const labels = groupIds.map((g) => groupLabel(g) ?? g).join("; ");
+  const labels = (
+    await Promise.all(groupIds.map(async (g) => (await groupLabel(g)) ?? g))
+  ).join("; ");
   redirect(
     withNotice(
       next,
@@ -113,7 +115,7 @@ export async function addManualCourseAction(fd: FormData): Promise<void> {
     .map((v) => v.toString().trim())
     .filter(Boolean);
 
-  const res = addManualCourse(user.id, {
+  const res = await addManualCourse(user.id, {
     term_id: termId || null,
     term_label: termLabelRaw,
     title,
@@ -124,14 +126,16 @@ export async function addManualCourseAction(fd: FormData): Promise<void> {
   if (!res.ok) redirect(withNotice(next, "err", res.error));
 
   if (groupIds.length > 0) {
-    const assign = setCourseAssignments(user.id, res.id, "manual", groupIds, note || null);
+    const assign = await setCourseAssignments(user.id, res.id, "manual", groupIds, note || null);
     if (!assign.ok) redirect(withNotice(next, "err", assign.error));
   }
   revalidateSchedule();
 
   const when = termId ? termLabel(termId) : termLabelRaw.trim() || "a later term";
   const boxes = groupIds.length
-    ? ` It counts toward ${groupIds.map((g) => groupLabel(g) ?? g).join("; ")}.`
+    ? ` It counts toward ${(
+        await Promise.all(groupIds.map(async (g) => (await groupLabel(g)) ?? g))
+      ).join("; ")}.`
     : " The engine will find boxes for it automatically.";
   redirect(
     withNotice(
@@ -148,9 +152,9 @@ export async function removeManualCourseAction(fd: FormData): Promise<void> {
   const user = await userOrRedirect();
   const next = formStr(fd, "next") || "/requirements";
   const id = formStr(fd, "id");
-  const m = id ? getManualCourse(id, user.id) : undefined;
+  const m = id ? await getManualCourse(id, user.id) : undefined;
   if (!m) redirect(withNotice(next, "err", "That manual course is not yours."));
-  removeManualCourse(user.id, id);
+  await removeManualCourse(user.id, id);
   revalidateSchedule();
   redirect(
     withNotice(next, "ok", `Removed “${m.title}” from your plan — its counting boxes came with it.`),
@@ -168,7 +172,7 @@ export async function setAbroadAction(fd: FormData): Promise<void> {
   const termId = formStr(fd, "termId");
   if (!termId) redirect(withNotice(next, "err", "Pick a term first."));
   const abroad = fd.has("abroad");
-  setAbroadFlag(user.id, termId, abroad);
+  await setAbroadFlag(user.id, termId, abroad);
   revalidateSchedule();
   redirect(
     withNotice(

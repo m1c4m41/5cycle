@@ -33,21 +33,21 @@ export type ManualRmpRow = {
  *   [{ "name": "Julie Medero", "quality": 4.3, "difficulty": 3.1,
  *      "numRatings": 210, "url": "https://www.ratemyprofessors.com/professor/123" }]
  */
-export function importManualRmp(
+export async function importManualRmp(
   file = path.join(process.cwd(), "data", "rmp-manual.json"),
-): { matched: number; missing: string[] } {
+): Promise<{ matched: number; missing: string[] }> {
   if (!fs.existsSync(file)) return { matched: 0, missing: [] };
   const rows = JSON.parse(fs.readFileSync(file, "utf8")) as ManualRmpRow[];
   const missing: string[] = [];
   let matched = 0;
   for (const r of rows) {
     const norm = normalizeName(r.name);
-    const found = get<{ id: string }>("SELECT id FROM instructors WHERE normalized = ?", [norm]);
+    const found = await get<{ id: string }>("SELECT id FROM instructors WHERE normalized = ?", [norm]);
     if (!found) {
       missing.push(r.name);
       continue;
     }
-    run(
+    await run(
       `UPDATE instructors SET
          rmp_quality = ?, rmp_difficulty = ?, rmp_num_ratings = ?,
          rmp_url = ?, rmp_tags = ?, rmp_synced_at = ?

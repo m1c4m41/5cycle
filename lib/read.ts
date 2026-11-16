@@ -7,23 +7,23 @@ import { catalogStats } from "./ingest";
 import { normalizeName } from "./util";
 import type { InstructorSummary, ReviewRow } from "./types";
 
-export function adminSnapshot() {
+export async function adminSnapshot() {
   return {
-    stats: catalogStats(),
-    requirementSets: Number(get<{ n: number }>("SELECT COUNT(*) n FROM requirement_sets")?.n ?? 0),
+    stats: await catalogStats(),
+    requirementSets: Number((await get<{ n: number }>("SELECT COUNT(*) n FROM requirement_sets"))?.n ?? 0),
     unverifiedSets: Number(
-      get<{ n: number }>("SELECT COUNT(*) n FROM requirement_sets WHERE verified = 0")?.n ?? 0,
+      (await get<{ n: number }>("SELECT COUNT(*) n FROM requirement_sets WHERE verified = 0"))?.n ?? 0,
     ),
     rmpCached: Number(
-      get<{ n: number }>("SELECT COUNT(*) n FROM instructors WHERE rmp_url IS NOT NULL")?.n ?? 0,
+      (await get<{ n: number }>("SELECT COUNT(*) n FROM instructors WHERE rmp_url IS NOT NULL"))?.n ?? 0,
     ),
-    lastSync: get<{ v: string }>("SELECT value v FROM meta WHERE key = 'terms_synced_at'")?.v ?? null,
+    lastSync: (await get<{ v: string }>("SELECT value v FROM meta WHERE key = 'terms_synced_at'"))?.v ?? null,
   };
 }
 
 /* ------------------------------- professors ------------------------------ */
 
-export function instructorSummary(id: string): InstructorSummary | undefined {
+export async function instructorSummary(id: string): Promise<InstructorSummary | undefined> {
   return get<InstructorSummary>(
     `SELECT i.id, i.name, i.home_school, i.section_count,
             COUNT(r.id)                    AS review_count,
@@ -36,10 +36,10 @@ export function instructorSummary(id: string): InstructorSummary | undefined {
   );
 }
 
-export function instructorReviews(id: string): ReviewRow[] {
+export async function instructorReviews(id: string): Promise<ReviewRow[]> {
   // node:sqlite returns null-prototype rows; spread into plain objects so
   // they can be serialized into client components (ReviewForm `existing`).
-  return all<ReviewRow>(
+  const rows = await all<ReviewRow>(
     `SELECT r.id, r.instructor_id, r.section_id, r.stars, r.difficulty, r.workload,
             r.grade, r.take_again, r.text, r.tags, r.created_at,
             'A 5C student' AS author, s.course_code
@@ -48,12 +48,13 @@ export function instructorReviews(id: string): ReviewRow[] {
      WHERE r.instructor_id = ?
      ORDER BY r.created_at DESC`,
     [id],
-  ).map((r) => ({ ...r }));
+  );
+  return rows.map((r) => ({ ...r }));
 }
 
 /** Tag chips, most-mentioned first. */
-export function reviewTagsFor(instructorId: string): string[] {
-  const rows = all<{ tags: string }>(
+export async function reviewTagsFor(instructorId: string): Promise<string[]> {
+  const rows = await all<{ tags: string }>(
     "SELECT tags FROM reviews WHERE instructor_id = ? AND tags <> ''",
     [instructorId],
   );
@@ -69,7 +70,7 @@ export function reviewTagsFor(instructorId: string): string[] {
     .map(([t]) => t);
 }
 
-export function sectionsTaughtBy(instructorId: string, limit = 40) {
+export async function sectionsTaughtBy(instructorId: string, limit = 40) {
   return all<{
     id: string;
     code_string: string;
@@ -85,9 +86,9 @@ export function sectionsTaughtBy(instructorId: string, limit = 40) {
   );
 }
 
-export function findInstructorByName(name: string): string | null {
+export async function findInstructorByName(name: string): Promise<string | null> {
   return (
-    get<{ id: string }>("SELECT id FROM instructors WHERE normalized = ?", [normalizeName(name)])
+    (await get<{ id: string }>("SELECT id FROM instructors WHERE normalized = ?", [normalizeName(name)]))
       ?.id ?? null
   );
 }

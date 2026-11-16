@@ -522,8 +522,8 @@ export default async function RequirementsPage({
 }) {
   const sp = await searchParams;
   const user = await currentUser();
-  const cur = currentTermId();
-  const loaded = requirementsLoaded();
+  const cur = await currentTermId();
+  const loaded = await requirementsLoaded();
 
   /* Guests: read-only preview of one campus's published sets, nothing ticked. */
   const askedSchool = one(sp.school).toUpperCase();
@@ -535,17 +535,17 @@ export default async function RequirementsPage({
   // One enrollment read, one set read, then progress per set against the same array.
   // Manually entered courses (study abroad, transfer, create-your-own) become
   // pseudo-sections and count alongside catalog sections.
-  const manuals = user ? manualCoursesFor(user.id) : [];
+  const manuals = user ? await manualCoursesFor(user.id) : [];
   const manualSections = user ? manuals.map((m) => manualPseudoSection(m, user.school)) : [];
-  const plannedAll = user ? [...enrolledSections(user.id), ...manualSections] : [];
+  const plannedAll = user ? [ ...(await enrolledSections(user.id)), ...manualSections] : [];
   const planned = user && scope === "term" ? plannedAll.filter((s) => s.term_id === term) : plannedAll;
-  const sets = user ? setsForUser(user) : listSets({ school });
+  const sets = user ? await setsForUser(user) : await listSets({ school });
   // For signed-in users the matcher honours checked boxes: courses are pinned
   // into the groups they were checked for. One course may be checked in
   // several sets, and Educational-Objective / Breadth groups may also take a
   // course that already counts elsewhere in the same set.
-  const progress = user ? progressForUser(user, planned) : sets.map((s) => progressForSet(s, planned));
-  const assignments = user ? assignmentsFor(user.id) : null;
+  const progress = user ? await progressForUser(user, planned) : sets.map((s) => progressForSet(s, planned));
+  const assignments = user ? await assignmentsFor(user.id) : null;
   /** Checked boxes for one course — catalog section or manual pseudo-section. */
   const boxesFor = (s: Section) => {
     const list = s.manual
@@ -566,9 +566,9 @@ export default async function RequirementsPage({
   const termOf = (s: Section) => s.term_id || s.manual?.termLabel || "Other";
 
   const termChoices = user
-    ? Array.from(new Set([cur, ...plannedTerms(user.id), ...(term ? [term] : [])])).sort(
-        (a, b) => termKey(b) - termKey(a),
-      )
+    ? Array.from(
+        new Set([cur, ...(await plannedTerms(user.id)), ...(term ? [term] : [])]),
+      ).sort((a, b) => termKey(b) - termKey(a))
     : [];
 
   const byKind = (kind: string) => progress.filter((p) => p.set.kind === kind);
@@ -860,7 +860,7 @@ export default async function RequirementsPage({
             <ul className="mt-3 divide-y divide-ink-100">
               {[...plannedAll]
                 .sort((a, b) => termKey(termOf(b)) - termKey(termOf(a)) || a.id.localeCompare(b.id))
-                .map((s) => {
+                .map(async (s) => {
                   const { ids: currentIds, note: currentNote } = boxesFor(s);
                   const auto = fulfillmentFor(s, sets);
                   const isManual = !!s.manual;
@@ -896,7 +896,9 @@ export default async function RequirementsPage({
                             title={currentNote ?? "Checked by you"}
                           >
                             📌 counting toward {currentIds.length} box{currentIds.length === 1 ? "" : "es"}:{" "}
-                            {currentIds.map((g) => groupLabel(g) ?? g).join("; ")}
+                            {(await Promise.all(
+                              currentIds.map(async (g) => (await groupLabel(g)) ?? g),
+                            )).join("; ")}
                           </span>
                         ) : (
                           <span className="text-xs text-ink-400">

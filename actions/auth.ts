@@ -64,7 +64,7 @@ export async function signupAction(
     };
   }
 
-  const res = createUser({
+  const res = await createUser({
     name: formStr(fd, "name"),
     email: formStr(fd, "email"),
     password: formStr(fd, "password"),
@@ -77,7 +77,7 @@ export async function signupAction(
   if (!res.ok) return { ok: false, error: res.error };
 
   await startSession(res.id);
-  const pending = applyPendingAdd(res.id, fd);
+  const pending = await applyPendingAdd(res.id, fd);
   revalidateAll();
   const url = new URL(safeNext(formStr(fd, "next"), "/planner"), "http://internal");
   url.searchParams.set("welcome", "1");
@@ -99,11 +99,11 @@ export async function loginAction(
   const password = formStr(fd, "password");
   if (!email || !password) return { ok: false, error: "Email and password are required." };
 
-  const res = checkCredentials(email, password);
+  const res = await checkCredentials(email, password);
   if (!res.ok) return { ok: false, error: "Those credentials don't match an account." };
 
   await startSession(res.id);
-  const pending = applyPendingAdd(res.id, fd);
+  const pending = await applyPendingAdd(res.id, fd);
   revalidateAll();
   redirect(withNotice(safeNext(formStr(fd, "next"), "/planner"), pending));
 }
@@ -112,10 +112,10 @@ export async function loginAction(
  * If the form carries a pending course add (a guest's "Add to plan" bounced
  * through sign-in), complete it for the fresh session and report the result.
  */
-function applyPendingAdd(userId: string, fd: FormData): ActionState {
+async function applyPendingAdd(userId: string, fd: FormData): Promise<ActionState> {
   const sectionId = formStr(fd, "add");
   if (!sectionId) return IDLE;
-  const res = addToSchedule(userId, sectionId, { force: formStr(fd, "force") === "1" });
+  const res = await addToSchedule(userId, sectionId, { force: formStr(fd, "force") === "1" });
   return res.ok
     ? { ok: true, notice: `${res.enrollment.section.code_string} added to your plan.` }
     : { ok: false, error: res.error };
@@ -152,16 +152,16 @@ export async function updateProfileAction(
   const majorId = formStr(fd, "majorId") || null;
   const major2Id = formStr(fd, "major2Id") || null;
   const minorId = formStr(fd, "minorId") || null;
-  if (majorId && !listSets().some((s) => s.id === majorId))
+  if (majorId && !(await listSets()).some((s) => s.id === majorId))
     return { ok: false, error: "Unknown major." };
-  if (major2Id && !listSets().some((s) => s.id === major2Id))
+  if (major2Id && !(await listSets()).some((s) => s.id === major2Id))
     return { ok: false, error: "Unknown second major." };
   if (major2Id && major2Id === majorId)
     return { ok: false, error: "The second major must be a different program." };
-  if (minorId && !listSets().some((s) => s.id === minorId))
+  if (minorId && !(await listSets()).some((s) => s.id === minorId))
     return { ok: false, error: "Unknown minor." };
 
-  updateUserProfile(user.id, {
+  await updateUserProfile(user.id, {
     name: formStr(fd, "name") || user.name,
     school: school as SchoolCode,
     grad_year: formNum(fd, "gradYear"),
@@ -172,7 +172,7 @@ export async function updateProfileAction(
   });
 
   // Manual assignments pointing at sets the profile no longer tracks are stale.
-  pruneAssignments(
+  await pruneAssignments(
     user.id,
     [`ge-${school}`, majorId, major2Id, minorId].filter(Boolean) as string[],
   );
@@ -196,7 +196,7 @@ export async function changePasswordAction(
   const next = formStr(fd, "next");
   if (next.length < 8) return { ok: false, error: "New password must be 8+ characters." };
 
-  const row = get<{ password_hash: string }>(
+  const row = await get<{ password_hash: string }>(
     "SELECT password_hash FROM users WHERE id = ?",
     [user.id],
   );
@@ -204,7 +204,7 @@ export async function changePasswordAction(
   if (!verifyPassword(current, row.password_hash))
     return { ok: false, error: "Current password is wrong." };
 
-  run("UPDATE users SET password_hash = ? WHERE id = ?", [hashPassword(next), user.id]);
+  await run("UPDATE users SET password_hash = ? WHERE id = ?", [hashPassword(next), user.id]);
   return { ok: true, notice: "Password changed." };
 }
 
@@ -221,17 +221,17 @@ export async function seedSamplePlanAction(
 ): Promise<ActionState> {
   assertActionsEnabled();
   const user = await userOrRedirect();
-  const term = formStr(fd, "term") || currentTermId();
+  const term = formStr(fd, "term") || (await currentTermId());
   const max = Math.min(Math.max(formNum(fd, "courses") ?? 5, 1), 8);
 
-  const choices = buildSamplePlan(user, term, max);
+  const choices = await buildSamplePlan(user, term, max);
   if (!choices.length)
     return {
       ok: false,
       error: `No open sections in ${term} matched your requirements yet. Sync the catalog first.`,
     };
 
-  const added = applySamplePlan(user.id, choices);
+  const added = await applySamplePlan(user.id, choices);
   revalidateAll();
   return {
     ok: true,
@@ -244,7 +244,7 @@ export async function seedSamplePlanAction(
 export async function clearSamplePlanAction(): Promise<ActionState> {
   assertActionsEnabled();
   const user = await userOrRedirect();
-  const res = run("DELETE FROM enrollments WHERE user_id = ? AND note = 'sample'", [user.id]);
+  const res = await run("DELETE FROM enrollments WHERE user_id = ? AND note = 'sample'", [user.id]);
   revalidateAll();
   return {
     ok: true,
@@ -263,11 +263,11 @@ export async function wipeAccountAction(
   if (formStr(fd, "confirm").toUpperCase() !== "DELETE")
     return { ok: false, error: "Type DELETE to confirm." };
 
-  tx(() => {
-    run("DELETE FROM enrollments WHERE user_id = ?", [user.id]);
-    run("DELETE FROM reviews WHERE user_id = ?", [user.id]);
-    run("DELETE FROM sessions WHERE user_id = ?", [user.id]);
-    run("DELETE FROM users WHERE id = ?", [user.id]);
+  await tx(async () => {
+    await run("DELETE FROM enrollments WHERE user_id = ?", [user.id]);
+    await run("DELETE FROM reviews WHERE user_id = ?", [user.id]);
+    await run("DELETE FROM sessions WHERE user_id = ?", [user.id]);
+    await run("DELETE FROM users WHERE id = ?", [user.id]);
   });
   await endSession();
   revalidateAll();

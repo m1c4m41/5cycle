@@ -47,13 +47,13 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   const next = safeNext(one(sp.next), "/planner");
   const add = one(sp.add);
   const force = one(sp.force) === "1";
-  const addSection = add ? getSection(add) : undefined;
+  const addSection = add ? await getSection(add) : undefined;
 
   const campuses = SCHOOLS.filter((s) => s.code !== "CG");
   const school = campuses.some((c) => c.code === v("school")) ? v("school") : "";
 
-  const majors = listSets({ kind: "major" });
-  const minors = listSets({ kind: "minor" });
+  const majors = await listSets({ kind: "major" });
+  const minors = await listSets({ kind: "minor" });
   const majorGroups = byCampus(majors, school);
   const minorGroups = byCampus(minors, school);
   const homeMajors = school ? majors.filter((m) => m.school === school).length : 0;

@@ -124,14 +124,16 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
   const from = `FROM instructor_ratings ir JOIN instructors i ON i.id = ir.id`;
 
   const total = Number(
-    get<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${clause}`, params)?.n ?? 0,
+    (await get<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${clause}`, params))?.n ?? 0,
   );
-  const known = Number(get<{ n: number }>("SELECT COUNT(*) AS n FROM instructor_ratings")?.n ?? 0);
+  const known = Number(
+    (await get<{ n: number }>("SELECT COUNT(*) AS n FROM instructor_ratings"))?.n ?? 0,
+  );
 
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const shown = Math.min(page, pages); // a too-large ?page= must not render an empty list
 
-  const rows = all<Row>(
+  const rows = await all<Row>(
     `SELECT ir.id, ir.name, ir.section_count, ir.review_count, ir.avg_stars,
             ir.rmp_quality, ir.rmp_difficulty, ir.rmp_num_ratings, ir.rmp_url,
             i.home_school

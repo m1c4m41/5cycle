@@ -147,7 +147,7 @@ const SORTS: Record<string, string> = {
   perm: "s.perm_count DESC, s.department ASC",
 };
 
-export function searchSections(q: CatalogQuery): { rows: Section[]; total: number } {
+export async function searchSections(q: CatalogQuery): Promise<{ rows: Section[]; total: number }> {
   const { where, params } = buildWhere(q);
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const limit = Math.min(q.limit ?? PAGE_DEFAULT, PAGE_MAX);
@@ -155,30 +155,30 @@ export function searchSections(q: CatalogQuery): { rows: Section[]; total: numbe
   const order = SORTS[q.sort ?? "code"] ?? SORTS.code;
 
   const total = Number(
-    get<{ n: number }>(`SELECT COUNT(*) n FROM sections s ${clause}`, params)?.n ?? 0,
+    (await get<{ n: number }>(`SELECT COUNT(*) n FROM sections s ${clause}`, params))?.n ?? 0,
   );
 
-  const rows = all<SectionRow>(
+  const rows = await all<SectionRow>(
     `SELECT s.* FROM sections s ${clause} ORDER BY ${order} LIMIT ? OFFSET ?`,
     [...params, limit, offset],
   );
 
-  return { rows: hydrate(rows), total };
+  return { rows: await hydrate(rows), total };
 }
 
 /** Attach meetings, instructors and course areas to a page of sections. */
-export function hydrate(rows: SectionRow[]): Section[] {
+export async function hydrate(rows: SectionRow[]): Promise<Section[]> {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
   const ph = ids.map(() => "?").join(",");
 
-  const meetings = all<{ section_id: string } & Meeting>(
+  const meetings = await all<{ section_id: string } & Meeting>(
     `SELECT section_id, days, start_time, end_time, locations
      FROM section_schedules WHERE section_id IN (${ph})
      ORDER BY start_time ASC`,
     ids,
   );
-  const instructors = all<{ section_id: string } & InstructorRef>(
+  const instructors = await all<{ section_id: string } & InstructorRef>(
     `SELECT si.section_id, i.id, i.name,
             ir.avg_stars, ir.review_count, ir.rmp_quality, ir.rmp_num_ratings, ir.rmp_url
      FROM section_instructors si
@@ -188,7 +188,7 @@ export function hydrate(rows: SectionRow[]): Section[] {
      ORDER BY i.name ASC`,
     ids,
   );
-  const areas = all<{ section_id: string } & AreaRef>(
+  const areas = await all<{ section_id: string } & AreaRef>(
     `SELECT sa.section_id, ca.code, ca.description, ca.kind, ca.school
      FROM section_areas sa
      JOIN course_areas ca ON ca.code = sa.area_code
@@ -222,9 +222,9 @@ function group<T extends Record<string, unknown>>(rows: T[], key: string): Map<s
   return out;
 }
 
-export function getSection(id: string): Section | undefined {
-  const row = get<SectionRow>("SELECT * FROM sections WHERE id = ?", [id]);
-  return row ? hydrate([row])[0] : undefined;
+export async function getSection(id: string): Promise<Section | undefined> {
+  const row = await get<SectionRow>("SELECT * FROM sections WHERE id = ?", [id]);
+  return row ? (await hydrate([row]))[0] : undefined;
 }
 
 /**
@@ -232,8 +232,8 @@ export function getSection(id: string): Section | undefined {
  * Used by the sample-plan builder and the "requirements vs. catalog" audit;
  * do not call this from a page render.
  */
-export function sectionsForTerm(termId: string, openOnly = false): Section[] {
-  const rows = all<SectionRow>(
+export async function sectionsForTerm(termId: string, openOnly = false): Promise<Section[]> {
+  const rows = await all<SectionRow>(
     `SELECT * FROM sections WHERE term_id = ? ${openOnly ? "AND status IN ('O','R')" : ""}
      ORDER BY department, course_number, section_number`,
     [termId],
@@ -242,19 +242,19 @@ export function sectionsForTerm(termId: string, openOnly = false): Section[] {
   const out: Section[] = [];
   const CHUNK = 500;
   for (let i = 0; i < rows.length; i += CHUNK) {
-    out.push(...hydrate(rows.slice(i, i + CHUNK)));
+    out.push(...(await hydrate(rows.slice(i, i + CHUNK))));
   }
   return out;
 }
 
-export function getSectionsByIds(ids: string[]): Section[] {
+export async function getSectionsByIds(ids: string[]): Promise<Section[]> {
   if (!ids.length) return [];
   const rows: SectionRow[] = [];
   const CHUNK = 500; // keep the IN (...) list under SQLite's parameter limit
   for (let i = 0; i < ids.length; i += CHUNK) {
     const chunk = ids.slice(i, i + CHUNK);
     const ph = chunk.map(() => "?").join(",");
-    rows.push(...all<SectionRow>(`SELECT * FROM sections WHERE id IN (${ph})`, chunk));
+    rows.push(...(await all<SectionRow>(`SELECT * FROM sections WHERE id IN (${ph})`, chunk)));
   }
   return hydrate(rows);
 }
@@ -270,24 +270,26 @@ export type Facets = {
   instructors: number;
 };
 
-export function facets(term?: string): Facets {
+export async function facets(term?: string): Promise<Facets> {
   const p = term ? [term] : [];
   const termClause = term ? "WHERE term_id = ?" : "";
   return {
     // Only terms we actually hold a catalog for, newest first in calendar order
     // (a string compare puts every Spring after every Fall).
-    terms: all<{ id: string; label: string; is_current: number; sections: number }>(
-      `SELECT t.id, t.label, t.is_current,
-              (SELECT COUNT(*) FROM sections s WHERE s.term_id = t.id) AS sections
-       FROM terms t ORDER BY t.id DESC`,
+    terms: (
+      await all<{ id: string; label: string; is_current: number; sections: number }>(
+        `SELECT t.id, t.label, t.is_current,
+                (SELECT COUNT(*) FROM sections s WHERE s.term_id = t.id) AS sections
+         FROM terms t ORDER BY t.id DESC`,
+      )
     )
       .filter((t) => t.sections > 0)
       .sort((a, b) => termChronoKey(b.id) - termChronoKey(a.id)),
-    schools: all<{ code: string; short: string; n: number }>(
+    schools: await all<{ code: string; short: string; n: number }>(
       `SELECT school AS code, school AS short, COUNT(*) n FROM sections ${termClause} GROUP BY school ORDER BY n DESC`,
       p,
     ),
-    departments: all<{ code: string; description: string; n: number }>(
+    departments: await all<{ code: string; description: string; n: number }>(
       `SELECT ca.code, ca.description, COUNT(*) n
        FROM course_areas ca
        JOIN section_areas sa ON sa.area_code = ca.code
@@ -296,7 +298,7 @@ export function facets(term?: string): Facets {
        GROUP BY ca.code ORDER BY ca.code ASC`,
       p,
     ),
-    geAreas: all<{ code: string; description: string; school: string | null; n: number }>(
+    geAreas: await all<{ code: string; description: string; school: string | null; n: number }>(
       `SELECT ca.code, ca.description, ca.school, COUNT(*) n
        FROM course_areas ca
        JOIN section_areas sa ON sa.area_code = ca.code
@@ -305,12 +307,12 @@ export function facets(term?: string): Facets {
        GROUP BY ca.code ORDER BY ca.code ASC`,
       p,
     ),
-    instructors: Number(get<{ n: number }>("SELECT COUNT(*) n FROM instructors")?.n ?? 0),
+    instructors: Number((await get<{ n: number }>("SELECT COUNT(*) n FROM instructors"))?.n ?? 0),
   };
 }
 
 /** Instructor autocomplete for the review + filter UIs. */
-export function suggestInstructors(prefix: string, limit = 12) {
+export async function suggestInstructors(prefix: string, limit = 12) {
   return all<{ id: string; name: string; section_count: number }>(
     `SELECT id, name, section_count FROM instructors
      WHERE normalized LIKE ? ORDER BY section_count DESC, name ASC LIMIT ?`,

@@ -40,7 +40,7 @@ export async function submitReviewAction(
   if (text.length < 15)
     return { ok: false, error: "Reviews need at least 15 characters — be specific." };
 
-  const instructor = get<{ id: string; name: string }>(
+  const instructor = await get<{ id: string; name: string }>(
     "SELECT id, name FROM instructors WHERE id = ?",
     [instructorId],
   );
@@ -51,18 +51,18 @@ export async function submitReviewAction(
     return { ok: false, error: "Difficulty must be between 1 and 5." };
 
   const sectionId = formStr(fd, "sectionId") || null;
-  if (sectionId && !get("SELECT id FROM sections WHERE id = ?", [sectionId]))
+  if (sectionId && !(await get("SELECT id FROM sections WHERE id = ?", [sectionId])))
     return { ok: false, error: "Unknown course." };
 
   // One review per professor per student: edit rather than stack.
-  const existing = get<{ id: string }>(
+  const existing = await get<{ id: string }>(
     "SELECT id FROM reviews WHERE instructor_id = ? AND user_id = ?",
     [instructorId, user.id],
   );
 
-  tx(() => {
+  await tx(async () => {
     if (existing) {
-      run(
+      await run(
         `UPDATE reviews SET stars=?, difficulty=?, workload=?, grade=?, take_again=?,
            text=?, tags=?, section_id=?, created_at=? WHERE id=?`,
         [
@@ -79,7 +79,7 @@ export async function submitReviewAction(
         ],
       );
     } else {
-      run(
+      await run(
         `INSERT INTO reviews(id, user_id, instructor_id, section_id, stars, difficulty,
            workload, grade, take_again, text, tags, created_at)
          VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -119,7 +119,7 @@ export async function deleteReviewAction(
   assertActionsEnabled();
   const user = await userOrRedirect();
   const id = formStr(fd, "reviewId");
-  const res = run("DELETE FROM reviews WHERE id = ? AND user_id = ?", [id, user.id]);
+  const res = await run("DELETE FROM reviews WHERE id = ? AND user_id = ?", [id, user.id]);
   if (!res.changes) return { ok: false, error: "Review not found (or not yours)." };
   revalidatePath("/professors", "layout");
   revalidatePath("/catalog");

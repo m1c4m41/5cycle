@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
   const q: CatalogQuery = {
     q: sp.get("q") ?? undefined,
-    term: sp.get("term") ?? currentTermId(),
+    term: sp.get("term") ?? (await currentTermId()),
     schools: list(sp, "school"),
     departments: list(sp, "dept"),
     areas: list(sp, "area"),
@@ -39,13 +39,13 @@ export async function GET(req: Request) {
     sort: (sp.get("sort") as CatalogQuery["sort"]) ?? "code",
   };
 
-  const { rows, total } = searchSections(q);
+  const { rows, total } = await searchSections(q);
   return jsonResponse({
     term: q.term,
     total,
     offset: q.offset,
     limit: q.limit,
     results: rows,
-    facets: facets(q.term),
+    facets: await facets(q.term),
   });
 }

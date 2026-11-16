@@ -43,7 +43,7 @@ export async function addToPlanAction(
     redirect(`/login?${q.toString()}`);
   }
 
-  const res = addToSchedule(user.id, sectionId, { force });
+  const res = await addToSchedule(user.id, sectionId, { force });
   if (!res.ok) {
     const detail = (res.conflicts ?? [])
       .map((c) => `${c.a.code_string} ↔ ${c.b.code_string}`)
@@ -74,8 +74,8 @@ export async function removeFromPlanAction(
   assertActionsEnabled();
   const user = await userOrRedirect();
   const sectionId = formStr(fd, "sectionId");
-  const section = getSection(sectionId);
-  const removed = removeFromSchedule(user.id, sectionId);
+  const section = await getSection(sectionId);
+  const removed = await removeFromSchedule(user.id, sectionId);
   revalidateSchedule();
   revalidatePath("/catalog");
   return removed
@@ -94,9 +94,9 @@ export async function setStatusAction(
   const sectionId = formStr(fd, "sectionId");
   const status = formStr(fd, "status");
   if (!STATUSES.has(status)) return { ok: false, error: "Unknown status." };
-  if (!getSection(sectionId)) return { ok: false, error: "Unknown section." };
+  if (!(await getSection(sectionId))) return { ok: false, error: "Unknown section." };
 
-  setEnrollmentStatus(user.id, sectionId, status);
+  await setEnrollmentStatus(user.id, sectionId, status);
   revalidateSchedule();
   return { ok: true, notice: `Marked as ${status.replace("_", " ")}.` };
 }
@@ -109,7 +109,7 @@ export async function clearTermAction(
   const user = await userOrRedirect();
   const term = formStr(fd, "term");
   if (!term) return { ok: false, error: "Missing term." };
-  const res = run("DELETE FROM enrollments WHERE user_id = ? AND term_id = ?", [
+  const res = await run("DELETE FROM enrollments WHERE user_id = ? AND term_id = ?", [
     user.id,
     term,
   ]);

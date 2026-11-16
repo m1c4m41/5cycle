@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   // (or a fresh account) the add completes automatically.
   const add = one(sp.add);
   const force = one(sp.force) === "1";
-  const addSection = add ? getSection(add) : undefined;
+  const addSection = add ? await getSection(add) : undefined;
 
   if (await currentUser()) redirect(next);
 

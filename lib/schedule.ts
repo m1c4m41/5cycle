@@ -19,25 +19,25 @@ export type EnrollmentRow = {
 
 export type Enrollment = EnrollmentRow & { section: Section };
 
-export function listEnrollments(userId: string, termId?: string): Enrollment[] {
+export async function listEnrollments(userId: string, termId?: string): Promise<Enrollment[]> {
   const rows = termId
-    ? all<EnrollmentRow>(
+    ? await all<EnrollmentRow>(
         "SELECT * FROM enrollments WHERE user_id = ? AND term_id = ? ORDER BY added_at ASC",
         [userId, termId],
       )
-    : all<EnrollmentRow>(
+    : await all<EnrollmentRow>(
         "SELECT * FROM enrollments WHERE user_id = ? ORDER BY term_id DESC, added_at ASC",
         [userId],
       );
-  const sections = getSectionsByIds(rows.map((r) => r.section_id));
+  const sections = await getSectionsByIds(rows.map((r) => r.section_id));
   const byId = new Map(sections.map((s) => [s.id, s]));
   return rows
     .map((r) => ({ ...r, section: byId.get(r.section_id) }))
     .filter((x): x is Enrollment => Boolean(x.section));
 }
 
-export function enrolledSections(userId: string, termId?: string): Section[] {
-  return listEnrollments(userId, termId).map((e) => e.section);
+export async function enrolledSections(userId: string, termId?: string): Promise<Section[]> {
+  return (await listEnrollments(userId, termId)).map((e) => e.section);
 }
 
 export type Conflict = {
@@ -77,15 +77,15 @@ export type AddResult =
   | { ok: true; enrollment: Enrollment; conflicts: Conflict[]; warning?: string }
   | { ok: false; error: string; conflicts?: Conflict[] };
 
-export function addToSchedule(
+export async function addToSchedule(
   userId: string,
   sectionId: string,
   opts: { status?: string; note?: string; force?: boolean } = {},
-): AddResult {
-  const section = getSection(sectionId);
+): Promise<AddResult> {
+  const section = await getSection(sectionId);
   if (!section) return { ok: false, error: "That section is not in the synced catalog." };
 
-  const existing = get<EnrollmentRow>(
+  const existing = await get<EnrollmentRow>(
     "SELECT * FROM enrollments WHERE user_id = ? AND section_id = ?",
     [userId, sectionId],
   );
@@ -93,7 +93,7 @@ export function addToSchedule(
     return { ok: true, enrollment: { ...existing, section }, conflicts: [], warning: "Already in your schedule." };
   }
 
-  const current = enrolledSections(userId, section.term_id);
+  const current = await enrolledSections(userId, section.term_id);
   const conflicts = findConflicts([...current, section]).filter(
     (c) => c.a.id === sectionId || c.b.id === sectionId,
   );
@@ -106,30 +106,30 @@ export function addToSchedule(
   }
 
   const id = newId("enr-");
-  run(
+  await run(
     `INSERT INTO enrollments(id, user_id, section_id, term_id, status, note, added_at)
      VALUES(?,?,?,?,?,?,?)`,
     [id, userId, sectionId, section.term_id, opts.status ?? "planned", opts.note ?? null, nowIso()],
   );
-  const row = get<EnrollmentRow>("SELECT * FROM enrollments WHERE id = ?", [id])!;
+  const row = (await get<EnrollmentRow>("SELECT * FROM enrollments WHERE id = ?", [id]))!;
   return { ok: true, enrollment: { ...row, section }, conflicts };
 }
 
-export function removeFromSchedule(userId: string, sectionId: string): boolean {
-  const res = run("DELETE FROM enrollments WHERE user_id = ? AND section_id = ?", [
+export async function removeFromSchedule(userId: string, sectionId: string): Promise<boolean> {
+  const res = await run("DELETE FROM enrollments WHERE user_id = ? AND section_id = ?", [
     userId,
     sectionId,
   ]);
   return Number(res.changes) > 0;
 }
 
-export function setEnrollmentStatus(
+export async function setEnrollmentStatus(
   userId: string,
   sectionId: string,
   status: string,
   note?: string,
 ) {
-  run(
+  await run(
     note === undefined
       ? "UPDATE enrollments SET status = ? WHERE user_id = ? AND section_id = ?"
       : "UPDATE enrollments SET status = ?, note = ? WHERE user_id = ? AND section_id = ?",
@@ -147,12 +147,12 @@ export type TermSummary = {
   needsPerm: number;
 };
 
-export function summarizeTerm(
+export async function summarizeTerm(
   userId: string,
   termId: string,
   homeSchool: string,
-): TermSummary {
-  const sections = enrolledSections(userId, termId);
+): Promise<TermSummary> {
+  const sections = await enrolledSections(userId, termId);
   const creditsBySchool: Record<string, number> = {};
   let cross = 0;
   for (const s of sections) {
@@ -173,10 +173,12 @@ export function summarizeTerm(
 }
 
 /** Distinct terms the student has planned anything in (newest first). */
-export function plannedTerms(userId: string): string[] {
-  return all<{ term_id: string }>(
-    "SELECT DISTINCT term_id FROM enrollments WHERE user_id = ? ORDER BY term_id DESC",
-    [userId],
+export async function plannedTerms(userId: string): Promise<string[]> {
+  return (
+    await all<{ term_id: string }>(
+      "SELECT DISTINCT term_id FROM enrollments WHERE user_id = ? ORDER BY term_id DESC",
+      [userId],
+    )
   ).map((r) => r.term_id);
 }
 

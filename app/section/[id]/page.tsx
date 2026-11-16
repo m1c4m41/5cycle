@@ -27,7 +27,6 @@ import {
   secondsTo12h,
   termLabel,
 } from "@/lib/util";
-import type { ReviewRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +37,7 @@ function spNotice(v: string | string[] | undefined): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const s = getSection(decodeURIComponent(id));
+  const s = await getSection(decodeURIComponent(id));
   if (!s) return { title: "Course not found · 5Cycle" };
   return {
     title: `${s.code_string} ${s.title} · 5Cycle`,
@@ -58,24 +57,26 @@ export default async function SectionPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  const s = getSection(decodeURIComponent(id));
+  const s = await getSection(decodeURIComponent(id));
   if (!s) notFound();
 
   const user = await currentUser();
-  const planned = user ? enrolledSections(user.id, s.term_id) : [];
+  const planned = user ? await enrolledSections(user.id, s.term_id) : [];
   const inPlan = planned.some((p) => p.id === s.id);
 
-  const sets = user ? setsForUser(user) : [];
+  const sets = user ? await setsForUser(user) : [];
   const fits = sets.length ? fulfillmentFor(s, sets) : [];
 
   // Other sections of the same course this term — the practical reason people
   // land here is "which discussion/lab time is open".
-  const siblings = searchSections({
-    term: s.term_id,
-    departments: [s.department],
-    q: `${s.department} ${String(s.course_number).padStart(3, "0")}${s.suffix}`,
-    limit: 40,
-  }).rows.filter(
+  const siblings = (
+    await searchSections({
+      term: s.term_id,
+      departments: [s.department],
+      q: `${s.department} ${String(s.course_number).padStart(3, "0")}${s.suffix}`,
+      limit: 40,
+    })
+  ).rows.filter(
     (o) =>
       o.id !== s.id &&
       o.department === s.department &&
@@ -197,8 +198,8 @@ export default async function SectionPage({
               </p>
             ) : (
               <ul className="space-y-3">
-                {s.instructors.map((i) => {
-                  const full = instructorSummary(i.id);
+                {s.instructors.map(async (i) => {
+                  const full = await instructorSummary(i.id);
                   return (
                     <li key={i.id} className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -438,7 +439,7 @@ export default async function SectionPage({
 }
 
 /** Reviews for every instructor attached to the section, in one thread. */
-function ReviewThread({
+async function ReviewThread({
   instructors,
   userId,
   sectionId,
@@ -451,10 +452,10 @@ function ReviewThread({
   return (
     <section className="card card-pad space-y-4">
       <h2 className="text-lg font-bold">Reviews for this section</h2>
-      {instructors.map((i) => {
-        const reviews = instructorReviews(i.id) as ReviewRow[];
+      {instructors.map(async (i) => {
+        const reviews = await instructorReviews(i.id);
         const mine = userId
-          ? get<{ id: string }>(
+          ? await get<{ id: string }>(
               "SELECT id FROM reviews WHERE instructor_id = ? AND user_id = ?",
               [i.id, userId],
             )

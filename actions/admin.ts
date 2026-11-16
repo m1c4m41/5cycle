@@ -36,7 +36,7 @@ export async function syncCatalogAction(
   const res = await manualSync(term || undefined);
   if (res.skipped) return { ok: false, error: res.skipped };
   const reports = res.reports ?? [];
-  if (!requirementsLoaded()) loadRequirementFiles();
+  if (!(await requirementsLoaded())) await loadRequirementFiles();
   revalidatePath("/catalog", "layout");
   revalidatePath("/requirements");
   revalidatePath("/admin");
@@ -71,7 +71,7 @@ export async function reloadRequirementsAction(
   await requireUser();
   if (!isAdminToken(formStr(fd, "token"))) return DENIED;
 
-  const res = loadRequirementFiles();
+  const res = await loadRequirementFiles();
   revalidatePath("/requirements", "layout");
   revalidatePath("/catalog");
   revalidatePath("/admin");
@@ -90,7 +90,7 @@ export async function importRmpAction(
   await requireUser();
   if (!isAdminToken(formStr(fd, "token"))) return DENIED;
 
-  const res = importManualRmp();
+  const res = await importManualRmp();
   revalidatePath("/professors", "layout");
   revalidatePath("/catalog");
   if (!res.matched && !res.missing.length)

@@ -8,6 +8,8 @@ dist/
 data/db.sqlite
 data/db.sqlite-wal
 data/db.sqlite-shm
+data/db.snapshot.sqlite-wal
+data/db.snapshot.sqlite-shm
 data/cache/
 
 .env

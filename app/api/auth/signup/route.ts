@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  if (!requirementsLoaded()) loadRequirementFiles();
+  if (!(await requirementsLoaded())) await loadRequirementFiles();
 
   let body: Record<string, string | number | null | undefined>;
   try {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     return jsonResponse({ error: "Pick one of the five Claremont Colleges." }, { status: 400 });
   }
 
-  const res = createUser({
+  const res = await createUser({
     name: String(body.name ?? ""),
     email: String(body.email ?? ""),
     password: String(body.password ?? ""),

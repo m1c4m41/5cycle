@@ -46,11 +46,11 @@ if (flags.has("--areas")) {
   if (skipped) process.exitCode = 1;
 }
 
-const req = loadRequirementFiles();
+const req = await loadRequirementFiles();
 console.log(`requirements: ${req.sets} sets, ${req.groups} groups loaded`);
-console.log(`  majors: ${listSets({ kind: "major" }).length}, minors: ${listSets({ kind: "minor" }).length}, GE: ${listSets({ kind: "ge" }).length}`);
+console.log(`  majors: ${(await listSets({ kind: "major" })).length}, minors: ${(await listSets({ kind: "minor" })).length}, GE: ${(await listSets({ kind: "ge" })).length}`);
 
-const s = catalogStats();
+const s = await catalogStats();
 console.log(
   `catalog now: ${s.sections} sections / ${s.courses} courses / ${s.instructors} professors / ${s.areas} areas`,
 );

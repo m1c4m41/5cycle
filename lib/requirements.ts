@@ -208,7 +208,7 @@ function fileRank(f: string): number {
   return 1;
 }
 
-export function loadRequirementFiles(dir = REQ_DIR): { sets: number; groups: number } {
+export async function loadRequirementFiles(dir = REQ_DIR): Promise<{ sets: number; groups: number }> {
   if (!fs.existsSync(dir)) return { sets: 0, groups: 0 };
   const files = fs
     .readdirSync(dir)
@@ -218,7 +218,7 @@ export function loadRequirementFiles(dir = REQ_DIR): { sets: number; groups: num
   let sets = 0;
   let groups = 0;
 
-  tx(() => {
+  await tx(async () => {
     for (const file of files) {
       let parsed: FileSpec;
       try {
@@ -227,7 +227,7 @@ export function loadRequirementFiles(dir = REQ_DIR): { sets: number; groups: num
         throw new Error(`Bad JSON in data/requirements/${file}: ${(err as Error).message}`);
       }
       for (const spec of parsed.sets ?? []) {
-        run(
+        await run(
           `INSERT INTO requirement_sets(id, school, kind, name, degree_years, total_credits, notes, source, verified)
            VALUES(?,?,?,?,?,?,?,?,?)
            ON CONFLICT(id) DO UPDATE SET
@@ -247,11 +247,11 @@ export function loadRequirementFiles(dir = REQ_DIR): { sets: number; groups: num
           ],
         );
         sets++;
-        run("DELETE FROM requirement_groups WHERE set_id = ?", [spec.id]);
+        await run("DELETE FROM requirement_groups WHERE set_id = ?", [spec.id]);
 
-        (spec.groups ?? []).forEach((g, i) => {
+        for (const [i, g] of (spec.groups ?? []).entries()) {
           const gid = `${spec.id}::${g.id ?? slug(g.name) ?? i}`;
-          run(
+          await run(
             `INSERT INTO requirement_groups(id, set_id, name, position, min_courses, min_credits, required, level, notes)
              VALUES(?,?,?,?,?,?,?,?,?)`,
             [
@@ -268,15 +268,15 @@ export function loadRequirementFiles(dir = REQ_DIR): { sets: number; groups: num
           );
           groups++;
           for (const m of compileRules(g)) {
-            run("INSERT INTO requirement_rules(group_id, match) VALUES(?,?)", [
+            await run("INSERT INTO requirement_rules(group_id, match) VALUES(?,?)", [
               gid,
               JSON.stringify(m),
             ]);
           }
-        });
+        }
       }
     }
-    run(
+    await run(
       `INSERT INTO meta(key,value) VALUES('requirements_loaded_at', ?)
        ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
       [new Date().toISOString()],
@@ -293,24 +293,24 @@ function slug(s: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function requirementsLoaded(): boolean {
-  return Number(get<{ n: number }>("SELECT COUNT(*) n FROM requirement_sets")?.n ?? 0) > 0;
+export async function requirementsLoaded(): Promise<boolean> {
+  return Number((await get<{ n: number }>("SELECT COUNT(*) n FROM requirement_sets"))?.n ?? 0) > 0;
 }
 
 /* ========================================================================= */
 /* Reading definitions                                                       */
 /* ========================================================================= */
 
-export function getSet(setId: string): RequirementSet | undefined {
-  const set = get<Omit<RequirementSet, "groups">>("SELECT * FROM requirement_sets WHERE id = ?", [
+export async function getSet(setId: string): Promise<RequirementSet | undefined> {
+  const set = await get<Omit<RequirementSet, "groups">>("SELECT * FROM requirement_sets WHERE id = ?", [
     setId,
   ]);
   if (!set) return undefined;
-  return { ...set, groups: getGroups(setId) };
+  return { ...set, groups: await getGroups(setId) };
 }
 
-function getGroups(setId: string): RequirementGroup[] {
-  const groups = all<
+async function getGroups(setId: string): Promise<RequirementGroup[]> {
+  const groups = await all<
     Omit<RequirementGroup, "rules"> & { rule_json: string | null }
   >(
     `SELECT g.*, (
@@ -336,7 +336,7 @@ function getGroups(setId: string): RequirementGroup[] {
   });
 }
 
-export function listSets(filter: { school?: string; kind?: string } = {}): RequirementSet[] {
+export async function listSets(filter: { school?: string; kind?: string } = {}): Promise<RequirementSet[]> {
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (filter.school) {
@@ -348,11 +348,15 @@ export function listSets(filter: { school?: string; kind?: string } = {}): Requi
     params.push(filter.kind);
   }
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  const rows = all<RequirementSet>(
+  const rows = await all<RequirementSet>(
     `SELECT * FROM requirement_sets ${clause} ORDER BY kind ASC, name ASC`,
     params,
   );
-  return rows.map((r) => ({ ...r, groups: getGroups(r.id) }));
+  const out: RequirementSet[] = [];
+  for (const r of rows) {
+    out.push({ ...r, groups: await getGroups(r.id) });
+  }
+  return out;
 }
 
 export type UserPrograms = {
@@ -363,7 +367,7 @@ export type UserPrograms = {
   minor_id: string | null;
 };
 
-export function setsForUser(u: UserPrograms): RequirementSet[] {
+export async function setsForUser(u: UserPrograms): Promise<RequirementSet[]> {
   const ids = [
     `ge-${u.school}`,
     u.major_id,
@@ -372,7 +376,7 @@ export function setsForUser(u: UserPrograms): RequirementSet[] {
   ].filter(Boolean) as string[];
   const out: RequirementSet[] = [];
   for (const id of ids) {
-    const s = getSet(id);
+    const s = await getSet(id);
     if (s) out.push(s);
   }
   return out;
@@ -627,11 +631,11 @@ type AssignmentRow = {
 };
 
 /** All of a student's checked boxes, grouped by course. */
-export function assignmentsFor(userId: string): {
+export async function assignmentsFor(userId: string): Promise<{
   sections: Map<string, Assignment[]>;
   manuals: Map<string, Assignment[]>;
-} {
-  const rows = all<AssignmentRow>(
+}> {
+  const rows = await all<AssignmentRow>(
     `SELECT COALESCE(section_id, manual_id) AS course_id,
             CASE WHEN section_id IS NOT NULL THEN 'section' ELSE 'manual' END AS course_kind,
             set_id, group_id, note
@@ -665,24 +669,24 @@ export function assignmentsFor(userId: string): {
  * list of boxes the student checked (empty = back to automatic). Every box is
  * validated first so a stale id can't wedge a course out of all counting.
  */
-export function setCourseAssignments(
+export async function setCourseAssignments(
   userId: string,
   courseId: string,
   courseKind: "section" | "manual",
   groupIds: string[],
   note: string | null = null,
-): { ok: true; count: number } | { ok: false; error: string } {
+): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
   if (courseKind === "section") {
-    if (!get<{ id: string }>("SELECT id FROM sections WHERE id = ?", [courseId]))
+    if (!(await get<{ id: string }>("SELECT id FROM sections WHERE id = ?", [courseId])))
       return { ok: false, error: "That section is not in the synced catalog." };
-  } else if (!getManualCourse(courseId, userId)) {
+  } else if (!(await getManualCourse(courseId, userId))) {
     return { ok: false, error: "That manual course is not yours." };
   }
 
   const col = courseKind === "section" ? "section_id" : "manual_id";
   const groups: { id: string; set_id: string }[] = [];
   for (const gid of [...new Set(groupIds.map((g) => g.trim()).filter(Boolean))]) {
-    const g = get<{ id: string; set_id: string }>(
+    const g = await get<{ id: string; set_id: string }>(
       "SELECT id, set_id FROM requirement_groups WHERE id = ?",
       [gid],
     );
@@ -690,13 +694,13 @@ export function setCourseAssignments(
     groups.push(g);
   }
 
-  tx(() => {
-    run(`DELETE FROM requirement_assignments WHERE user_id = ? AND ${col} = ?`, [
+  await tx(async () => {
+    await run(`DELETE FROM requirement_assignments WHERE user_id = ? AND ${col} = ?`, [
       userId,
       courseId,
     ]);
     for (const g of groups) {
-      run(
+      await run(
         `INSERT INTO requirement_assignments(id, user_id, ${col}, set_id, group_id, note, created_at)
          VALUES(?,?,?,?,?,?,?)
          ON CONFLICT(user_id, ${col}, group_id) DO UPDATE SET
@@ -720,18 +724,18 @@ const MANUAL_DEPT: Record<ManualCourseKind, string> = {
 };
 
 /** The student's manually-entered courses. */
-export function manualCoursesFor(userId: string): ManualCourse[] {
-  const rows = all<ManualCourse>(
+export async function manualCoursesFor(userId: string): Promise<ManualCourse[]> {
+  const rows = await all<ManualCourse>(
     "SELECT * FROM manual_courses WHERE user_id = ? ORDER BY created_at ASC",
     [userId],
   );
   return rows.map((r) => ({ ...r }));
 }
 
-export function getManualCourse(id: string, userId?: string): ManualCourse | undefined {
+export async function getManualCourse(id: string, userId?: string): Promise<ManualCourse | undefined> {
   const row = userId
-    ? get<ManualCourse>("SELECT * FROM manual_courses WHERE id = ? AND user_id = ?", [id, userId])
-    : get<ManualCourse>("SELECT * FROM manual_courses WHERE id = ?", [id]);
+    ? await get<ManualCourse>("SELECT * FROM manual_courses WHERE id = ? AND user_id = ?", [id, userId])
+    : await get<ManualCourse>("SELECT * FROM manual_courses WHERE id = ?", [id]);
   return row ? { ...row } : undefined;
 }
 
@@ -782,21 +786,21 @@ export type ManualCourseInput = {
   note: string | null;
 };
 
-export function addManualCourse(
+export async function addManualCourse(
   userId: string,
   input: ManualCourseInput,
-): { ok: true; id: string } | { ok: false; error: string } {
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const title = input.title.trim();
   if (!title) return { ok: false, error: "Give the course a title first." };
   const credits = Number(input.credits);
   if (!Number.isFinite(credits) || credits <= 0 || credits > 12)
     return { ok: false, error: "Credits must be between 0.25 and 12 (5C-normalized)." };
-  if (input.term_id && !get<{ id: string }>("SELECT id FROM terms WHERE id = ?", [input.term_id]))
+  if (input.term_id && !(await get<{ id: string }>("SELECT id FROM terms WHERE id = ?", [input.term_id])))
     return { ok: false, error: "Unknown term — pick one of the synced terms." };
   if (!input.term_id && !input.term_label.trim())
     return { ok: false, error: "Pick a term." };
   const id = newId("man-");
-  run(
+  await run(
     `INSERT INTO manual_courses(id, user_id, term_id, term_label, title, credits, kind, note, created_at)
      VALUES(?,?,?,?,?,?,?,?,?)`,
     [
@@ -814,24 +818,24 @@ export function addManualCourse(
   return { ok: true, id };
 }
 
-export function removeManualCourse(userId: string, id: string): boolean {
-  const res = run("DELETE FROM manual_courses WHERE id = ? AND user_id = ?", [id, userId]);
+export async function removeManualCourse(userId: string, id: string): Promise<boolean> {
+  const res = await run("DELETE FROM manual_courses WHERE id = ? AND user_id = ?", [id, userId]);
   return Number(res.changes) > 0;
 }
 
 /* ---------------------------- planner term flags ------------------------- */
 
 /** Which of the student's terms are flagged "studying abroad". */
-export function abroadFlagsFor(userId: string): Map<string, boolean> {
-  const rows = all<{ term_id: string; is_abroad: number }>(
+export async function abroadFlagsFor(userId: string): Promise<Map<string, boolean>> {
+  const rows = await all<{ term_id: string; is_abroad: number }>(
     "SELECT term_id, is_abroad FROM user_term_flags WHERE user_id = ?",
     [userId],
   );
   return new Map(rows.map((r) => [r.term_id, r.is_abroad === 1]));
 }
 
-export function setAbroadFlag(userId: string, termId: string, abroad: boolean): void {
-  run(
+export async function setAbroadFlag(userId: string, termId: string, abroad: boolean): Promise<void> {
+  await run(
     `INSERT INTO user_term_flags(user_id, term_id, is_abroad) VALUES(?,?,?)
      ON CONFLICT(user_id, term_id) DO UPDATE SET is_abroad = excluded.is_abroad`,
     [userId, termId, abroad ? 1 : 0],
@@ -839,8 +843,8 @@ export function setAbroadFlag(userId: string, termId: string, abroad: boolean): 
 }
 
 /** Display label for a group id, e.g. "CMC General Education — Arts". */
-export function groupLabel(groupId: string): string | undefined {
-  const row = get<{ gname: string; sname: string }>(
+export async function groupLabel(groupId: string): Promise<string | undefined> {
+  const row = await get<{ gname: string; sname: string }>(
     `SELECT g.name AS gname, s.name AS sname
      FROM requirement_groups g JOIN requirement_sets s ON s.id = g.set_id
      WHERE g.id = ?`,
@@ -850,12 +854,12 @@ export function groupLabel(groupId: string): string | undefined {
 }
 
 /** Drop assignments pointing at sets the profile no longer tracks. */
-export function pruneAssignments(userId: string, keepSetIds: string[]): number {
+export async function pruneAssignments(userId: string, keepSetIds: string[]): Promise<number> {
   if (keepSetIds.length === 0) {
-    const res = run("DELETE FROM requirement_assignments WHERE user_id = ?", [userId]);
+    const res = await run("DELETE FROM requirement_assignments WHERE user_id = ?", [userId]);
     return Number(res.changes);
   }
-  const res = run(
+  const res = await run(
     `DELETE FROM requirement_assignments
      WHERE user_id = ? AND set_id NOT IN (${keepSetIds.map(() => "?").join(",")})`,
     [userId, ...keepSetIds],
@@ -863,19 +867,19 @@ export function pruneAssignments(userId: string, keepSetIds: string[]): number {
   return Number(res.changes);
 }
 
-export function progressForUser(
+export async function progressForUser(
   user: UserPrograms & { id?: string | null },
   planned: Section[],
   opts: {
     assignments?: { sections: Map<string, Assignment[]>; manuals: Map<string, Assignment[]> };
   } = {},
-): SetProgress[] {
+): Promise<SetProgress[]> {
   const assignments =
     opts.assignments ??
     (user.id
-      ? assignmentsFor(user.id)
+      ? await assignmentsFor(user.id)
       : { sections: new Map<string, Assignment[]>(), manuals: new Map<string, Assignment[]>() });
-  const sets = setsForUser(user);
+  const sets = await setsForUser(user);
   const idxById = new Map<string, number>();
   planned.forEach((s, i) => {
     if (!idxById.has(s.id)) idxById.set(s.id, i);

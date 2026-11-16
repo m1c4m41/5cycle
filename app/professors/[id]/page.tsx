@@ -20,7 +20,7 @@ function num(v: number | null | undefined): number | null {
 
 export async function generateMetadata({ params }: Params) {
   const { id } = await params;
-  const s = instructorSummary(decodeURIComponent(id));
+  const s = await instructorSummary(decodeURIComponent(id));
   if (!s) return { title: "Professor not found" };
   return {
     title: s.name,
@@ -149,20 +149,20 @@ export default async function ProfessorPage({ params }: Params) {
   const { id } = await params;
   const instructorId = decodeURIComponent(id);
 
-  const summary = instructorSummary(instructorId);
+  const summary = await instructorSummary(instructorId);
   if (!summary) notFound();
 
-  const reviews = instructorReviews(instructorId);
-  const tags = reviewTagsFor(instructorId);
-  const sections = sectionsTaughtBy(instructorId);
+  const reviews = await instructorReviews(instructorId);
+  const tags = await reviewTagsFor(instructorId);
+  const sections = await sectionsTaughtBy(instructorId);
   const user = await currentUser();
 
   // instructorReviews() doesn't expose user_id, so resolve "mine" by id lookup.
   const mineRow = user
-    ? get<{ id: string }>("SELECT id FROM reviews WHERE instructor_id = ? AND user_id = ? LIMIT 1", [
-        instructorId,
-        user.id,
-      ])
+    ? await get<{ id: string }>(
+        "SELECT id FROM reviews WHERE instructor_id = ? AND user_id = ? LIMIT 1",
+        [instructorId, user.id],
+      )
     : undefined;
   const mine = mineRow ? reviews.find((r) => r.id === mineRow.id) ?? null : null;
 

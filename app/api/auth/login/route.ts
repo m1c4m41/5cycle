@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if (!body.email || !body.password) {
     return jsonResponse({ error: "Email and password are required." }, { status: 400 });
   }
-  const res = checkCredentials(body.email, body.password);
+  const res = await checkCredentials(body.email, body.password);
   if (!res.ok) {
     // Same message for unknown email and wrong password.
     return jsonResponse({ error: "Those credentials don't match an account." }, { status: 401 });

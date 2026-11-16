@@ -57,7 +57,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const user = await currentUser();
 
-  const term = one(sp.term) || currentTermId();
+  const term = one(sp.term) || (await currentTermId());
   const page = Math.max(1, num(sp.page) ?? 1);
   const q = one(sp.q);
   const schools = list(sp.school);
@@ -72,8 +72,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const maxCredits = num(sp.maxCredits);
   const previewId = one(sp.preview);
 
-  const fx = facets(term);
-  const { rows, total } = searchSections({
+  const fx = await facets(term);
+  const { rows, total } = await searchSections({
     q: q || undefined,
     term,
     schools,
@@ -91,9 +91,9 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   });
   const sectionById = new Map(rows.map((r) => [r.id, r]));
 
-  const planned = user ? enrolledSections(user.id, term) : [];
+  const planned = user ? await enrolledSections(user.id, term) : [];
   const plannedIds = new Set(planned.map((s) => s.id));
-  const userSets = user ? setsForUser(user) : [];
+  const userSets = user ? await setsForUser(user) : [];
 
   /** Does this section clash with the student's saved classes for the term? */
   const fitFor = (sId: string): FitInfo | undefined => {
@@ -115,10 +115,10 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
   // Weekly-grid preview: the section the student clicked "View on grid" on,
   // drawn together with everything already saved for that term.
-  const previewSection = user && previewId ? getSection(previewId) : undefined;
-  let previewCtx: { base: ReturnType<typeof enrolledSections>; clashes: ReturnType<typeof findConflicts> } | undefined;
+  const previewSection = user && previewId ? await getSection(previewId) : undefined;
+  let previewCtx: { base: Awaited<ReturnType<typeof enrolledSections>>; clashes: ReturnType<typeof findConflicts> } | undefined;
   if (user && previewSection) {
-    const base = enrolledSections(user.id, previewSection.term_id).filter(
+    const base = (await enrolledSections(user.id, previewSection.term_id)).filter(
       (s) => s.id !== previewSection.id,
     );
     previewCtx = {

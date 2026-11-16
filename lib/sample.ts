@@ -21,19 +21,19 @@ export type PlanChoice = {
  * Pick up to `maxCourses` open sections in `termId` that each advance an
  * outstanding requirement, without clashing with one another.
  */
-export function buildSamplePlan(
+export async function buildSamplePlan(
   user: Pick<UserRow, "school" | "major_id" | "major2_id" | "minor_id">,
   termId: string,
   maxCourses = 5,
-): PlanChoice[] {
-  const sets = listSets().filter(
+): Promise<PlanChoice[]> {
+  const sets = (await listSets()).filter(
     (s) =>
       s.id === `ge-${user.school}` ||
       s.id === user.major_id ||
       s.id === user.major2_id ||
       s.id === user.minor_id,
   );
-  const pool = sectionsForTerm(termId, true).filter(
+  const pool = (await sectionsForTerm(termId, true)).filter(
     (s) => s.credits_5c > 0 && s.meetings.length > 0 && !s.potential_error,
   );
 
@@ -92,12 +92,12 @@ export function buildSamplePlan(
   return chosen;
 }
 
-export function applySamplePlan(userId: string, choices: PlanChoice[]): number {
+export async function applySamplePlan(userId: string, choices: PlanChoice[]): Promise<number> {
   if (!choices.length) return 0;
-  return tx(() => {
+  return tx(async () => {
     let n = 0;
     for (const c of choices) {
-      run(
+      await run(
         `INSERT OR IGNORE INTO enrollments(id, user_id, section_id, term_id, status, note, added_at)
          VALUES(?,?,?,?,?,?,?)`,
         [newId("enr-"), userId, c.section.id, c.section.term_id, "planned", "sample", nowIso()],
