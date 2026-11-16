@@ -188,12 +188,6 @@ export default async function HomePage() {
             </li>
           ))}
         </ol>
-        <p className="text-xs text-ink-500">
-          Every catalog filter is a plain <span className="kbd">GET</span> query string, so a
-          shortlisted view is bookmarkable and shareable — and browsing the catalog works even with
-          JavaScript turned off. (Adding sections to a plan and running the sync buttons do need
-          JavaScript.)
-        </p>
       </section>
 
       {/* --------------------------- limitations ---------------------------- */}
