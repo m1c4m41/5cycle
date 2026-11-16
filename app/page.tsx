@@ -22,7 +22,7 @@ function Stat({ n, label }: { n: string; label: string }) {
   );
 }
 
-const FEATURES: { title: string; body: string; href: string; cta: string }[] = [
+const FEATURES: { title: string; body: string; href: string; cta: string; highlight?: boolean }[] = [
   {
     title: "The full 5C catalog, in one list",
     body: "One searchable list of every section across the five colleges — full course description, course-area designations, professor(s), teaching campus, credits on both the campus and 5C scales, meeting times, seats and open/closed status. The catalog is pulled straight from the consortium registrar's course feed, so it is the live upstream source, not a spreadsheet someone exported last year.",
@@ -52,6 +52,7 @@ const FEATURES: { title: string; body: string; href: string; cta: string }[] = [
     body: "Every professor page carries our own student reviews — stars, difficulty, workload, grade, take-again, tags and text — and, where we have actually retrieved one, a mirrored RateMyProfessors score next to it. Where we don't, we show a search link. We never display an invented number.",
     href: "/professors",
     cta: "Browse professors →",
+    highlight: true,
   },
 ];
 
@@ -159,7 +160,12 @@ export default async function HomePage() {
         <h2 className="text-lg font-bold tracking-tight">What&apos;s in it</h2>
         <div className="grid gap-3 md:grid-cols-2">
           {FEATURES.map((f) => (
-            <article key={f.title} className="card card-pad flex flex-col gap-2">
+            <article
+              key={f.title}
+              className={`card card-pad flex flex-col gap-2 ${
+                f.highlight ? "ring-2 ring-brand-600" : ""
+              }`}
+            >
               <h3 className="text-sm font-bold text-ink-900">{f.title}</h3>
               <p className="text-sm leading-relaxed text-ink-600">{f.body}</p>
               <Link href={f.href} className="link mt-auto self-start text-xs">
