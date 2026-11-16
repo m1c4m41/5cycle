@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   const started = Date.now();
   const { reports, current, skipped } = await manualSync(term);
   if (skipped) return jsonResponse({ ok: false, error: skipped }, { status: 503 });
-  const requirements = loadReq();
+  const requirements = await loadReq();
 
   return jsonResponse({
     ok: true,
@@ -66,11 +66,11 @@ export async function POST(req: Request) {
     current,
     reports,
     requirements,
-    stats: catalogStats(),
+    stats: await catalogStats(),
   });
 }
 
 export async function GET(req: Request) {
   if (!(await authorized(req))) return jsonResponse({ error: "bad admin token" }, { status: 401 });
-  return jsonResponse({ ok: true, stats: catalogStats(), autoSync: getAutoSyncStatus() });
+  return jsonResponse({ ok: true, stats: await catalogStats(), autoSync: await getAutoSyncStatus() });
 }
