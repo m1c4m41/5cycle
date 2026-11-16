@@ -733,12 +733,6 @@ export default async function RequirementsPage({
             <p className="text-2xl font-bold tabular-nums text-ink-900">{planned.length}</p>
           </div>
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-ink-500">
-          Every total on this page uses <span className="kbd">Section.credits_5c</span>, the
-          catalog&apos;s campus-normalized credit value: Harvey Mudd grades work on a 3-credit course
-          scale, so HMC credits are divided by 3 upstream, which keeps an HMC course comparable with
-          the 1.0-credit-per-course scale the other four campuses use.
-        </p>
         {halfCredits > 0 && (
           <p className="mt-1.5 text-xs leading-relaxed text-sky-700">
             {cr(halfCredits)} of those 5C credits come from 0.5-credit courses. They count toward
