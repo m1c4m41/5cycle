@@ -30,7 +30,10 @@ import {
 import { currentUser } from "@/lib/session";
 import {
   abroadFlagsFor,
+  assignmentsFor,
+  blankCountingSets,
   manualCoursesFor,
+  usedPairsFrom,
   manualPseudoSection,
   progressForUser,
   setsForUser,
@@ -111,11 +114,12 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   // Guests browse a live-but-empty plan; every user-owned state degrades to
   // its empty form so the same markup renders for both. All four user reads
   // are independent given (user, term) — one parallel fan-out.
-  const [enrollments, manualCourses, abroadMap, summary] = await Promise.all([
+  const [enrollments, manualCourses, abroadMap, summary, assignments] = await Promise.all([
     user ? listEnrollments(user.id, term) : Promise.resolve([] as Enrollment[]),
     user ? manualCoursesFor(user.id) : Promise.resolve([] as ManualCourse[]),
     user ? abroadFlagsFor(user.id) : Promise.resolve(new Map<string, boolean>()),
     user ? summarizeTerm(user.id, term, user.school) : Promise.resolve(emptySummary(term)),
+    user ? assignmentsFor(user.id) : Promise.resolve(null),
   ]);
   const sections = enrollments.map((e) => e.section);
   // Manually entered courses (study-abroad classes, transfer credit,
@@ -540,7 +544,12 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 Count it toward (optional — check every box it fills, the engine decides the rest)
               </span>
               <div className="mt-1">
-                <GroupCheckboxes sets={sets} checked={[]} disabledHalf={false} />
+                <GroupCheckboxes
+                  sets={blankCountingSets(sets)}
+                  checked={[]}
+                  usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "")]}
+                  strictGe={false}
+                />
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">

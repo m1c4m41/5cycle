@@ -3,9 +3,10 @@
  * Server Actions — manual counting (multi-box) + manual courses + abroad flag.
  *
  * A course can be checked off against several requirement boxes at once:
- * across sets (GE + major + minor may all take the same class) and, inside a
- * set, Educational-Objective / Breadth boxes may take a course more than
- * once. Manual courses (study abroad, transfer credit, create-your-own) get
+ * across sets (GE + major + minor may share a class, but only one class may be
+ * shared between any two programs) and, inside the GE set, at most one
+ * Educational-Objective box and one Breadth box (see lib/counting.ts for the
+ * rules, re-checked on every save). Manual courses (study abroad, transfer credit, create-your-own) get
  * the same treatment. 0.5-credit courses can't tick GE or Breadth boxes — the
  * engine enforces that; their credits still count toward the total.
  */
@@ -86,7 +87,7 @@ export async function saveCourseCounting(fd: FormData): Promise<void> {
     withNotice(
       next,
       "ok",
-      `${label} now counts toward ${labels}${note ? ` (note: ${note})` : ""}. A course may tick several boxes — and Educational-Objective / Breadth boxes may take it more than once inside a set.`,
+      `${label} now counts toward ${labels}${note ? ` (note: ${note})` : ""}. If it isn’t an official match for a major/minor box, make sure your advisor approves the exception.`,
     ),
   );
 }
@@ -127,7 +128,10 @@ export async function addManualCourseAction(fd: FormData): Promise<void> {
 
   if (groupIds.length > 0) {
     const assign = await setCourseAssignments(user.id, res.id, "manual", groupIds, note || null);
-    if (!assign.ok) redirect(withNotice(next, "err", assign.error));
+    if (!assign.ok) {
+      await removeManualCourse(user.id, res.id); // don't leave a half-added course behind
+      redirect(withNotice(next, "err", assign.error));
+    }
   }
   revalidateSchedule();
 

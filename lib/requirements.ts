@@ -35,6 +35,12 @@ import type {
   SetProgress,
 } from "./types";
 import { schoolShort, termLabel as termLabelOf } from "./util";
+import {
+  boxSection,
+  pairKey,
+  validateCounting,
+  type CountingSet,
+} from "./counting";
 
 const REQ_DIR = path.join(process.cwd(), "data", "requirements");
 
@@ -1017,6 +1023,54 @@ export async function assignmentsFor(userId: string): Promise<{
   return out;
 }
 
+/** What the counting form needs to know about one course against the student's sets. */
+export function countingSetsFor(sets: RequirementSet[], course: Section): CountingSet[] {
+  return sets.map((set) => ({
+    id: set.id,
+    name: set.name,
+    kind: set.kind,
+    groups: set.groups.map((g) => ({
+      id: g.id,
+      name: g.name,
+      section: boxSection(g.name),
+      matches: groupMatches(g, course),
+    })),
+  }));
+}
+
+/** Counting sets with no rule matches — for a course that doesn't exist yet. */
+export function blankCountingSets(sets: RequirementSet[]): CountingSet[] {
+  return sets.map((set) => ({
+    id: set.id,
+    name: set.name,
+    kind: set.kind,
+    groups: set.groups.map((g) => ({ id: g.id, name: g.name, section: boxSection(g.name), matches: false })),
+  }));
+}
+
+/**
+ * Program pairs (major↔major, major↔minor, minor↔minor) whose single allowed
+ * shared course is already taken by some course OTHER than `excludeCourseId`.
+ * Only boxes the student explicitly checked count; GE sets never count.
+ */
+export function usedPairsFrom(
+  assignments: { sections: Map<string, Assignment[]>; manuals: Map<string, Assignment[]> },
+  sets: RequirementSet[],
+  excludeCourseId: string,
+): Set<string> {
+  const programSets = new Set(sets.filter((s) => s.kind !== "ge").map((s) => s.id));
+  const used = new Set<string>();
+  for (const map of [assignments.sections, assignments.manuals]) {
+    for (const [courseId, list] of map) {
+      if (courseId === excludeCourseId) continue;
+      const inSets = [...new Set(list.map((a) => a.setId).filter((id) => programSets.has(id)))];
+      for (let i = 0; i < inSets.length; i++)
+        for (let j = i + 1; j < inSets.length; j++) used.add(pairKey(inSets[i], inSets[j]));
+    }
+  }
+  return used;
+}
+
 /**
  * Replace the full set of checked boxes for one course. `groupIds` is the
  * list of boxes the student checked (empty = back to automatic). Every box is
@@ -1045,6 +1099,32 @@ export async function setCourseAssignments(
     );
     if (!g) return { ok: false, error: "Unknown requirement box — reload the page and try again." };
     groups.push(g);
+  }
+
+  // Enforce the counting rules server-side too (the form greys boxes out, but
+  // never trust the client): GE boxes must match, one Educational-Objective /
+  // Breadth box per section, one shared course per program pair.
+  if (groups.length > 0) {
+    const u = await get<UserPrograms & { id: string }>(
+      "SELECT id, school, major_id, major2_id, minor_id FROM users WHERE id = ?",
+      [userId],
+    );
+    if (u) {
+      const sets = await setsForUser(u);
+      const course =
+        courseKind === "section"
+          ? await (await import("./catalog")).getSection(courseId)
+          : manualPseudoSection((await getManualCourse(courseId, userId))!, u.school as SchoolCode);
+      if (course) {
+        const verdict = validateCounting({
+          sets: countingSetsFor(sets, course),
+          strictGe: courseKind === "section",
+          checkedIds: groups.map((g) => g.id),
+          usedPairs: usedPairsFrom(await assignmentsFor(userId), sets, courseId),
+        });
+        if (!verdict.ok) return verdict;
+      }
+    }
   }
 
   await tx(async () => {

@@ -20,6 +20,8 @@ import { SCHOOLS } from "@/lib/constants";
 import { currentTermId } from "@/lib/ingest";
 import {
   assignmentsFor,
+  blankCountingSets,
+  countingSetsFor,
   fulfillmentFor,
   groupLabel,
   isBreadthGroup,
@@ -32,6 +34,7 @@ import {
   progressForUser,
   requirementsLoaded,
   setsForUser,
+  usedPairsFrom,
   type Assignment,
   type LabItem,
 } from "@/lib/requirements";
@@ -1110,14 +1113,37 @@ export default async function RequirementsPage({
           <h2 className="text-base font-bold tracking-tight">
             Counting boxes — advisor designations, manual courses &amp; double-dip control
           </h2>
-          <p className="mt-1 text-sm leading-relaxed text-ink-600">
-            Check <em>every</em> box a course should count toward — one class can tick a GE box, a
-            major box and a minor box at the same time. Inside one set, Educational-Objective and
-            Breadth-of-Knowledge boxes may also take a course that already counts elsewhere in that
-            set. Uncheck everything (or press “Release all”) to let the engine decide. And note: a
-            0.5-credit course can&apos;t tick a GE or Breadth box (a full credit is needed) — its
-            credits still count toward your 32-credit graduation total.
+          <p className="mt-1 text-sm font-medium text-ink-800">
+            Check the boxes you want each course to count toward. Boxes it can&apos;t count toward
+            are greyed out.
           </p>
+          <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink-600">
+            <li>
+              <strong>GE:</strong> a course can only be checked toward a GE requirement it actually
+              has (its course-area designation).
+            </li>
+            <li>
+              <strong>Educational Objectives &amp; Breadth of Knowledge:</strong> one course may
+              count toward one box in <em>each</em>, but never two boxes inside the same one — once
+              you pick a box there, the others close.
+            </li>
+            <li>
+              <strong>Major &amp; minor:</strong> a course may count toward a GE <em>and</em> your
+              major or minor. Between programs (major↔major, major↔minor, minor↔minor) only{" "}
+              <strong>one</strong> course can be shared — once it&apos;s used, the boxes that would
+              need a second overlap close.
+            </li>
+            <li>
+              <strong>Advisor exceptions:</strong> if a course doesn&apos;t officially fit a major or
+              minor box but your advisor chose or approved it, you can still save it — you&apos;ll
+              get a warning to confirm first.
+            </li>
+            <li>
+              A 0.5-credit course can&apos;t tick a GE or Breadth box (a full credit is needed); its
+              credits still count toward your 32-credit total. Uncheck everything or press “Release
+              all” to let the engine decide.
+            </li>
+          </ul>
 
           {plannedAll.length > 0 ? (
             <ul className="mt-3 divide-y divide-ink-100">
@@ -1186,7 +1212,14 @@ export default async function RequirementsPage({
                           <input type="hidden" name="courseId" value={s.id} />
                           <input type="hidden" name="courseKind" value={isManual ? "manual" : "section"} />
                           <input type="hidden" name="next" value={nextHref} />
-                          <GroupCheckboxes sets={sets} checked={currentIds} disabledHalf={s.credits_5c < 1} />
+                          <GroupCheckboxes
+                            key={currentIds.join(",")}
+                            sets={countingSetsFor(sets, s)}
+                            checked={currentIds}
+                            usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, s.id)]}
+                            strictGe={!isManual}
+                            half={s.credits_5c < 1}
+                          />
                           <div className="flex flex-wrap items-center gap-2 border-t border-ink-100 pt-2">
                             <input
                               type="text"
@@ -1290,7 +1323,12 @@ export default async function RequirementsPage({
             <div className="mt-3">
               <span className="label">Count it toward (optional — the engine can decide instead)</span>
               <div className="mt-1">
-                <GroupCheckboxes sets={sets} checked={[]} disabledHalf={false} />
+                <GroupCheckboxes
+                  sets={blankCountingSets(sets)}
+                  checked={[]}
+                  usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "")]}
+                  strictGe={false}
+                />
               </div>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
