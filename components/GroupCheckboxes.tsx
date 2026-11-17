@@ -7,7 +7,7 @@
  * "groupId"; the server action reads fd.getAll("groupId").
  */
 import type { RequirementSet } from "@/lib/types";
-import { isBreadthGroup, isDoubleDipGroup } from "@/lib/requirements";
+import { isBreadthGroup } from "@/lib/requirements";
 import { cn } from "@/lib/util";
 
 const KIND_LABEL: Record<string, string> = { ge: "GE", major: "Major", minor: "Minor" };
@@ -56,13 +56,7 @@ export function GroupCheckboxes({
                         : undefined
                     }
                   />
-                  <span>
-                    {g.name}
-                    {isDoubleDipGroup(g) &&
-                      !/writing educational objective/i.test(g.name) && (
-                        <span className="text-ink-400"> · may double-dip</span>
-                      )}
-                  </span>
+                  <span>{g.name}</span>
                 </label>
               );
             })}
