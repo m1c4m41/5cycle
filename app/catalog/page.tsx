@@ -528,7 +528,10 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
         {/* Right: the student's live weekly grid for this term, sticky while browsing */}
         {user && (
-          <aside className="min-w-0 lg:sticky lg:top-4 lg:col-span-5" aria-label="Your weekly grid">
+          <aside
+            className="min-w-0 lg:sticky lg:top-4 lg:col-span-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain"
+            aria-label="Your weekly grid"
+          >
             <div className="card card-pad space-y-3">
               <div className="flex items-baseline justify-between gap-2">
                 <h2 className="text-base font-bold tracking-tight">
