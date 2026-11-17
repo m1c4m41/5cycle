@@ -285,7 +285,17 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
         <>
           {/* table on sm and up */}
           <div className="card hidden overflow-hidden sm:block">
-            <table className="w-full border-collapse text-sm">
+            {/* Fixed layout: column widths come from the colgroup, not from whatever
+                happens to be on the page, so every page of results looks the same. */}
+            <table className="w-full table-fixed border-collapse text-sm">
+              <colgroup>
+                <col className="w-[26%]" />
+                <col className="w-[9%]" />
+                <col className="w-[9%]" />
+                <col className="w-[18%]" />
+                <col className="w-[11%]" />
+                <col className="w-[27%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-ink-200 bg-ink-50 text-left text-[11px] uppercase tracking-wide text-ink-500">
                   <th className="px-4 py-2.5 font-semibold">Professor</th>
@@ -302,7 +312,7 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
                     <td className="px-4 py-2.5">
                       <Link
                         href={`/professors/${encodeURIComponent(r.id)}`}
-                        className="font-semibold text-ink-900 hover:underline"
+                        className="break-words font-semibold text-ink-900 hover:underline"
                       >
                         {r.name}
                       </Link>
