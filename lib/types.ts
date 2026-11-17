@@ -121,6 +121,9 @@ export type RequirementGroup = {
   level: string;
   notes: string | null;
   rules: RequirementRule[];
+  /** Courses that count as several toward this group (an accelerated course
+   *  standing in for a two-semester sequence). See lib/sequences.ts. */
+  worth?: { codes: string[]; counts: number; replaces: string[] }[];
 };
 
 export type RequirementSet = {

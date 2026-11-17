@@ -35,6 +35,7 @@ import type {
   SetProgress,
 } from "./types";
 import { schoolShort, termLabel as termLabelOf } from "./util";
+import { applySequenceOverrides } from "./sequences";
 import {
   boxSection,
   pairKey,
@@ -332,12 +333,21 @@ function parseGroupRow(g: GroupRow): RequirementGroup {
   } catch {
     raw = [];
   }
-  return {
+  return applySequenceOverrides({
     ...rest,
     rules: raw
       .filter(Boolean)
       .map((json, i) => ({ id: i, match: JSON.parse(json as string) as Matcher })),
-  };
+  });
+}
+
+function worthEntry(g: RequirementGroup, s: Section) {
+  return (g.worth ?? []).find((e) => e.codes.some((c) => codeEquals(s.course_code, c)));
+}
+
+/** How many courses of this group's requirement one course counts as (1 normally). */
+function courseWorth(g: RequirementGroup, s: Section): number {
+  return worthEntry(g, s)?.counts ?? 1;
 }
 
 async function getGroups(setId: string): Promise<RequirementGroup[]> {
@@ -839,9 +849,44 @@ export function progressForSet(
   const countedPinned = set.groups.map((_, gi) =>
     (pinned.get(gi) ?? []).filter((i) => !(blocked[gi] && half[i])),
   );
-  const pinnedByGroup = countedPinned.map((l) => l.length);
+  // Pinned courses fill as many slots as they are worth (accelerated course = 2).
+  const pinnedByGroup = countedPinned.map((l, gi) =>
+    l.reduce((n, i) => n + courseWorth(set.groups[gi], planned[i]), 0),
+  );
   const pinnedIdx = new Set<number>();
   for (const list of pinned.values()) for (const i of list) pinnedIdx.add(i);
+
+  // Two-for-one courses (accelerated standing in for a sequence) fill several
+  // slots of their group at once; set them aside before the matcher runs.
+  const worthFill: number[][] = set.groups.map(() => []);
+  const worthSlots: number[] = set.groups.map(() => 0);
+  set.groups.forEach((g, gi) => {
+    if (!g.worth?.length || (!g.min_courses && g.min_credits)) return;
+    const need = Math.max(1, g.min_courses ?? 1);
+    for (let i = 0; i < planned.length; i++) {
+      if (worthSlots[gi] + pinnedByGroup[gi] >= need) break;
+      if (pinnedIdx.has(i) || worthFill.some((l) => l.includes(i))) continue;
+      if (blocked[gi] && half[i]) continue;
+      const w = courseWorth(g, planned[i]);
+      if (w > 1 && groupMatches(g, planned[i])) {
+        worthFill[gi].push(i);
+        worthSlots[gi] += w;
+      }
+    }
+  });
+  const worthIdx = new Set<number>(worthFill.flat());
+  // Once a two-for-one course stands in for its sequence, the courses it
+  // replaces (014L/015L for 029L…) no longer count separately in that group.
+  const replacedIdx: Set<number>[] = set.groups.map((g, gi) => {
+    const out = new Set<number>();
+    for (const wi of worthFill[gi]) {
+      const rep = worthEntry(g, planned[wi])?.replaces ?? [];
+      planned.forEach((s, i) => {
+        if (i !== wi && rep.some((c) => codeEquals(s.course_code, c))) out.add(i);
+      });
+    }
+    return out;
+  });
 
   // slots per group: one per required course. Credit-driven groups get one
   // slot and are then topped up greedily. Locked sections consume slots
@@ -851,7 +896,7 @@ export function progressForSet(
   set.groups.forEach((g, gi) => {
     const creditDriven = !g.min_courses && !!g.min_credits;
     const count = creditDriven ? 1 : Math.max(1, g.min_courses ?? 1);
-    const open = Math.max(0, count - pinnedByGroup[gi]);
+    const open = Math.max(0, count - pinnedByGroup[gi] - worthSlots[gi]);
     for (let k = 0; k < open; k++) {
       slots.push({ groupIndex: gi, creditDriven });
       slotGroup.push(gi);
@@ -861,7 +906,7 @@ export function progressForSet(
   // Free sections: not checked into a box above.
   const freeIdx: number[] = [];
   for (let i = 0; i < planned.length; i++) {
-    if (pinnedIdx.has(i)) continue;
+    if (pinnedIdx.has(i) || worthIdx.has(i)) continue;
     freeIdx.push(i);
   }
 
@@ -870,6 +915,7 @@ export function progressForSet(
     const hits: number[] = [];
     slots.forEach((slot, slotIdx) => {
       if (blocked[slot.groupIndex] && half[pi]) return; // 0.5 cr can't tick GE/breadth
+      if (replacedIdx[slot.groupIndex].has(pi)) return; // covered by the two-for-one course
       if (groupMatches(set.groups[slot.groupIndex], s)) hits.push(slotIdx);
     });
     return hits;
@@ -878,12 +924,12 @@ export function progressForSet(
   const slotOwner = maxMatch(slots, adjacency);
 
   // Checked boxes first (only the ones that actually count), then the matcher.
-  const assignedPerGroup: number[][] = countedPinned.map((l) => [...l]);
+  const assignedPerGroup: number[][] = countedPinned.map((l, gi) => [...l, ...worthFill[gi]]);
   for (const [slotIdx, freePos] of slotOwner) {
     assignedPerGroup[slotGroup[slotIdx]].push(freeIdx[freePos]);
   }
 
-  const used = new Set<number>(pinnedIdx);
+  const used = new Set<number>([...pinnedIdx, ...worthIdx]);
   for (const list of assignedPerGroup) for (const i of list) used.add(i);
 
   // Credit-driven top-up: keep adding unmatched matching courses until the
@@ -894,6 +940,7 @@ export function progressForSet(
     for (const si of freeIdx) {
       if (used.has(si)) continue;
       if (blocked[gi] && half[si]) continue; // 0.5 cr can't tick GE/breadth
+      if (replacedIdx[gi].has(si)) continue;
       if (have >= g.min_credits) break;
       if (groupMatches(g, planned[si])) {
         assignedPerGroup[gi].push(si);
@@ -921,7 +968,8 @@ export function progressForSet(
     const matched = matchedIdx.map((i) => planned[i]);
     const pinnedList = (pinned.get(gi) ?? []).map((i) => planned[i]);
     const haveCredits = matched.reduce((s, x) => s + x.credits_5c, 0);
-    const haveCourses = matched.length;
+    // A two-for-one course counts as the several courses it stands in for.
+    const haveCourses = matched.reduce((n, s) => n + courseWorth(g, s), 0);
     const neededCourses = g.min_courses ?? 0;
     const neededCredits = g.min_credits ?? null;
 
@@ -931,7 +979,10 @@ export function progressForSet(
 
     const excess = planned.filter(
       (s, i) =>
-        !matchedIdx.includes(i) && !(blocked[gi] && half[i]) && groupMatches(g, s),
+        !matchedIdx.includes(i) &&
+        !replacedIdx[gi].has(i) &&
+        !(blocked[gi] && half[i]) &&
+        groupMatches(g, s),
     );
 
     return {
