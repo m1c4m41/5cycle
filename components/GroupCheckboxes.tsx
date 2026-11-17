@@ -58,9 +58,10 @@ export function GroupCheckboxes({
                   />
                   <span>
                     {g.name}
-                    {isDoubleDipGroup(g) && (
-                      <span className="text-ink-400"> · may double-dip</span>
-                    )}
+                    {isDoubleDipGroup(g) &&
+                      !/writing educational objective/i.test(g.name) && (
+                        <span className="text-ink-400"> · may double-dip</span>
+                      )}
                   </span>
                 </label>
               );
