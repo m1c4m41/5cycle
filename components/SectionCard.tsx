@@ -127,8 +127,22 @@ export function SectionCard({
             <div className="mt-1 text-sm text-ink-400">Staff / instructor not posted</div>
           )}
 
+          {(s.description || s.areas.length > 0 || (reasons && reasons.length > 0)) && (
+            <details className="group mt-2">
+              <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-ink-800 [&::-webkit-details-marker]:hidden">
+                <span className="inline-block transition-transform group-open:rotate-90">▸</span>
+                {[
+                  s.description ? "Description" : null,
+                  s.areas.length > 0 ? `${s.areas.length} area${s.areas.length === 1 ? "" : "s"}` : null,
+                  reasons && reasons.length > 0
+                    ? `${reasons.length} requirement${reasons.length === 1 ? "" : "s"} filled`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </summary>
           {s.description && (
-            <p className="mt-2 text-sm leading-relaxed text-ink-600">{truncate(s.description, 240)}</p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-600">{s.description}</p>
           )}
 
           {s.areas.length > 0 && (
@@ -157,13 +171,16 @@ export function SectionCard({
 
           {reasons && reasons.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-1">
-              {reasons.slice(0, 4).map((r) => (
+              {reasons.map((r) => (
                 <li key={r} className="chip border-emerald-300 bg-emerald-50 text-emerald-800">
                   ✓ {r}
                 </li>
               ))}
             </ul>
           )}
+            </details>
+          )}
+
         </div>
 
         <div className="flex w-full flex-col items-start gap-2 sm:w-48 sm:items-end">
