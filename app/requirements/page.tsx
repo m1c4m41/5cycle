@@ -1098,6 +1098,99 @@ export default async function RequirementsPage({
         )}
       </section>
 
+      {/* Double-counting policy note */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold tracking-tight text-ink-900">
+          Double-counting between a major and a minor
+        </h2>
+        <div className="card card-pad space-y-3 text-sm leading-relaxed text-ink-700">
+          <p>
+            At <strong>Scripps College</strong>{" "}
+            <a
+              className="link"
+              href="https://catalog.scrippscollege.edu/content.php?catoid=35&navoid=4466"
+              target="_blank"
+              rel="noreferrer"
+            >
+              (catalog)
+            </a>{" "}
+            and <strong>Pitzer College</strong>, you can double-count at most{" "}
+            <strong>one course between a major and a minor</strong> (or between two minors).
+          </p>
+          <p>
+            Because the Claremont Colleges (5Cs) are legally and academically independent
+            institutions, double-counting policies <strong>vary by your home college</strong>,
+            rather than following a single consortium-wide rule:
+          </p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong>Scripps College:</strong> Up to one course may double-count between a major
+              and a minor or between two minors (provided it does not also double-count toward a
+              General Education requirement).{" "}
+              <a
+                className="link"
+                href="https://catalog.scrippscollege.edu/content.php?catoid=35&navoid=4452"
+                target="_blank"
+                rel="noreferrer"
+              >
+                [Scripps catalog]
+              </a>
+            </li>
+            <li>
+              <strong>Pitzer College:</strong> Department policies (such as Chemistry) generally
+              restrict overlap to a maximum of one course that can double-count between a major
+              and a minor.{" "}
+              <a
+                className="link"
+                href="https://www.pitzer.edu/academics/programs/chemistry"
+                target="_blank"
+                rel="noreferrer"
+              >
+                [Pitzer Chemistry]
+              </a>
+            </li>
+            <li>
+              <strong>Claremont McKenna College (CMC):</strong> Does not permit a single course to
+              be counted toward more than one major requirement, and individual
+              department/sequence rules govern minor overlaps.{" "}
+              <a
+                className="link"
+                href="https://catalog.claremontmckenna.edu/content.php?catoid=43&navoid=9175"
+                target="_blank"
+                rel="noreferrer"
+              >
+                [CMC catalog]
+              </a>
+            </li>
+            <li>
+              <strong>Pomona College &amp; Harvey Mudd College:</strong> Each department and
+              program maintains specific guidelines regarding course sharing, joint majors, and
+              cross-departmental credit limits.{" "}
+              <a
+                className="link"
+                href="https://pomona-preview.catalog.prod.coursedog.com/academicpolicies/degreegraduationpolicies/specialmajorsdoublemajorsminors"
+                target="_blank"
+                rel="noreferrer"
+              >
+                [Pomona policies]
+              </a>{" "}
+              <a
+                className="link"
+                href="https://www.hmc.edu/cs/academic-programs/joint-major-computer-science-climate/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                [HMC joint major]
+              </a>
+            </li>
+          </ul>
+          <p className="text-xs text-ink-500">
+            This is general guidance, not official policy — confirm with your home college&rsquo;s
+            catalog and your department before you count a course twice.
+          </p>
+        </div>
+      </section>
+
     </div>
   );
 }
