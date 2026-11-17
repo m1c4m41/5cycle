@@ -81,12 +81,6 @@ export function RmpScore({
           <OutwardIcon />
           Look up on RateMyProfessors
         </a>
-        <span
-          className="chip border-ink-200 bg-ink-50 text-ink-400"
-          title="We have not mirrored a RateMyProfessors score for this professor. No score is shown rather than an estimated one."
-        >
-          not mirrored locally
-        </span>
       </span>
     );
   }
