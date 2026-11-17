@@ -6,6 +6,7 @@ import { enrolledSections, findConflicts } from "@/lib/schedule";
 import { fulfillmentFor, setsForUser } from "@/lib/requirements";
 import { SCHOOLS } from "@/lib/constants";
 import { termLabel } from "@/lib/util";
+import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
 import { TermSelect } from "@/components/TermSelect";
@@ -72,32 +73,36 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const maxCredits = num(sp.maxCredits);
   const previewId = one(sp.preview);
 
-  const fx = await facets(term);
-  const { rows, total } = await searchSections({
-    q: q || undefined,
-    term,
-    schools,
-    departments: depts,
-    areas,
-    instructor: instructor || undefined,
-    minCredits,
-    maxCredits,
-    openOnly,
-    permOnly,
-    notAtSchool: notAtSchool || undefined,
-    sort: sort as "code" | "title" | "credits" | "perm",
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  });
+  // All four are independent once `term` is known — one parallel fan-out
+  // (they used to be ~10 serial Turso round-trips).
+  const [fx, { rows, total }, planned, userSets] = await Promise.all([
+    facets(term),
+    searchSections({
+      q: q || undefined,
+      term,
+      schools,
+      departments: depts,
+      areas,
+      instructor: instructor || undefined,
+      minCredits,
+      maxCredits,
+      openOnly,
+      permOnly,
+      notAtSchool: notAtSchool || undefined,
+      sort: sort as "code" | "title" | "credits" | "perm",
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    }),
+    user ? enrolledSections(user.id, term) : Promise.resolve([] as Section[]),
+    user ? setsForUser(user) : Promise.resolve([] as RequirementSet[]),
+  ]);
   const sectionById = new Map(rows.map((r) => [r.id, r]));
 
   // When a plain query comes up empty in the selected term, point the user at
   // the terms that actually carry it (e.g. "bio 43LX" in a term without a lab).
   const otherTerms = total === 0 && q ? await termsWithQuery(q, term) : [];
 
-  const planned = user ? await enrolledSections(user.id, term) : [];
   const plannedIds = new Set(planned.map((s) => s.id));
-  const userSets = user ? await setsForUser(user) : [];
 
   /** Does this section clash with the student's saved classes for the term? */
   const fitFor = (sId: string): FitInfo | undefined => {

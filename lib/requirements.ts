@@ -21,6 +21,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { cache } from "react";
 import { all, get, newId, nowIso, run, tx } from "./db";
 import type { SchoolCode } from "./constants";
 import type {
@@ -370,6 +371,10 @@ export async function listSets(filter: { school?: string; kind?: string } = {}):
     `SELECT * FROM requirement_sets ${clause} ORDER BY kind ASC, name ASC`,
     params,
   );
+  return attachGroups(rows);
+}
+
+async function attachGroups(rows: Omit<RequirementSet, "groups">[]): Promise<RequirementSet[]> {
   const bySet = await getGroupsForSets(rows.map((r) => r.id));
   return rows.map((r) => ({ ...r, groups: bySet.get(r.id) ?? [] }));
 }
@@ -382,19 +387,23 @@ export type UserPrograms = {
   minor_id: string | null;
 };
 
-export async function setsForUser(u: UserPrograms): Promise<RequirementSet[]> {
-  const ids = [
-    `ge-${u.school}`,
-    u.major_id,
-    u.major2_id ?? null,
-    u.minor_id,
-  ].filter(Boolean) as string[];
-  const out: RequirementSet[] = [];
-  for (const id of ids) {
-    const s = await getSet(id);
-    if (s) out.push(s);
-  }
-  return out;
+// cache() keys on argument identity, so memoize on the primitive program ids
+// (not the user object): any caller with the same programs shares one read.
+const setsForPrograms = cache(
+  async (school: string, major: string, major2: string, minor: string): Promise<RequirementSet[]> => {
+    const ids = [`ge-${school}`, major, major2, minor].filter(Boolean);
+    const ph = ids.map(() => "?").join(",");
+    const rows = await all<Omit<RequirementSet, "groups">>(
+      `SELECT * FROM requirement_sets WHERE id IN (${ph})`,
+      ids,
+    );
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    return attachGroups(ids.map((id) => byId.get(id)).filter(Boolean) as Omit<RequirementSet, "groups">[]);
+  },
+);
+
+export function setsForUser(u: UserPrograms): Promise<RequirementSet[]> {
+  return setsForPrograms(u.school, u.major_id ?? "", u.major2_id ?? "", u.minor_id ?? "");
 }
 
 /** Which requirement slots could this single course advance, for this student? */

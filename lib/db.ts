@@ -132,11 +132,20 @@ function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
  * Execute a statement on the current transaction if there is one, otherwise
  * standalone on the client.
  */
+const txTail = new WeakMap<Transaction, Promise<unknown>>();
 async function exec(sql: string, params: SqlValue[] = []): Promise<ResultSet> {
   await boot();
   const t = txStore.getStore();
-  if (t) return t.execute({ sql, args: params });
-  return client().execute(sql, params);
+  if (!t) return client().execute(sql, params);
+  // Helpers fan out with Promise.all; a single transaction is one ordered
+  // stream, so statements inside it are chained rather than interleaved.
+  const prev = txTail.get(t) ?? Promise.resolve();
+  const next = prev.then(
+    () => t.execute({ sql, args: params }),
+    () => t.execute({ sql, args: params }),
+  );
+  txTail.set(t, next.catch(() => undefined));
+  return next;
 }
 
 let bootPromise: Promise<void> | null = null;
@@ -145,6 +154,8 @@ function boot(): Promise<void> {
   return bootPromise;
 }
 
+/** Bump when the guarded ALTER/rebuild steps in runSchemaMigrations change. */
+const MIGRATION_REV = "1";
 const BOOT_DDL_TIMEOUT_MS = Number(process.env.CYCLE_BOOT_DDL_TIMEOUT_MS) || 15_000;
 
 /**
@@ -154,7 +165,21 @@ const BOOT_DDL_TIMEOUT_MS = Number(process.env.CYCLE_BOOT_DDL_TIMEOUT_MS) || 15_
  * catalog sync holding the lock).
  */
 async function runSchemaMigrations(d: Client): Promise<void> {
-  await d.executeMultiple(fs.readFileSync(SCHEMA_PATH, "utf8"));
+  const ddl = fs.readFileSync(SCHEMA_PATH, "utf8");
+  // Remote only: one cheap READ tells us the schema is already current, so a
+  // cold start skips the whole write-heavy DDL pass. The stamp is the hash of
+  // schema.sql plus MIGRATION_REV (bump it when the ALTER/rebuild guards below
+  // change), written only after a full successful pass.
+  const version = crypto.createHash("sha1").update(ddl).update(MIGRATION_REV).digest("hex");
+  if (REMOTE_DB) {
+    try {
+      const rs = await d.execute("SELECT value FROM meta WHERE key = 'schema_version'");
+      if (String(rs.rows[0]?.[0] ?? "") === version) return;
+    } catch {
+      /* meta missing on a brand-new database — fall through to full setup */
+    }
+  }
+  await d.executeMultiple(ddl);
 
   // schema.sql is CREATE TABLE IF NOT EXISTS, so columns added after the
   // first boot need explicit ALTERs here. Each guard is idempotent.
@@ -195,6 +220,13 @@ async function runSchemaMigrations(d: Client): Promise<void> {
       ALTER TABLE requirement_assignments_new RENAME TO requirement_assignments;
       CREATE INDEX IF NOT EXISTS ix_assign_user ON requirement_assignments(user_id);
     `);
+  }
+
+  if (REMOTE_DB) {
+    await d.execute({
+      sql: "INSERT INTO meta(key, value) VALUES('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      args: [version],
+    });
   }
 }
 

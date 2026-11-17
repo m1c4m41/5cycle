@@ -1,5 +1,7 @@
 /** Catalog search + hydration. All filtering happens in SQL so the UI can
  *  page through 2,000+ live sections without shipping them to the browser. */
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { all, get } from "./db";
 import { termChronoKey } from "./hyperschedule";
 import type { AreaRef, InstructorRef, Meeting, Section, SectionRow } from "./types";
@@ -200,48 +202,51 @@ export async function searchSections(q: CatalogQuery): Promise<{ rows: Section[]
   const offset = Math.max(q.offset ?? 0, 0);
   const order = SORTS[q.sort ?? "code"] ?? SORTS.code;
 
-  const total = Number(
-    (await get<{ n: number }>(`SELECT COUNT(*) n FROM sections s ${clause}`, params))?.n ?? 0,
-  );
+  // COUNT and page SELECT are independent — fire both at once.
+  const [totalRow, rows] = await Promise.all([
+    get<{ n: number }>(`SELECT COUNT(*) n FROM sections s ${clause}`, params),
+    all<SectionRow>(
+      `SELECT s.* FROM sections s ${clause} ORDER BY ${order} LIMIT ? OFFSET ?`,
+      [...params, limit, offset],
+    ),
+  ]);
 
-  const rows = await all<SectionRow>(
-    `SELECT s.* FROM sections s ${clause} ORDER BY ${order} LIMIT ? OFFSET ?`,
-    [...params, limit, offset],
-  );
-
-  return { rows: await hydrate(rows), total };
+  return { rows: await hydrate(rows), total: Number(totalRow?.n ?? 0) };
 }
 
-/** Attach meetings, instructors and course areas to a page of sections. */
+/** Attach meetings, instructors and course areas to a page of sections.
+ *  The three lookups are independent — one parallel fan-out. */
 export async function hydrate(rows: SectionRow[]): Promise<Section[]> {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
   const ph = ids.map(() => "?").join(",");
 
-  const meetings = await all<{ section_id: string } & Meeting>(
-    `SELECT section_id, days, start_time, end_time, locations
-     FROM section_schedules WHERE section_id IN (${ph})
-     ORDER BY start_time ASC`,
-    ids,
-  );
-  const instructors = await all<{ section_id: string } & InstructorRef>(
-    `SELECT si.section_id, i.id, i.name,
-            ir.avg_stars, ir.review_count, ir.rmp_quality, ir.rmp_num_ratings, ir.rmp_url
-     FROM section_instructors si
-     JOIN instructors i ON i.id = si.instructor_id
-     LEFT JOIN instructor_ratings ir ON ir.id = i.id
-     WHERE si.section_id IN (${ph})
-     ORDER BY i.name ASC`,
-    ids,
-  );
-  const areas = await all<{ section_id: string } & AreaRef>(
-    `SELECT sa.section_id, ca.code, ca.description, ca.kind, ca.school
-     FROM section_areas sa
-     JOIN course_areas ca ON ca.code = sa.area_code
-     WHERE sa.section_id IN (${ph})
-     ORDER BY ca.kind = 'ge' DESC, ca.code ASC`,
-    ids,
-  );
+  const [meetings, instructors, areas] = await Promise.all([
+    all<{ section_id: string } & Meeting>(
+      `SELECT section_id, days, start_time, end_time, locations
+       FROM section_schedules WHERE section_id IN (${ph})
+       ORDER BY start_time ASC`,
+      ids,
+    ),
+    all<{ section_id: string } & InstructorRef>(
+      `SELECT si.section_id, i.id, i.name,
+              ir.avg_stars, ir.review_count, ir.rmp_quality, ir.rmp_num_ratings, ir.rmp_url
+       FROM section_instructors si
+       JOIN instructors i ON i.id = si.instructor_id
+       LEFT JOIN instructor_ratings ir ON ir.id = i.id
+       WHERE si.section_id IN (${ph})
+       ORDER BY i.name ASC`,
+      ids,
+    ),
+    all<{ section_id: string } & AreaRef>(
+      `SELECT sa.section_id, ca.code, ca.description, ca.kind, ca.school
+       FROM section_areas sa
+       JOIN course_areas ca ON ca.code = sa.area_code
+       WHERE sa.section_id IN (${ph})
+       ORDER BY ca.kind = 'ge' DESC, ca.code ASC`,
+      ids,
+    ),
+  ]);
 
   const mBy = group(meetings, "section_id");
   const iBy = group(instructors, "section_id");
@@ -316,26 +321,49 @@ export type Facets = {
   instructors: number;
 };
 
-export async function facets(term?: string): Promise<Facets> {
+// Terms and per-term section counts only change on sync, and facets() runs on
+// several pages per request: memoize per request so the full-table GROUP BY
+// runs at most once.
+const termList = cache(() =>
+  all<{ id: string; label: string; is_current: number }>(
+    "SELECT id, label, is_current FROM terms ORDER BY id DESC",
+  ),
+);
+const termSectionCounts = cache(() =>
+  all<{ term_id: string; n: number }>("SELECT term_id, COUNT(*) n FROM sections GROUP BY term_id"),
+);
+
+/**
+ * Facets only change when the catalog syncs, so they're cached across requests
+ * (tag "catalog", 5-minute TTL as a backstop for syncs that run outside a
+ * request, where the tag can't be revalidated). Dropping a Turso round-trip
+ * fan-out from every catalog/planner view is the point.
+ */
+export const CATALOG_TAG = "catalog";
+const cachedFacets = unstable_cache(
+  (term: string) => facetsUncached(term || undefined),
+  ["facets-v1"],
+  { tags: [CATALOG_TAG], revalidate: 300 },
+);
+export function facets(term?: string): Promise<Facets> {
+  return cachedFacets(term ?? "");
+}
+
+async function facetsUncached(term?: string): Promise<Facets> {
   const p = term ? [term] : [];
   const termClause = term ? "WHERE term_id = ?" : "";
-  return {
-    // Only terms we actually hold a catalog for, newest first in calendar order
-    // (a string compare puts every Spring after every Fall).
-    terms: (
-      await all<{ id: string; label: string; is_current: number; sections: number }>(
-        `SELECT t.id, t.label, t.is_current,
-                (SELECT COUNT(*) FROM sections s WHERE s.term_id = t.id) AS sections
-         FROM terms t ORDER BY t.id DESC`,
-      )
-    )
-      .filter((t) => t.sections > 0)
-      .sort((a, b) => termChronoKey(b.id) - termChronoKey(a.id)),
-    schools: await all<{ code: string; short: string; n: number }>(
+  // The per-term section count used to be a correlated subquery (a full
+  // sections scan *per term*, ~100-180ms alone); a single GROUP BY plus a
+  // JS merge does the same work in one pass, and all six statements below
+  // are independent — they run as one parallel fan-out.
+  const [termRows, termCounts, schools, departments, geAreas, instr] = await Promise.all([
+    termList(),
+    termSectionCounts(),
+    all<{ code: string; short: string; n: number }>(
       `SELECT school AS code, school AS short, COUNT(*) n FROM sections ${termClause} GROUP BY school ORDER BY n DESC`,
       p,
     ),
-    departments: await all<{ code: string; description: string; n: number }>(
+    all<{ code: string; description: string; n: number }>(
       `SELECT ca.code, ca.description, COUNT(*) n
        FROM course_areas ca
        JOIN section_areas sa ON sa.area_code = ca.code
@@ -344,7 +372,7 @@ export async function facets(term?: string): Promise<Facets> {
        GROUP BY ca.code ORDER BY ca.code ASC`,
       p,
     ),
-    geAreas: await all<{ code: string; description: string; school: string | null; n: number }>(
+    all<{ code: string; description: string; school: string | null; n: number }>(
       `SELECT ca.code, ca.description, ca.school, COUNT(*) n
        FROM course_areas ca
        JOIN section_areas sa ON sa.area_code = ca.code
@@ -353,7 +381,21 @@ export async function facets(term?: string): Promise<Facets> {
        GROUP BY ca.code ORDER BY ca.code ASC`,
       p,
     ),
-    instructors: Number((await get<{ n: number }>("SELECT COUNT(*) n FROM instructors"))?.n ?? 0),
+    get<{ n: number }>("SELECT COUNT(*) n FROM instructors"),
+  ]);
+  // Only terms we actually hold a catalog for, newest first in calendar order
+  // (a string compare puts every Spring after every Fall).
+  const countBy = new Map(termCounts.map((r) => [r.term_id, Number(r.n)]));
+  const terms = termRows
+    .map((t) => ({ ...t, sections: countBy.get(t.id) ?? 0 }))
+    .filter((t) => t.sections > 0)
+    .sort((a, b) => termChronoKey(b.id) - termChronoKey(a.id));
+  return {
+    terms,
+    schools,
+    departments,
+    geAreas,
+    instructors: Number(instr?.n ?? 0),
   };
 }
 

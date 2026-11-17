@@ -35,7 +35,7 @@ import {
   progressForUser,
   setsForUser,
 } from "@/lib/requirements";
-import type { Section } from "@/lib/types";
+import type { ManualCourse, RequirementSet, Section, SetProgress } from "@/lib/types";
 import { currentTermId } from "@/lib/ingest";
 import { permNeededFor } from "@/lib/perm";
 import {
@@ -99,18 +99,29 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   const user = await currentUser();
   const sp = await searchParams;
 
-  const synced = (await facets()).terms;
-  const term = one(sp.term) || (await currentTermId()) || synced[0]?.id || "";
+  // facets() (no term) and currentTermId() are independent — parallel.
+  const [fxAll, curTerm] = await Promise.all([
+    facets(),
+    one(sp.term) ? Promise.resolve("") : currentTermId(),
+  ]);
+  const synced = fxAll.terms;
+  const term = one(sp.term) || curTerm || synced[0]?.id || "";
   const selfHref = `/planner?term=${term}`;
 
   // Guests browse a live-but-empty plan; every user-owned state degrades to
-  // its empty form so the same markup renders for both.
-  const enrollments = user ? await listEnrollments(user.id, term) : [];
+  // its empty form so the same markup renders for both. All four user reads
+  // are independent given (user, term) — one parallel fan-out.
+  const [enrollments, manualCourses, abroadMap, summary] = await Promise.all([
+    user ? listEnrollments(user.id, term) : Promise.resolve([] as Enrollment[]),
+    user ? manualCoursesFor(user.id) : Promise.resolve([] as ManualCourse[]),
+    user ? abroadFlagsFor(user.id) : Promise.resolve(new Map<string, boolean>()),
+    user ? summarizeTerm(user.id, term, user.school) : Promise.resolve(emptySummary(term)),
+  ]);
   const sections = enrollments.map((e) => e.section);
   // Manually entered courses (study-abroad classes, transfer credit,
   // create-your-own) show up alongside catalog sections for this term.
   const manualSections = user
-    ? (await manualCoursesFor(user.id))
+    ? manualCourses
         .filter((m) => m.term_id === term)
         .map((m) => manualPseudoSection(m, user.school))
     : [];
@@ -118,8 +129,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   const manualCredits = Number(
     manualSections.reduce((a, s) => a + s.credits_5c, 0).toFixed(2),
   );
-  const abroad = user ? (await abroadFlagsFor(user.id)).get(term) === true : false;
-  const summary = user ? await summarizeTerm(user.id, term, user.school) : emptySummary(term);
+  const abroad = user ? abroadMap.get(term) === true : false;
   const conflicts = findConflicts(sections);
   const conflicting = new Set<string>();
   for (const c of conflicts) {
@@ -127,9 +137,12 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
     conflicting.add(c.b.id);
   }
   const plannedIds = new Set(sections.map((s) => s.id));
-  const sets = user ? await setsForUser(user) : [];
-  // Checklist includes the manual pseudo-sections so entered credits count.
-  const progress = user ? await progressForUser(user, allSections) : [];
+  // setsForUser is request-cached, so the copy inside progressForUser is free.
+  const [sets, progress] = await Promise.all([
+    user ? setsForUser(user) : Promise.resolve([] as RequirementSet[]),
+    // Checklist includes the manual pseudo-sections so entered credits count.
+    user ? progressForUser(user, allSections) : Promise.resolve([] as SetProgress[]),
+  ]);
 
   const notices = {
     ok: one(sp.ok),

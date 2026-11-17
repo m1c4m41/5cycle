@@ -14,6 +14,7 @@ import {
   type HS_Term,
 } from "./hyperschedule";
 import { SCHOOL_BY_CODE } from "./constants";
+import { cache } from "react";
 import {
   buildCodeString,
   buildCourseCode,
@@ -160,7 +161,7 @@ export async function syncTermList(force = false) {
   return await syncTermListFrom(await getAllTerms(force));
 }
 
-export async function currentTermId(): Promise<string> {
+async function loadCurrentTermId(): Promise<string> {
   // The calendar wins: once the seasonal term's row exists, every page is on
   // the right term immediately — even before the first sync after a
   // season change flips the is_current flag.
@@ -174,6 +175,12 @@ export async function currentTermId(): Promise<string> {
     ""
   );
 }
+
+// cache(): one request (layout + page + nested components) may resolve the
+// current term several times; the per-request memo keeps it to one query.
+// Sync/bootstrap paths use loadCurrentTermId() directly so they never read a
+// value memoized before they changed the terms table.
+export const currentTermId: () => Promise<string> = cache(loadCurrentTermId);
 
 async function getMetaSafe(key: string): Promise<string | undefined> {
   try {
@@ -474,7 +481,7 @@ export async function bootstrap(): Promise<{
   reports: SyncReport[];
 }> {
   await syncTermList(true);
-  const current = await currentTermId();
+  const current = await loadCurrentTermId();
   // Newest first in *calendar* order: string-sorting term ids puts every Spring
   // after every Fall, which silently skips the term students are actually in.
   const available = (await all<{ id: string }>("SELECT id FROM terms"))
@@ -494,21 +501,40 @@ export async function bootstrap(): Promise<{
   return { current, reports };
 }
 
+// Six scalar counts ride in ONE statement (they used to be six serial
+// round-trips), and the two row sets run in parallel with it.
 export async function catalogStats() {
-  const num = async (q: string, p: (string | number | null)[] = []) =>
-    Number((await get<{ n: number }>(q, p))?.n ?? 0);
-  return {
-    sections: await num("SELECT COUNT(*) n FROM sections"),
-    courses: await num("SELECT COUNT(DISTINCT course_code) n FROM sections"),
-    instructors: await num("SELECT COUNT(*) n FROM instructors"),
-    areas: await num("SELECT COUNT(*) n FROM course_areas"),
-    terms: await all<{ id: string; label: string; is_current: number; synced_at: string | null }>(
+  const [counts, terms, bySchool] = await Promise.all([
+    get<{
+      sections: number;
+      courses: number;
+      instructors: number;
+      areas: number;
+      reviews: number;
+      users: number;
+    }>(
+      `SELECT (SELECT COUNT(*) FROM sections) AS sections,
+              (SELECT COUNT(DISTINCT course_code) FROM sections) AS courses,
+              (SELECT COUNT(*) FROM instructors) AS instructors,
+              (SELECT COUNT(*) FROM course_areas) AS areas,
+              (SELECT COUNT(*) FROM reviews) AS reviews,
+              (SELECT COUNT(*) FROM users) AS users`,
+    ),
+    all<{ id: string; label: string; is_current: number; synced_at: string | null }>(
       "SELECT id, label, is_current, synced_at FROM terms ORDER BY id DESC",
     ),
-    reviews: await num("SELECT COUNT(*) n FROM reviews"),
-    users: await num("SELECT COUNT(*) n FROM users"),
-    bySchool: await all<{ school: string; n: number }>(
+    all<{ school: string; n: number }>(
       "SELECT school, COUNT(*) n FROM sections GROUP BY school ORDER BY n DESC",
     ),
+  ]);
+  return {
+    sections: Number(counts?.sections ?? 0),
+    courses: Number(counts?.courses ?? 0),
+    instructors: Number(counts?.instructors ?? 0),
+    areas: Number(counts?.areas ?? 0),
+    terms,
+    reviews: Number(counts?.reviews ?? 0),
+    users: Number(counts?.users ?? 0),
+    bySchool,
   };
 }

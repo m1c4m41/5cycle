@@ -41,6 +41,7 @@ import { SchoolBadge } from "@/components/SectionCard";
 import type {
   GroupProgress,
   Matcher,
+  ManualCourse,
   RequirementGroup,
   RequirementSet,
   Section,
@@ -702,30 +703,40 @@ export default async function RequirementsPage({
 }) {
   const sp = await searchParams;
   const user = await currentUser();
-  const cur = await currentTermId();
-  const loaded = await requirementsLoaded();
 
   /* Guests: read-only preview of one campus's published sets, nothing ticked. */
   const askedSchool = one(sp.school).toUpperCase();
   const school = STUDENT_SCHOOLS.some((s) => s.code === askedSchool) ? askedSchool : "CM";
 
+  // Every DB read this page needs is independent once (user, school) are
+  // known — one parallel fan-out (was ~10 serial Turso round-trips).
+  const [cur, loaded, manuals, plannedEnrolled, sets, assignments, lxKeys, termIds] = await Promise.all([
+    currentTermId(),
+    requirementsLoaded(),
+    user ? manualCoursesFor(user.id) : Promise.resolve([] as ManualCourse[]),
+    user ? enrolledSections(user.id) : Promise.resolve([] as Section[]),
+    user ? setsForUser(user) : listSets({ school }),
+    user ? assignmentsFor(user.id) : Promise.resolve(null),
+    labLxKeys(),
+    user ? plannedTerms(user.id) : Promise.resolve([] as string[]),
+  ]);
+
   const term = one(sp.term) || cur;
   const scope = one(sp.scope) === "term" ? "term" : "all";
 
-  // One enrollment read, one set read, then progress per set against the same array.
   // Manually entered courses (study abroad, transfer, create-your-own) become
   // pseudo-sections and count alongside catalog sections.
-  const manuals = user ? await manualCoursesFor(user.id) : [];
   const manualSections = user ? manuals.map((m) => manualPseudoSection(m, user.school)) : [];
-  const plannedAll = user ? [ ...(await enrolledSections(user.id)), ...manualSections] : [];
+  const plannedAll = user ? [ ...plannedEnrolled, ...manualSections] : [];
   const planned = user && scope === "term" ? plannedAll.filter((s) => s.term_id === term) : plannedAll;
-  const sets = user ? await setsForUser(user) : await listSets({ school });
   // For signed-in users the matcher honours checked boxes: courses are pinned
   // into the groups they were checked for. One course may be checked in
   // several sets, and Educational-Objective / Breadth groups may also take a
-  // course that already counts elsewhere in the same set.
-  const progress = user ? await progressForUser(user, planned) : sets.map((s) => progressForSet(s, planned));
-  const assignments = user ? await assignmentsFor(user.id) : null;
+  // course that already counts elsewhere in the same set. Pass the
+  // assignments we already fetched so progressForUser doesn't re-read them.
+  const progress = user
+    ? await progressForUser(user, planned, assignments ? { assignments } : {})
+    : sets.map((s) => progressForSet(s, planned));
   /** Checked boxes for one course — catalog section or manual pseudo-section. */
   const boxesFor = (s: Section) => {
     const list = s.manual
@@ -747,7 +758,7 @@ export default async function RequirementsPage({
 
   const termChoices = user
     ? Array.from(
-        new Set([cur, ...(await plannedTerms(user.id)), ...(term ? [term] : [])]),
+        new Set([cur, ...termIds, ...(term ? [term] : [])]),
       ).sort((a, b) => termKey(b) - termKey(a))
     : [];
 
@@ -762,7 +773,6 @@ export default async function RequirementsPage({
    * another campus. Guests preview only their campus's GE set: program labs
    * depend on the major a guest hasn't picked yet.
    */
-  const lxKeys = await labLxKeys();
   const labItems = labItemsFor(
     user ? progress : progress.filter((p) => p.set.kind === "ge"),
     lxKeys,

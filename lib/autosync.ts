@@ -41,6 +41,8 @@
  * `next dev` it stays off unless CYCLE_AUTO_SYNC=1; CYCLE_AUTO_SYNC=0
  * disables it anywhere. Started once per process from instrumentation.ts.
  */
+import { revalidateTag } from "next/cache";
+import { CATALOG_TAG } from "./catalog";
 import fs from "node:fs";
 import path from "node:path";
 import { all, getMeta, nowIso, setMeta } from "./db";
@@ -379,6 +381,11 @@ export async function manualSync(
       await setMeta("autosync_last_sections", nowIso());
     } catch {
       /* best-effort */
+    }
+    try {
+      revalidateTag(CATALOG_TAG);
+    } catch {
+      /* outside a request scope — the cache TTL picks the change up */
     }
     logEvent("manual", { term: term ?? "bootstrap", reports: reports.length });
     return { reports, current };

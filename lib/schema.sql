@@ -39,6 +39,7 @@ CREATE INDEX IF NOT EXISTS ix_sections_term    ON sections(term_id);
 CREATE INDEX IF NOT EXISTS ix_sections_school  ON sections(school);
 CREATE INDEX IF NOT EXISTS ix_sections_dept    ON sections(department);
 CREATE INDEX IF NOT EXISTS ix_sections_code    ON sections(course_code);
+CREATE INDEX IF NOT EXISTS ix_sections_term_school ON sections(term_id, school);
 CREATE INDEX IF NOT EXISTS ix_sections_status  ON sections(status);
 
 CREATE TABLE IF NOT EXISTS section_schedules (
@@ -73,6 +74,7 @@ CREATE TABLE IF NOT EXISTS section_instructors (
   instructor_id TEXT NOT NULL REFERENCES instructors(id) ON DELETE CASCADE,
   PRIMARY KEY (section_id, instructor_id)
 );
+CREATE INDEX IF NOT EXISTS ix_secinstr_instructor ON section_instructors(instructor_id);
 
 -- Registrar course-area designations. Numbered prefixes (1x POM, 2x SCR,
 -- 3x CMC, 4x HM, 5x PZ) are general-education categories; alpha codes are

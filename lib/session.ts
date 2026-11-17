@@ -5,6 +5,7 @@
  */
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { all, get, newId, nowIso, run } from "./db";
 import { hashPassword, verifyPassword } from "./password";
 import type { UserRow } from "./types";
@@ -111,7 +112,8 @@ export async function currentUserId(): Promise<string | null> {
   return row.user_id;
 }
 
-export async function currentUser(): Promise<UserRow | null> {
+/** Uncached lookup — use after/around mutations (requireUser does). */
+async function loadCurrentUser(): Promise<UserRow | null> {
   const id = await currentUserId();
   if (!id) return null;
   return (
@@ -123,6 +125,12 @@ export async function currentUser(): Promise<UserRow | null> {
   );
 }
 
+// cache(): the app layout AND the page each call currentUser() per render;
+// the per-request memo collapses that to a single session lookup. Server
+// actions go through requireUser() (uncached) so a mutation followed by the
+// re-render in the same request never sees a pre-mutation row.
+export const currentUser: () => Promise<UserRow | null> = cache(loadCurrentUser);
+
 export class Unauthorized extends Error {
   constructor() {
     super("Not signed in");
@@ -130,7 +138,7 @@ export class Unauthorized extends Error {
 }
 
 export async function requireUser(): Promise<UserRow> {
-  const u = await currentUser();
+  const u = await loadCurrentUser();
   if (!u) throw new Unauthorized();
   return u;
 }
