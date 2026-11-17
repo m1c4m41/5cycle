@@ -3,6 +3,7 @@ import type { Section } from "@/lib/types";
 import { AFFILIATION_LABELS, SCHOOL_BY_CODE, STATUS_LABELS } from "@/lib/constants";
 import { cn, formatCredits, formatMeeting, truncate } from "@/lib/util";
 import { Stars } from "./Stars";
+import { extractPrerequisites } from "@/lib/prereq";
 
 export function SchoolBadge({ code, small }: { code: string; small?: boolean }) {
   const s = SCHOOL_BY_CODE[code];
@@ -75,6 +76,7 @@ export function SectionCard({
   next?: string;
 }) {
   const href = `/section/${encodeURIComponent(s.id)}`;
+  const prereq = extractPrerequisites(s.description);
   return (
     <article className="card card-pad">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -125,6 +127,12 @@ export function SectionCard({
             </div>
           ) : (
             <div className="mt-1 text-sm text-ink-400">Staff / instructor not posted</div>
+          )}
+
+          {prereq && (
+            <p className="mt-1.5 text-sm leading-snug text-ink-700">
+              <span className="font-semibold text-amber-800">Prerequisites:</span> {prereq}
+            </p>
           )}
 
           {(s.description || s.areas.length > 0 || (reasons && reasons.length > 0)) && (
