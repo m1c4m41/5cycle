@@ -38,6 +38,8 @@ import { schoolShort, termLabel as termLabelOf } from "./util";
 import {
   boxSection,
   pairKey,
+  DEFAULT_OVERLAP_LIMIT,
+  overlapLimitFor,
   validateCounting,
   type CountingSet,
 } from "./counting";
@@ -1049,26 +1051,31 @@ export function blankCountingSets(sets: RequirementSet[]): CountingSet[] {
 }
 
 /**
- * Program pairs (major↔major, major↔minor, minor↔minor) whose single allowed
- * shared course is already taken by some course OTHER than `excludeCourseId`.
+ * Program pairs (major↔major, major↔minor, minor↔minor) whose allowed shared
+ * courses (`limit`, per campus) are already taken by some course OTHER than `excludeCourseId`.
  * Only boxes the student explicitly checked count; GE sets never count.
  */
 export function usedPairsFrom(
   assignments: { sections: Map<string, Assignment[]>; manuals: Map<string, Assignment[]> },
   sets: RequirementSet[],
   excludeCourseId: string,
+  limit: number = DEFAULT_OVERLAP_LIMIT,
 ): Set<string> {
   const programSets = new Set(sets.filter((s) => s.kind !== "ge").map((s) => s.id));
-  const used = new Set<string>();
+  const uses = new Map<string, number>();
   for (const map of [assignments.sections, assignments.manuals]) {
     for (const [courseId, list] of map) {
       if (courseId === excludeCourseId) continue;
       const inSets = [...new Set(list.map((a) => a.setId).filter((id) => programSets.has(id)))];
       for (let i = 0; i < inSets.length; i++)
-        for (let j = i + 1; j < inSets.length; j++) used.add(pairKey(inSets[i], inSets[j]));
+        for (let j = i + 1; j < inSets.length; j++) {
+          const k = pairKey(inSets[i], inSets[j]);
+          uses.set(k, (uses.get(k) ?? 0) + 1);
+        }
     }
   }
-  return used;
+  // A pair is "full" once other courses have used up the campus's allowance.
+  return new Set([...uses].filter(([, n]) => n >= limit).map(([k]) => k));
 }
 
 /**
@@ -1120,7 +1127,7 @@ export async function setCourseAssignments(
           sets: countingSetsFor(sets, course),
           strictGe: courseKind === "section",
           checkedIds: groups.map((g) => g.id),
-          usedPairs: usedPairsFrom(await assignmentsFor(userId), sets, courseId),
+          usedPairs: usedPairsFrom(await assignmentsFor(userId), sets, courseId, overlapLimitFor(u.school)),
         });
         if (!verdict.ok) return verdict;
       }

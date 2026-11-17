@@ -16,6 +16,7 @@ import {
 } from "@/actions/requirements";
 import { GroupCheckboxes } from "@/components/GroupCheckboxes";
 import { SetCard } from "@/components/SetCard";
+import { overlapLimitFor } from "@/lib/counting";
 import { SCHOOLS } from "@/lib/constants";
 import { currentTermId } from "@/lib/ingest";
 import {
@@ -1128,10 +1129,14 @@ export default async function RequirementsPage({
               you pick a box there, the others close.
             </li>
             <li>
-              <strong>Major &amp; minor:</strong> a course may count toward a GE <em>and</em> your
-              major or minor. Between programs (major↔major, major↔minor, minor↔minor) only{" "}
-              <strong>one</strong> course can be shared — once it&apos;s used, the boxes that would
-              need a second overlap close.
+              <strong>Major &amp; minor:</strong> inside one major or minor a course fills only{" "}
+              <strong>one</strong> box — once you pick it, that program&apos;s other boxes lock. A
+              course may count toward a GE <em>and</em> your major or minor. Between programs (major↔major, major↔minor, minor↔minor) at most{" "}
+              <strong>
+                {overlapLimitFor(user?.school)} course{overlapLimitFor(user?.school) === 1 ? "" : "s"}
+              </strong>{" "}
+              can be shared at {schoolShort(user?.school ?? "")} — once that&apos;s used up, the boxes
+              that would need another overlap close. Other colleges set their own limits.
             </li>
             <li>
               <strong>Advisor exceptions:</strong> if a course doesn&apos;t officially fit a major or
@@ -1216,7 +1221,7 @@ export default async function RequirementsPage({
                             key={currentIds.join(",")}
                             sets={countingSetsFor(sets, s)}
                             checked={currentIds}
-                            usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, s.id)]}
+                            usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, s.id, overlapLimitFor(user.school))]}
                             strictGe={!isManual}
                             half={s.credits_5c < 1}
                           />
@@ -1326,7 +1331,7 @@ export default async function RequirementsPage({
                 <GroupCheckboxes
                   sets={blankCountingSets(sets)}
                   checked={[]}
-                  usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "")]}
+                  usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", overlapLimitFor(user.school))]}
                   strictGe={false}
                 />
               </div>

@@ -9,7 +9,9 @@
  *  2. Educational-Objective and Breadth-of-Knowledge boxes may share a course
  *     (one course can fill one of each) — but never two boxes inside the same
  *     one of those sections.
- *  3. A course may count toward GE *and* a major/minor freely. Between two
+ *  3. Inside one major/minor a course fills only ONE box — once you pick it,
+ *     that program's other boxes lock.
+ *     A course may count toward GE *and* a major/minor freely. Between two
  *     programs (major↔major, major↔minor, minor↔minor) only ONE course may be
  *     shared in total.
  *  4. Boxes the course doesn't match in a major/minor (advisor exceptions,
@@ -40,6 +42,17 @@ export function boxSection(name: string): BoxSection {
   return "other";
 }
 
+/**
+ * How many courses a student may share between two programs (major↔major,
+ * major↔minor, minor↔minor), by home campus. Scripps allows two; the other
+ * campuses default to one and require department/committee sign-off beyond
+ * that. Edit this table to change a campus's policy.
+ */
+export const OVERLAP_LIMIT: Record<string, number> = { SC: 2 };
+export const DEFAULT_OVERLAP_LIMIT = 1;
+export const overlapLimitFor = (school: string | null | undefined): number =>
+  (school && OVERLAP_LIMIT[school]) || DEFAULT_OVERLAP_LIMIT;
+
 export const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
 /** Why a box can't be ticked right now (null = it can). */
@@ -64,7 +77,14 @@ export function boxBlockReason(args: {
   if (set.kind === "ge" && strictGe && !group.matches) {
     return "This course doesn’t carry this GE designation, so it can’t count here.";
   }
-  // Within a set, only one Educational-Objective box and one Breadth box.
+  // Major/minor: one course fills only ONE requirement box inside a program.
+  if (set.kind !== "ge") {
+    const taken = set.groups.find((g) => g.id !== group.id && checked.has(g.id));
+    if (taken) {
+      return `Already counting toward “${taken.name}” — a course can fill only one requirement inside the same ${set.kind}.`;
+    }
+  }
+  // GE: only one Educational-Objective box and one Breadth box.
   if (group.section !== "other") {
     const clash = set.groups.find(
       (g) => g.id !== group.id && g.section === group.section && checked.has(g.id),
@@ -81,7 +101,7 @@ export function boxBlockReason(args: {
       if (other.id === set.id || other.kind === "ge") continue;
       if (!other.groups.some((g) => checked.has(g.id))) continue;
       if (usedPairs.has(pairKey(set.id, other.id))) {
-        return `Another course already overlaps ${set.name} and ${other.name} — only one course may count toward both.`;
+        return `Another course already overlaps ${set.name} and ${other.name} — your campus’s shared-course limit is used up.`;
       }
     }
   }
