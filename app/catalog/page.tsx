@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSection, searchSections, facets } from "@/lib/catalog";
+import { getSection, searchSections, facets, termsWithQuery } from "@/lib/catalog";
 import { currentTermId } from "@/lib/ingest";
 import { currentUser } from "@/lib/session";
 import { enrolledSections, findConflicts } from "@/lib/schedule";
@@ -90,6 +90,10 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     offset: (page - 1) * PAGE_SIZE,
   });
   const sectionById = new Map(rows.map((r) => [r.id, r]));
+
+  // When a plain query comes up empty in the selected term, point the user at
+  // the terms that actually carry it (e.g. "bio 43LX" in a term without a lab).
+  const otherTerms = total === 0 && q ? await termsWithQuery(q, term) : [];
 
   const planned = user ? await enrolledSections(user.id, term) : [];
   const plannedIds = new Set(planned.map((s) => s.id));
@@ -389,11 +393,29 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
           {total === 0 ? (
             <div className="card card-pad text-center">
               <p className="font-semibold">Nothing matched.</p>
-              <p className="mt-1 text-sm text-ink-600">
-                {fx.terms.length === 0
-                  ? "The catalog hasn't synced yet — check back soon."
-                  : "Try fewer filters, or a different term."}
-              </p>
+              {q && otherTerms.length > 0 ? (
+                <p className="mt-1 text-sm text-ink-600">
+                  No “{q}” in {termLabel(term)}, but it is offered in:{" "}
+                  {otherTerms.map((t, i) => (
+                    <span key={t.term_id}>
+                      {i > 0 && ", "}
+                      <Link
+                        className="font-medium text-sky-700 underline"
+                        href={`/catalog?q=${encodeURIComponent(q)}&term=${encodeURIComponent(t.term_id)}`}
+                      >
+                        {termLabel(t.term_id)} ({t.n})
+                      </Link>
+                    </span>
+                  ))}
+                  .
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-ink-600">
+                  {fx.terms.length === 0
+                    ? "The catalog hasn't synced yet — check back soon."
+                    : "Try fewer filters, or a different term."}
+                </p>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-3">

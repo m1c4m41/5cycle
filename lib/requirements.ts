@@ -537,21 +537,46 @@ function schoolTokenOf(s: Section): string {
 /**
  * Does this section count as a laboratory course? Verified against the
  * catalog of all five campuses:
- *  - "L" subscript on the course number (Keck/Scripps: "148L", "043LX");
+ *  - "LX" subscript — the *separated* lab half of a lecture/lab pair
+ *    (Keck "BIOL 043L" + "BIOL 043LX"): always a lab;
+ *  - "L" subscript: a lab when the course has NO "LX" sibling — the lab is
+ *    integrated ("Vertebrate Physiology w/Lab", "Human Anatomy With Lab",
+ *    NEUR 148L) — but NOT when a separate "LX" section exists anywhere in
+ *    the catalog, because then the "L" is the lecture;
  *  - Pomona's trailing-L lab components (CHEM 001AL/001BL, CSCI 051PL …);
  *  - a lab word in the title (HMC: "Physical Chemistry Laboratory";
  *    Pomona: "Intro to Statistics w/Lab").
  *  HMC / CMC / Keck use two-letter AL / BL / LA / LB codes for plain section
  *  variants and parts, so those count only when the title agrees.
  */
-export function isLabCourse(s: Section): boolean {
+export function isLabCourse(s: Section, lxKeys?: Set<string>): boolean {
   const title = s.title ?? "";
   if (NON_LAB_RE.test(title)) return false;
   const suffix = (s.suffix ?? "").toUpperCase();
-  if (suffix === "L" || suffix === "LX") return true;
+  if (suffix === "LX") return true;
+  if (suffix === "L") {
+    if (lxKeys?.has(`${s.school}|${s.department}|${s.course_number}`)) return false;
+    return true;
+  }
   if (suffix.length === 2 && suffix.endsWith("L") && schoolTokenOf(s) === "PO") return true;
   if (TITLE_NOT_LAB_RE.test(title)) return false;
   return TITLE_LAB_RE.test(title) || TITLE_CODE_L_RE.test(title);
+}
+
+/**
+ * Keys (`school|department|course_number`) of courses that have a separate
+ * "LX" lab section *anywhere* in the synced catalog. The lecture/lab split
+ * is a property of the course, not the term — Keck's BIOL 043L/043LX pair
+ * appears in different terms across the year — so the lookup is global.
+ * `isLabCourse` uses this to stop counting the "L" lecture when the lab
+ * lives in the "LX" section.
+ */
+export async function labLxKeys(): Promise<Set<string>> {
+  const rows = await all<{ k: string }>(
+    `SELECT DISTINCT school || '|' || department || '|' || course_number AS k
+     FROM sections WHERE suffix = 'LX'`,
+  );
+  return new Set(rows.map((r) => r.k));
 }
 
 /** Numbered at/above `min` (upper division is 100+ at all five campuses). */
@@ -742,8 +767,9 @@ function countSources(gp: GroupProgress): Section[] {
 }
 
 /** Lab / division-related items across a list of set progresses
- *  (GE, majors, minors). */
-export function labItemsFor(progresses: SetProgress[]): LabItem[] {
+ *  (GE, majors, minors). Pass `labLxKeys()` so an "L" lecture whose lab
+ *  lives in a separate "LX" section isn't double-counted. */
+export function labItemsFor(progresses: SetProgress[], lxKeys?: Set<string>): LabItem[] {
   const out: LabItem[] = [];
   for (const p of progresses) {
     for (const gp of p.groups) {
@@ -755,7 +781,7 @@ export function labItemsFor(progresses: SetProgress[]): LabItem[] {
         set: p.set,
         gp,
         counted,
-        labCount: counted.filter(isLabCourse).length,
+        labCount: counted.filter((s) => isLabCourse(s, lxKeys)).length,
         upperCount: counted.filter((s) => isUpperCourse(s, minNum)).length,
         minNum,
       };

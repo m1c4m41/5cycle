@@ -78,54 +78,100 @@ function buildWhere(q: CatalogQuery): Built {
   if (q.permOnly) {
     where.push("s.perm_count > 0");
   }
-  if (q.q) {
-    // Fuzzy / buzzword search. Every token is OR-combined so "chem" pulls up
-    // lectures AND labs, and a course-code token ("math58", "dance 152",
-    // "chem 014L") also matches the exact department + normalized number
-    // (014 ≡ 14 ≡ 114) instead of demanding the exact code string.
-    const tokens = q.q.toLowerCase().trim().split(/\s+/).filter(Boolean).slice(0, 8);
-    const orParts: string[] = [];
-    const orParams: (string | number | null)[] = [];
-
-    const usedForCode = new Set<number>();
-    for (let i = 0; i < tokens.length; i++) {
-      const t = tokens[i];
-      // 'math58' / 'chem014l' / 'history101' — letters glued to a number.
-      let m = /^([a-z]{2,12})\s*0*(\d{1,4})([a-z]{0,2})$/.exec(t);
-      // 'dance 152' / 'history 101' / 'economics 1' — a department name (code
-      // or full word) followed by a bare number. Build the same shape as the
-      // glued regex: [full, dept, number, suffix]. The dept is matched
-      // prefix-aware below, so 'history' resolves to the stored 'HIST'.
-      if (
-        !m &&
-        i + 1 < tokens.length &&
-        /^[a-z]{2,12}$/.test(t) &&
-        /^0*\d{1,4}[a-z]{0,2}$/.test(tokens[i + 1])
-      ) {
-        const n = tokens[i + 1];
-        const mm = /^0*(\d{1,4})([a-z]{0,2})$/.exec(n)!;
-        m = [t, t, mm[1], mm[2]] as unknown as RegExpExecArray;
-        usedForCode.add(i);
-        usedForCode.add(i + 1);
-      }
-      if (m) {
-        const nums = fuzzyNumbers(Number(m[2]));
-        orParts.push(`((s.department = ? OR upper(s.department) LIKE upper(?) || '%' OR upper(?) LIKE upper(s.department) || '%') AND s.course_number IN (${nums.map(() => "?").join(",")}))`);
-        orParams.push(m[1].toUpperCase(), m[1], m[1], ...nums);
-      }
-    }
-    for (let i = 0; i < tokens.length; i++) {
-      if (usedForCode.has(i)) continue;
-      orParts.push("s.search LIKE ?");
-      orParams.push(`%${tokens[i]}%`);
-    }
-
-    if (orParts.length) {
-      where.push(`(${orParts.join(" OR ")})`);
-      params.push(...orParams);
-    }
+  const qc = q.q ? buildQClause(q.q) : null;
+  if (qc) {
+    where.push(qc.clause);
+    params.push(...qc.params);
   }
   return { where, params };
+}
+
+type QClause = { clause: string; params: (string | number | null)[] };
+
+/**
+ * The WHERE fragment for a free-text query. Fuzzy / buzzword search: every
+ * token is OR-combined so "chem" pulls up lectures AND labs, and a
+ * course-code token ("math58", "dance 152", "chem 014L") matches the
+ * department + normalized number (014 ≡ 14 ≡ 114) instead of demanding the
+ * exact code string. An *explicitly typed* suffix ("…014L", "…43LX") is a
+ * hard constraint — "chem 014L" must not leak in the +100-numbered course
+ * and "phys 30LX" must not return the lecture.
+ *
+ * Exported so a page can ask "which terms *do* have a match?" when the
+ * selected term comes up empty (see termsWithQuery).
+ */
+export function buildQClause(rawQ: string): QClause | null {
+  const tokens = rawQ.toLowerCase().trim().split(/\s+/).filter(Boolean).slice(0, 8);
+  if (tokens.length === 0) return null;
+  const orParts: string[] = [];
+  const orParams: (string | number | null)[] = [];
+
+  const usedForCode = new Set<number>();
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    // 'math58' / 'chem014l' / 'history101' — letters glued to a number.
+    let m = /^([a-z]{2,12})\s*0*(\d{1,4})([a-z]{0,2})$/.exec(t);
+    // 'dance 152' / 'history 101' / 'economics 1' — a department name (code
+    // or full word) followed by a bare number. Build the same shape as the
+    // glued regex: [full, dept, number, suffix]. The dept is matched
+    // prefix-aware below, so 'history' resolves to the stored 'HIST'.
+    if (
+      !m &&
+      i + 1 < tokens.length &&
+      /^[a-z]{2,12}$/.test(t) &&
+      /^0*\d{1,4}[a-z]{0,2}$/.test(tokens[i + 1])
+    ) {
+      const n = tokens[i + 1];
+      const mm = /^0*(\d{1,4})([a-z]{0,2})$/.exec(n)!;
+      m = [t, t, mm[1], mm[2]] as unknown as RegExpExecArray;
+      usedForCode.add(i);
+      usedForCode.add(i + 1);
+    }
+    if (m) {
+      const nums = fuzzyNumbers(Number(m[2]));
+      let part = `((s.department = ? OR upper(s.department) LIKE upper(?) || '%' OR upper(?) LIKE upper(s.department) || '%') AND s.course_number IN (${nums.map(() => "?").join(",")}))`;
+      orParams.push(m[1].toUpperCase(), m[1], m[1], ...nums);
+      if (m[3]) {
+        part += " AND upper(s.suffix) = ?";
+        orParams.push(m[3].toUpperCase());
+      }
+      orParts.push(part);
+    }
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    if (usedForCode.has(i)) continue;
+    orParts.push("s.search LIKE ?");
+    orParams.push(`%${tokens[i]}%`);
+  }
+
+  if (orParts.length === 0) return null;
+  return { clause: `(${orParts.join(" OR ")})`, params: orParams };
+}
+
+/**
+ * Terms (besides `excludeTerm`) that contain matches for the free-text query,
+ * most matches first. Lets the catalog tell a student "not offered in Fall
+ * 2026 — it is in Spring 2027 (2 sections)" instead of a dead "Nothing
+ * matched".
+ */
+export async function termsWithQuery(
+  rawQ: string,
+  excludeTerm?: string,
+  limit = 5,
+): Promise<{ term_id: string; n: number }[]> {
+  const qc = buildQClause(rawQ);
+  if (!qc) return [];
+  const where = [qc.clause];
+  const params: (string | number | null)[] = [...qc.params];
+  if (excludeTerm) {
+    where.push("s.term_id <> ?");
+    params.push(excludeTerm);
+  }
+  return all<{ term_id: string; n: number }>(
+    `SELECT s.term_id, COUNT(*) n FROM sections s WHERE ${where.join(" AND ")}
+     GROUP BY s.term_id ORDER BY n DESC, s.term_id DESC LIMIT ?`,
+    [...params, limit],
+  );
 }
 
 /**

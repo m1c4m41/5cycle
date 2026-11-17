@@ -12,7 +12,7 @@ curl -s -o /dev/null -c "$JAR" -H 'content-type: application/json' \
 SEC=$(node scripts/probe.mjs "SELECT section_id FROM enrollments e WHERE e.term_id='SP2027' AND e.user_id=(SELECT id FROM users WHERE email='qa@5cycle.app') LIMIT 1" 2>/dev/null \
       | grep -o '"section_id": "[^"]*"' | head -1 | cut -d'"' -f4)
 echo "target section: $SEC"
-before=$(node scripts/probe.mjs "SELECT status FROM enrollments WHERE section_id='$SEC'" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
+before=$(node scripts/probe.mjs "SELECT status FROM enrollments e WHERE e.section_id='$SEC' AND e.user_id=(SELECT id FROM users WHERE email='qa@5cycle.app')" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
 echo "status before : $before"
 
 # Scrape the action id for the status-change form straight out of the rendered page.
@@ -37,7 +37,7 @@ curl -s -o /tmp/mut-out.html -w 'http=%{http_code}\n' -b "$JAR" -c "$JAR" \
   -F "\$${AID}=" -F "sectionId=$SEC" -F "status=waitlist" -F "next=/planner" \
   "$BASE/planner"
 
-after=$(node scripts/probe.mjs "SELECT status FROM enrollments WHERE section_id='$SEC'" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
+after=$(node scripts/probe.mjs "SELECT status FROM enrollments e WHERE e.section_id='$SEC' AND e.user_id=(SELECT id FROM users WHERE email='qa@5cycle.app')" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
 echo "status after  : $after"
 if [ "$after" = "waitlist" ]; then echo "  PASS  server-action write persisted to SQLite"; else echo "  FAIL  write did not land"; fi
 
@@ -45,7 +45,7 @@ echo
 echo "== revert -> $before"
 curl -s -o /dev/null -b "$JAR" -c "$JAR" \
   -F "\$${AID}=" -F "sectionId=$SEC" -F "status=$before" -F "next=/planner" "$BASE/planner"
-done_=$(node scripts/probe.mjs "SELECT status FROM enrollments WHERE section_id='$SEC'" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
+done_=$(node scripts/probe.mjs "SELECT status FROM enrollments e WHERE e.section_id='$SEC' AND e.user_id=(SELECT id FROM users WHERE email='qa@5cycle.app')" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
 echo "status now    : $done_"
 [ "$done_" = "$before" ] && echo "  PASS  reverted" || echo "  WARN  revert left it at $done_"
 
@@ -53,7 +53,7 @@ echo
 echo "== guard: mutation without a session cookie must not write"
 code=$(curl -s -o /dev/null -w '%{http_code}' -F "\$${AID}=" -F "sectionId=$SEC" -F "status=waitlist" -F "next=/planner" "$BASE/planner")
 echo "  anonymous POST -> http $code (expect 3xx redirect to /login)"
-still=$(node scripts/probe.mjs "SELECT status FROM enrollments WHERE section_id='$SEC'" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
+still=$(node scripts/probe.mjs "SELECT status FROM enrollments e WHERE e.section_id='$SEC' AND e.user_id=(SELECT id FROM users WHERE email='qa@5cycle.app')" 2>/dev/null | grep -o '"status": "[^"]*"' | cut -d'"' -f4)
 echo "  status unchanged: $still"
 [ "$still" = "$before" ] && echo "  PASS  anonymous mutation rejected" || echo "  FAIL  anonymous mutation applied!"
 

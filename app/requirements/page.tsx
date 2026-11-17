@@ -24,6 +24,7 @@ import {
   groupLabel,
   isBreadthGroup,
   labItemsFor,
+  labLxKeys,
   listSets,
   manualCoursesFor,
   manualPseudoSection,
@@ -761,8 +762,10 @@ export default async function RequirementsPage({
    * another campus. Guests preview only their campus's GE set: program labs
    * depend on the major a guest hasn't picked yet.
    */
+  const lxKeys = await labLxKeys();
   const labItems = labItemsFor(
     user ? progress : progress.filter((p) => p.set.kind === "ge"),
+    lxKeys,
   );
   /** Lab items grouped by set, keeping the set order of `progress`. */
   const labBySet = (() => {
