@@ -103,6 +103,32 @@ function client(): Client {
 const txStore = new AsyncLocalStorage<Transaction>();
 
 /**
+ * Await `p` but give up after `ms`. The loser keeps running in the
+ * background (the driver offers no cancellation), so callers that rely on
+ * the timeout must be prepared for that — tx() force-closes its stream,
+ * which makes the leftover work fail fast.
+ */
+function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`timed out after ${ms} ms: ${what}`)),
+      ms,
+    );
+    timer.unref?.();
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
+
+/**
  * Execute a statement on the current transaction if there is one, otherwise
  * standalone on the client.
  */
@@ -119,25 +145,15 @@ function boot(): Promise<void> {
   return bootPromise;
 }
 
+const BOOT_DDL_TIMEOUT_MS = Number(process.env.CYCLE_BOOT_DDL_TIMEOUT_MS) || 15_000;
+
 /**
- * Idempotent boot: pragmas (file mode only), schema (CREATE ... IF NOT
- * EXISTS), then the two post-creation column migrations. Safe to run on every
- * process start, local or remote, first or later.
+ * Schema DDL + the two guarded post-creation migrations. Idempotent — safe
+ * to run on every process start, local or remote, first or later. On Turso
+ * these are writes, so they queue behind any open write transaction (e.g. a
+ * catalog sync holding the lock).
  */
-async function doBoot(): Promise<void> {
-  const d = client();
-  if (!REMOTE_DB) {
-    try {
-      await d.execute("PRAGMA journal_mode = WAL");
-    } catch {
-      /* read-only fs */
-    }
-    try {
-      await d.execute("PRAGMA foreign_keys = ON");
-    } catch {
-      /* ignore */
-    }
-  }
+async function runSchemaMigrations(d: Client): Promise<void> {
   await d.executeMultiple(fs.readFileSync(SCHEMA_PATH, "utf8"));
 
   // schema.sql is CREATE TABLE IF NOT EXISTS, so columns added after the
@@ -182,6 +198,66 @@ async function doBoot(): Promise<void> {
   }
 }
 
+let schemaRetryScheduled = false;
+function scheduleSchemaRetry(): void {
+  if (schemaRetryScheduled) return;
+  schemaRetryScheduled = true;
+  const timer = setTimeout(() => {
+    schemaRetryScheduled = false;
+    void runSchemaMigrations(client()).then(
+      () => console.log("[db] deferred schema check completed"),
+      (e) => {
+        console.warn(
+          `[db] deferred schema check failed (${e instanceof Error ? e.message : e}); retrying`,
+        );
+        scheduleSchemaRetry();
+      },
+    );
+  }, 60_000);
+  timer.unref?.();
+}
+
+/**
+ * Idempotent boot: pragmas (file mode only), then the schema check.
+ *
+ * Remote mode bounds the schema check: if another connection holds Turso's
+ * write lock (a stalled catalog sync did exactly this once and took the whole
+ * site down, because every request awaited boot's DDL), we serve traffic from
+ * the already-existing tables and retry in the background instead of wedging
+ * every request. File mode has no such contention, so a failure there is a
+ * real schema error and is rethrown as before.
+ */
+async function doBoot(): Promise<void> {
+  const d = client();
+  if (!REMOTE_DB) {
+    try {
+      await d.execute("PRAGMA journal_mode = WAL");
+    } catch {
+      /* read-only fs */
+    }
+    try {
+      await d.execute("PRAGMA foreign_keys = ON");
+    } catch {
+      /* ignore */
+    }
+    await runSchemaMigrations(d);
+    return;
+  }
+  try {
+    await withTimeout(
+      runSchemaMigrations(d),
+      BOOT_DDL_TIMEOUT_MS,
+      "schema check (another connection holds the write lock)",
+    );
+  } catch (e) {
+    console.warn(
+      `[db] boot: schema check deferred — ${e instanceof Error ? e.message : e}; ` +
+        "serving from existing tables, retrying in 60s",
+    );
+    scheduleSchemaRetry();
+  }
+}
+
 /** SELECT many. */
 export async function all<T = Record<string, unknown>>(
   sql: string,
@@ -212,18 +288,58 @@ export async function run(sql: string, params: SqlValue[] = []): Promise<RunResu
  * they are routed onto the transaction automatically, including through
  * nested function calls.
  */
+const TX_STREAM_TIMEOUT_MS = Number(process.env.CYCLE_TX_STREAM_TIMEOUT_MS) || 10_000;
+/** A healthy full 3-term section sync takes ~5 s; 5 minutes is a big margin. */
+const TX_BODY_TIMEOUT_MS = Number(process.env.CYCLE_TX_BODY_TIMEOUT_MS) || 5 * 60_000;
+const TX_CLOSE_TIMEOUT_MS = 15_000;
+
+function isTimeoutError(e: unknown): boolean {
+  return e instanceof Error && e.message.startsWith("timed out after");
+}
+
+function forceCloseTx(t: Transaction): void {
+  // Aborts the underlying stream: the server rolls the transaction back and
+  // releases the write lock. No-op if already closed.
+  try {
+    if (!t.closed) t.close();
+  } catch {
+    /* already closed */
+  }
+}
+
 export async function tx<T>(fn: () => Promise<T>): Promise<T> {
   await boot();
-  const t = await client().transaction("write");
+  // Opening the stream is cheap; the actual BEGIN IMMEDIATE (and any lock
+  // wait) happens with the first statement inside fn.
+  const t = await withTimeout(
+    client().transaction("write"),
+    TX_STREAM_TIMEOUT_MS,
+    "opening write transaction",
+  );
   try {
-    const out = await txStore.run(t, fn);
-    await t.commit();
+    // A single hung statement would otherwise hold Turso's write lock for
+    // the life of the process (it once did, and blocked every other boot's
+    // schema check site-wide). Bound the body; on timeout force-close the
+    // transaction — releasing the lock — and fail with a retryable error.
+    const body = txStore.run(t, fn);
+    body.catch(() => {}); // surfaced via the race below; keeps Node quiet on timeout
+    const out = await withTimeout(body, TX_BODY_TIMEOUT_MS, "write transaction body");
+    const commit = t.commit();
+    commit.catch(() => {});
+    await withTimeout(commit, TX_CLOSE_TIMEOUT_MS, "commit");
     return out;
   } catch (err) {
-    try {
-      await t.rollback();
-    } catch {
-      /* already rolled back */
+    if (isTimeoutError(err)) {
+      // The stream is stalled — a graceful ROLLBACK would hang on it too.
+      forceCloseTx(t);
+    } else {
+      try {
+        const rb = t.rollback();
+        rb.catch(() => {});
+        await withTimeout(rb, TX_CLOSE_TIMEOUT_MS, "rollback");
+      } catch {
+        forceCloseTx(t);
+      }
     }
     throw err;
   }
