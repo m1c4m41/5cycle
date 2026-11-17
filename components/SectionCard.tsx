@@ -65,6 +65,7 @@ export function SectionCard({
   fit,
   previewHref,
   next,
+  needTag,
 }: {
   s: Section;
   plannedIds: Set<string>;
@@ -74,6 +75,8 @@ export function SectionCard({
   previewHref?: string;
   /** Where a guest's "Add" should send them (catalog page with filters). */
   next?: string;
+  /** Gap-filler: what this class is needed for, shown in the header. */
+  needTag?: { label: string; tier: "major" | "minor" | "ge" };
 }) {
   const href = `/section/${encodeURIComponent(s.id)}`;
   const prereq = extractPrerequisites(s.description);
@@ -95,6 +98,18 @@ export function SectionCard({
             )}
             {s.half && (
               <span className="chip border-sky-300 bg-sky-50 text-sky-700">{s.half}</span>
+            )}
+            {needTag && (
+              <span
+                className={cn(
+                  "chip font-semibold",
+                  needTag.tier === "ge"
+                    ? "border-teal-300 bg-teal-50 text-teal-800"
+                    : "border-emerald-400 bg-emerald-50 text-emerald-800",
+                )}
+              >
+                ✓ {needTag.label}
+              </span>
             )}
             {s.perm_count > 0 && (
               <span

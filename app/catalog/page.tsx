@@ -6,6 +6,7 @@ import { enrolledSections, findConflicts } from "@/lib/schedule";
 import { fulfillmentFor, setsForUser } from "@/lib/requirements";
 import { SCHOOLS } from "@/lib/constants";
 import { termLabel } from "@/lib/util";
+import { findGapFillers, type GapResult } from "@/lib/gapfill";
 import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
@@ -72,12 +73,15 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const minCredits = num(sp.minCredits);
   const maxCredits = num(sp.maxCredits);
   const previewId = one(sp.preview);
+  const fill = Boolean(user) && one(sp.fill) === "1";
 
   // All four are independent once `term` is known — one parallel fan-out
   // (they used to be ~10 serial Turso round-trips).
-  const [fx, { rows, total }, planned, userSets] = await Promise.all([
+  const [fx, { rows, total }, planned, userSets, gap] = await Promise.all([
     facets(term),
-    searchSections({
+    fill
+      ? Promise.resolve({ rows: [] as Section[], total: 0 })
+      : searchSections({
       q: q || undefined,
       term,
       schools,
@@ -95,12 +99,13 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     }),
     user ? enrolledSections(user.id, term) : Promise.resolve([] as Section[]),
     user ? setsForUser(user) : Promise.resolve([] as RequirementSet[]),
+    fill && user ? findGapFillers(user, term) : Promise.resolve(null as GapResult | null),
   ]);
-  const sectionById = new Map(rows.map((r) => [r.id, r]));
+  const sectionById = new Map([...rows, ...(gap?.picks.map((g) => g.section) ?? [])].map((r) => [r.id, r]));
 
   // When a plain query comes up empty in the selected term, point the user at
   // the terms that actually carry it (e.g. "bio 43LX" in a term without a lab).
-  const otherTerms = total === 0 && q ? await termsWithQuery(q, term) : [];
+  const otherTerms = !fill && total === 0 && q ? await termsWithQuery(q, term) : [];
 
   const plannedIds = new Set(planned.map((s) => s.id));
 
@@ -355,8 +360,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             </Link>
           )}
           {user && (
-            <Link href="/requirements" className="btn-ghost">
-              Browse to fill a checklist gap →
+            <Link href={`/catalog?term=${encodeURIComponent(term)}&fill=1`} className="btn-ghost">
+              Find classes for my empty time slots →
             </Link>
           )}
         </div>
@@ -395,7 +400,65 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             </section>
           )}
 
-          {total === 0 ? (
+          {fill && gap ? (
+            <>
+              <section className="card card-pad space-y-1" aria-label="Classes for your empty time slots">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-lg font-bold tracking-tight">
+                    Classes that fit your {termLabel(term)} grid
+                  </h2>
+                  <Link href={`/catalog?term=${encodeURIComponent(term)}`} className="link text-sm">
+                    Show all classes ✕
+                  </Link>
+                </div>
+                <p className="text-sm leading-relaxed text-ink-600">
+                  {gap.plannedCount > 0
+                    ? `Each class below meets only in empty slots next to your ${gap.plannedCount} saved class${gap.plannedCount === 1 ? "" : "es"}`
+                    : "Your grid is empty, so every time works"}{" "}
+                  and advances a requirement you still need — <strong>major and minor</strong>{" "}
+                  requirements first, then <strong>general education</strong>. One section per
+                  course; open classes rank a little higher.
+                </p>
+              </section>
+              {gap.picks.length === 0 ? (
+                <div className="card card-pad text-center">
+                  <p className="font-semibold">
+                    {gap.openGroups === 0
+                      ? "No open requirements left to fill."
+                      : "Nothing this term fits your empty slots and an open requirement."}
+                  </p>
+                  <p className="mt-1 text-sm text-ink-600">
+                    {gap.openGroups === 0
+                      ? "Every checklist box that has a fixed requirement is already satisfied."
+                      : "Try another term, or open the planner to free up a time slot."}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {gap.picks.map((pick) => (
+                    <SectionCard
+                      key={pick.section.id}
+                      s={pick.section}
+                      plannedIds={plannedIds}
+                      fit={fitFor(pick.section.id)}
+                      previewHref={hrefFor(sp, { preview: pick.section.id })}
+                      next={hrefFor(sp, {})}
+                      needTag={{
+                        tier: pick.tier,
+                        label:
+                          pick.tier === "ge"
+                            ? "Fills a GE you need"
+                            : pick.tier === "major"
+                              ? "Fills a major requirement"
+                              : "Fills a minor requirement",
+                      }}
+                      reasons={pick.reasons}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : total === 0 ? (
             <div className="card card-pad text-center">
               <p className="font-semibold">Nothing matched.</p>
               {q && otherTerms.length > 0 ? (
@@ -442,7 +505,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             </div>
           )}
 
-          {pages > 1 && (
+          {!fill && pages > 1 && (
             <nav className="flex flex-wrap items-center justify-between gap-2 pt-2" aria-label="Pagination">
               <span className="text-sm text-ink-500">
                 Page {page} of {pages} · showing {rows.length} of {total.toLocaleString()}
