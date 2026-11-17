@@ -27,6 +27,7 @@ import {
   groupLabel,
   isBreadthGroup,
   labItemsFor,
+  labSummary,
   labLxKeys,
   listSets,
   manualCoursesFor,
@@ -545,6 +546,72 @@ function subChip(x: number, y: number, unit: string, title: string) {
   );
 }
 
+/** Lab counter: a bar plus a plain "do I need another lab?" answer. */
+function LabMeter({
+  summary,
+  label,
+  catalogLink,
+}: {
+  summary: { have: number; need: number; remaining: number; unnumbered: number };
+  label: string;
+  catalogLink?: string;
+}) {
+  const { have, need, remaining, unnumbered } = summary;
+  if (need === 0 && unnumbered === 0) return null;
+  const pct = need ? Math.round((have / need) * 100) : 0;
+  const done = need > 0 && remaining === 0;
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-3 py-2.5",
+        done ? "border-emerald-200 bg-emerald-50/50" : "border-amber-200 bg-amber-50/50",
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-sm font-bold text-ink-900">{label}</span>
+        {need > 0 && (
+          <span className="text-sm font-semibold tabular-nums text-ink-800">
+            {have} of {need} lab class{need === 1 ? "" : "es"}
+          </span>
+        )}
+        <span className={cn("text-sm font-semibold", done ? "text-emerald-800" : "text-amber-800")}>
+          {need === 0
+            ? "lab count not stated — see below"
+            : done
+              ? "✓ lab requirement met"
+              : `Take ${remaining} more lab class${remaining === 1 ? "" : "es"}`}
+        </span>
+        {!done && catalogLink && (
+          <Link href={catalogLink} className="link ml-auto text-xs">
+            Find a lab →
+          </Link>
+        )}
+      </div>
+      {need > 0 && (
+        <div
+          className="mt-1.5 h-2 overflow-hidden rounded-full bg-white ring-1 ring-ink-200"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={need}
+          aria-valuenow={have}
+          aria-label={`${label}: ${have} of ${need} lab classes`}
+        >
+          <div
+            className={cn("h-full rounded-full", done ? "bg-emerald-500" : "bg-amber-500")}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
+      {unnumbered > 0 && (
+        <p className="mt-1 text-[11px] text-ink-500">
+          Plus {unnumbered} requirement{unnumbered === 1 ? "" : "s"} that mention labs without a
+          number — not counted above.
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** One row in the "Lab requirements" section. */
 function renderLabRow(item: LabItem, term: string) {
   const { gp, tier } = item;
@@ -992,9 +1059,19 @@ export default async function RequirementsPage({
             </p>
           </div>
 
+          {user && (
+            <LabMeter
+              label="All your programs"
+              summary={labSummary(labItems)}
+              catalogLink={`/catalog?q=lab&term=${term}`}
+            />
+          )}
+
           {labBySet.map(({ set, items }) => {
             const boxes = items.filter((i) => i.tier === "group");
             const met = boxes.filter((i) => i.gp.satisfied).length;
+            const summary = labSummary(items);
+            const firstOpen = items.find((i) => i.tier !== "upper" && !i.gp.satisfied);
             return (
               <div key={set.id} className="card card-pad">
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -1008,6 +1085,13 @@ export default async function RequirementsPage({
                       {met}/{boxes.length} lab box{boxes.length === 1 ? "" : "es"} met
                     </span>
                   )}
+                </div>
+                <div className="mt-2">
+                  <LabMeter
+                    label={`${set.name} labs`}
+                    summary={summary}
+                    catalogLink={firstOpen ? catalogHref(firstOpen.gp.group, term) : undefined}
+                  />
                 </div>
                 <ul className="mt-2 flex flex-col gap-2">
                   {items.map((it) => renderLabRow(it, term))}

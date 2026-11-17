@@ -828,6 +828,67 @@ export function labItemsFor(progresses: SetProgress[], lxKeys?: Set<string>): La
   return out;
 }
 
+export type LabSummary = {
+  /** Lab classes done toward the numbered lab requirements (capped per box). */
+  have: number;
+  /** Lab classes the program's numbered lab requirements add up to. */
+  need: number;
+  /** need − have: how many more lab classes to take. */
+  remaining: number;
+  /** Lab-related groups whose prose gives no number (not in have/need). */
+  unnumbered: number;
+};
+
+/**
+ * One lab counter for a program: every lab box counts its course floor, and
+ * every "at least N laboratory courses" note counts N. `have` is capped per
+ * box so a surplus in one box can't hide a shortfall in another.
+ */
+/** A group named after one specific course ("PSYC143 PO - Social Cognitive … with
+ *  Lab") — a catalog list item, not a count of labs. */
+const NAMED_COURSE_GROUP_RE = /^[A-Z]{2,5}\s?\d{2,3}[A-Z]{0,2}\s+[A-Z]{2}\b/;
+
+export function labSummary(items: LabItem[]): LabSummary {
+  let have = 0;
+  let need = 0;
+  let unnumbered = 0;
+  let named: LabItem[] = [];
+  for (const it of items) {
+    const g = it.gp.group;
+    if (it.tier === "group") {
+      if (NAMED_COURSE_GROUP_RE.test(g.name)) {
+        named.push(it);
+        continue;
+      }
+      const prose = labNeedFromProse(g); // "three of which must be laboratory"
+      const n = prose ?? g.min_courses ?? 1;
+      need += n;
+      have +=
+        prose != null
+          ? Math.min(it.labCount, n)
+          : g.min_courses
+            ? Math.min(it.gp.haveCourses, n)
+            : it.gp.satisfied
+              ? 1
+              : 0;
+    } else if (it.tier === "note") {
+      if (it.labNeed != null) {
+        need += it.labNeed;
+        have += Math.min(it.labCount, it.labNeed);
+      } else unnumbered++;
+    }
+  }
+  // Named lab courses are individual requirements only when the program gives
+  // no lab count of its own; otherwise they are the options for that count.
+  if (need === 0) {
+    for (const it of named) {
+      need += 1;
+      have += it.gp.haveCourses > 0 ? 1 : 0;
+    }
+  }
+  return { have, need, remaining: Math.max(0, need - have), unnumbered };
+}
+
 export function progressForSet(
   set: RequirementSet,
   planned: Section[],
