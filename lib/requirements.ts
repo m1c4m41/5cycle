@@ -515,23 +515,261 @@ export function labProseNote(g: RequirementGroup): string | null {
   return LAB_NOTE_RE.test(note) ? note : null;
 }
 
+/* ------------------------------------------------------------------ */
+/* Lab / upper-division course detection                               */
+/* ------------------------------------------------------------------ */
+
+/** Lab word in a course title: "… Laboratory", "… w/Lab", "Lab, Intro to…". */
+const TITLE_LAB_RE = /\b(labs?|laborator\w*)\b/i;
+/** Title words that look lab-ish but are not (CM "Policy Lab"). */
+const TITLE_NOT_LAB_RE = /\bpolicy\s+lab\b/i;
+/** A course code with an L subscript typed into the title, e.g. a manually
+ *  entered "NEUR 148L – Cell and Molecular Neuroscience". */
+const TITLE_CODE_L_RE = /\b\d{1,4}L\b/;
+
+/** School token from the course code ("BIOL 148L KS" → "KS"); falls back to
+ *  the section's school column. */
+function schoolTokenOf(s: Section): string {
+  const m = /\s([A-Z]{2})$/.exec(s.course_code ?? "");
+  return m ? m[1] : s.school;
+}
+
+/**
+ * Does this section count as a laboratory course? Verified against the
+ * catalog of all five campuses:
+ *  - "L" subscript on the course number (Keck/Scripps: "148L", "043LX");
+ *  - Pomona's trailing-L lab components (CHEM 001AL/001BL, CSCI 051PL …);
+ *  - a lab word in the title (HMC: "Physical Chemistry Laboratory";
+ *    Pomona: "Intro to Statistics w/Lab").
+ *  HMC / CMC / Keck use two-letter AL / BL / LA / LB codes for plain section
+ *  variants and parts, so those count only when the title agrees.
+ */
+export function isLabCourse(s: Section): boolean {
+  const title = s.title ?? "";
+  if (NON_LAB_RE.test(title)) return false;
+  const suffix = (s.suffix ?? "").toUpperCase();
+  if (suffix === "L" || suffix === "LX") return true;
+  if (suffix.length === 2 && suffix.endsWith("L") && schoolTokenOf(s) === "PO") return true;
+  if (TITLE_NOT_LAB_RE.test(title)) return false;
+  return TITLE_LAB_RE.test(title) || TITLE_CODE_L_RE.test(title);
+}
+
+/** Numbered at/above `min` (upper division is 100+ at all five campuses). */
+export function isUpperCourse(s: Section, min = 100): boolean {
+  return typeof s.course_number === "number" && s.course_number >= min;
+}
+
+/* ------------------------------------------------------------------ */
+/* Prose condition parsing (lab counts + division floors)              */
+/* ------------------------------------------------------------------ */
+
+const NUM_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+function toNum(t: string): number | null {
+  const k = t.trim().toLowerCase();
+  if (k in NUM_WORDS) return NUM_WORDS[k];
+  const n = parseInt(k, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Ordered most-specific first: "at least three laboratory courses",
+ *  "three must carry a lab", "two of the remainder must still include a
+ *  laboratory", "three of which must be laboratory", "(one with lab)", and a
+ *  loose "N of which … laboratory" fallback. */
+const LAB_NUM_PATTERNS: RegExp[] = [
+  /(?:at least|no fewer than|at minimum)\s+(one|two|three|four|five|six|seven|\d+)\s+(?:more\s+)?(?:additional\s+)?(?:laborator\w*|labs?)\b/i,
+  /\b(one|two|three|four|five|six|\d+)\s+(?:courses?\s+)?(?:must|should)\s+(?:carry\s+(?:a|an)\s+)?(?:laborator\w*|labs?)\b/i,
+  /\b(one|two|three|four|five|six|\d+)\s+of\s+the\s+(?:remainder|remaining)\s+must\s+still\s+include\s+a\s+laboratory/i,
+  /(?:at least\s+)?(one|two|three|four|five|six|\d+)\s+of\s+(?:which|them|these)\s+(?:must|should)\s+(?:be\s+|carry\s+)?(?:an?\s+)?(?:laborator\w*|labs?)\b/i,
+  /(?:at least|no fewer than|at minimum)\s+(one|two|three|four|five|six|\d+)\s+with\s+(?:a\s+)?(?:laborator\w*|labs?)\b/i,
+  /\((?:at least\s+)?(one|two|three|four|five|six|\d+)\s+(?:labs?|with lab)\)/i,
+  /(?:at least\s+)?(one|two|three|four|five|six|\d+)\s+of\s+(?:which|them|these|the\s+\w+)\s+[^.;]{0,40}?(?:laborator\w*|labs?\b)/i,
+];
+
+/** The "at least N laboratory courses" figure a group's prose states — null
+ *  when the note mentions labs without a number. */
+export function labNeedFromProse(g: RequirementGroup): number | null {
+  const text = `${g.notes ?? ""} ${g.name ?? ""}`;
+  for (const re of LAB_NUM_PATTERNS) {
+    const m = text.match(re);
+    if (m) {
+      const n = toNum(m[1]);
+      if (n != null) return n;
+    }
+  }
+  return null;
+}
+
+/** Explicit course-number floors in the prose: "numbered 100 or higher",
+ *  "numbered above 100", "at or above 100", "102 and above". */
+function explicitFloors(text: string): number[] {
+  const out: number[] = [];
+  const re =
+    /numbered\s+(?:at\s+or\s+above|above|at\s+least)?\s*(\d{1,3})\b|at\s+or\s+above\s*(\d{1,3})\b|(\d{1,3})\s+or\s+(?:higher|above)\b|(\d{1,3})\s+and\s+above\b/g;
+  for (const m of text.matchAll(re)) out.push(parseInt(m[1] ?? m[2] ?? m[3] ?? m[4], 10));
+  return out;
+}
+
+/** "N of M must be upper-division" / "at least one numbered 100 or above" /
+ *  "the other should be upper-division" — how many of the group's courses
+ *  the prose demands be upper-division. */
+function upperNOfM(text: string): number | null {
+  let m = text.match(
+    /\b(one|two|three|four|five|six|\d+)\s+of\s+(?:the\s+)?(?:five|six|seven|eight|\d+)\s+must\s+(?:be\s+)?(?:an?\s+)?upper[- ]division/i,
+  );
+  if (m) return toNum(m[1]);
+  m = text.match(
+    /\bat least\s+(one|two|three|four|five|six|\d+)\s+(?:course|courses)?\s*numbered\s+(?:at\s+or\s+above|above|at\s+least)?\s*(\d{1,3})/i,
+  );
+  if (m) return toNum(m[1]);
+  if (/\bthe\s+other\s+(?:should|must)\s+be\s+(?:an?\s+)?upper[- ]division/i.test(text)) return 1;
+  return null;
+}
+
+/** Upper-division phrasing that is only an option, not a demand:
+ *  "Lower- or upper-division elective", "an equivalent upper-division
+ *  class", "may petition …", "a student who places out …". */
+const UPPER_OPTION_RE =
+  /\blower[-\s]*or\s+upper\b|\bmay\s+petition\b|\bplaces\s+out\b|\bequivalent\s+upper[- ]division\b/i;
+
+function codeNumber(code: string): number | null {
+  const m = String(code).match(/(\d{1,4})/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+/** Does this matcher only admit courses numbered at/above `min`? Rules are
+ *  OR alternatives at the group level, so a group enforces a floor only when
+ *  every one of its rules does. */
+function ruleEnforcesMin(m: Matcher, min: number): boolean {
+  if (!m) return false;
+  switch (m.type) {
+    case "department":
+      return typeof m.min === "number" && m.min >= min;
+    case "course": {
+      const ns = (m.codes ?? []).map(codeNumber).filter((n): n is number => n != null);
+      return ns.length > 0 && ns.every((n) => n >= min);
+    }
+    case "and":
+      return (m.children ?? []).some((ch) => ruleEnforcesMin(ch, min));
+    case "or":
+      return (m.children ?? []).length > 0 && (m.children ?? []).every((ch) => ruleEnforcesMin(ch, min));
+    default:
+      return false;
+  }
+}
+
+/** Course codes the rules allow (excluding "not" subtrees — those codes are
+ *  barred, not permitted). */
+function collectAllowedCodes(m: Matcher, out: string[]): void {
+  if (!m) return;
+  switch (m.type) {
+    case "course":
+      out.push(...(m.codes ?? []));
+      break;
+    case "and":
+    case "or":
+      (m.children ?? []).forEach((ch) => collectAllowedCodes(ch, out));
+      break;
+    default:
+      break;
+  }
+}
+
+/**
+ * The group's prose demands that its courses be upper-division, but the
+ * checklist rule does not already enforce the floor — so the division part
+ * is a sub-count the tracker can surface. Returns the demand
+ * ({need: how many of the counted courses, minNum: the number floor}) or null
+ * when there is no clean demand:
+ *  - "upper-division" only as an option ("…or an equivalent upper-division
+ *    class", "Lower- or upper-division elective") → null;
+ *  - mixed floors in one note ("MATH 102+ or CSCI 070+") → null;
+ *  - the rule already enforces the floor → null (the checklist forces it);
+ *  - the rule lists specific courses below the floor (the list is the real
+ *    demand, e.g. a program list containing HIST 055) → null.
+ */
+export function upperProseNeed(g: RequirementGroup): { need: number; minNum: number } | null {
+  const text = `${g.notes ?? ""} ${g.name ?? ""}`;
+  const upperWord = /\bupper[- ]division\b/i.test(text);
+  const nOfM = upperNOfM(text);
+  const rawFloors = explicitFloors(text);
+  if (new Set(rawFloors).size >= 2) return null; // "102 or higher … 070 or higher"
+  // A single explicit floor wins even when it sits below 100 (HMC calls
+  // CSCI 070+ "upper-division"); otherwise "upper-division" implies 100+.
+  const floor = rawFloors.length === 1 ? rawFloors[0] : null;
+  const minNum = floor ?? (upperWord ? 100 : null);
+  if (minNum == null) return null;
+  if (nOfM == null && !upperWord && floor == null) return null;
+  if (UPPER_OPTION_RE.test(text)) return null;
+  const need = nOfM ?? g.min_courses;
+  if (!need) return null;
+  if (g.rules.length > 0 && g.rules.every((r) => ruleEnforcesMin(r.match, minNum))) return null;
+  const codes: string[] = [];
+  g.rules.forEach((r) => collectAllowedCodes(r.match, codes));
+  if (codes.some((c) => { const n = codeNumber(c); return n != null && n < minNum; })) return null;
+  return { need, minNum };
+}
+
 export type LabItem = {
   set: RequirementSet;
   gp: GroupProgress;
   /** "group": the requirement itself is a lab box.
-   *  "note": a lab is part of a larger requirement — only the prose says how many. */
-  tier: "group" | "note";
+   *  "note": a lab is part of a larger requirement — the prose says how many.
+   *  "upper": the prose demands upper-division (numbered at/above `minNum`)
+   *    courses but the checklist rule does not enforce the floor. */
+  tier: "group" | "note" | "upper";
+  /** The courses that count for this group (matched + checked-box pins). */
+  counted: Section[];
+  /** How many of `counted` carry a lab indicator (L subscript / lab title). */
+  labCount: number;
+  /** Prose's "at least N laboratory courses" — null when unnumbered. */
+  labNeed: number | null;
+  /** Prose's division demand: at least this many of `counted` numbered
+   *  at/above `minNum`. Null when the rule already enforces it. */
+  upperNeed: number | null;
+  /** The division floor the prose asks for (100 by default). */
+  minNum: number;
+  upperCount: number;
 };
 
-/** Lab-related items across a list of set progresses (GE, majors, minors). */
+/** The courses that count for a group: the matcher's picks plus any the
+ *  student/advisor pinned in by checked box. */
+function countSources(gp: GroupProgress): Section[] {
+  const out: Section[] = [...gp.matched];
+  for (const s of gp.pinned) if (!out.some((x) => x.id === s.id)) out.push(s);
+  return out;
+}
+
+/** Lab / division-related items across a list of set progresses
+ *  (GE, majors, minors). */
 export function labItemsFor(progresses: SetProgress[]): LabItem[] {
   const out: LabItem[] = [];
   for (const p of progresses) {
     for (const gp of p.groups) {
-      if (isLabGroup(gp.group)) {
-        out.push({ set: p.set, gp, tier: "group" });
-      } else {
-        if (labProseNote(gp.group)) out.push({ set: p.set, gp, tier: "note" });
+      const g = gp.group;
+      const counted = countSources(gp);
+      const up = upperProseNeed(g);
+      const minNum = up ? up.minNum : 100;
+      const base = {
+        set: p.set,
+        gp,
+        counted,
+        labCount: counted.filter(isLabCourse).length,
+        upperCount: counted.filter((s) => isUpperCourse(s, minNum)).length,
+        minNum,
+      };
+      if (isLabGroup(g)) {
+        out.push({ ...base, tier: "group", labNeed: null, upperNeed: null });
+      } else if (labProseNote(g)) {
+        out.push({
+          ...base,
+          tier: "note",
+          labNeed: labNeedFromProse(g),
+          upperNeed: up ? up.need : null,
+        });
+      } else if (up) {
+        out.push({ ...base, tier: "upper", labNeed: null, upperNeed: up.need });
       }
     }
   }

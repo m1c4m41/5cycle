@@ -517,6 +517,28 @@ function renderSet(p: SetProgress, term: string) {
 /* Lab tracker                                                                */
 /* -------------------------------------------------------------------------- */
 
+/** X/Y progress chip for a prose sub-requirement (lab count, 100+ count). */
+function subChip(x: number, y: number, unit: string, title: string) {
+  const done = x >= y;
+  return (
+    <span
+      className={cn(
+        "chip",
+        done
+          ? "border-emerald-300 bg-white text-emerald-800"
+          : x > 0
+            ? "border-amber-300 bg-white text-amber-800"
+            : "border-ink-200 bg-white text-ink-500",
+      )}
+      title={title}
+    >
+      {done ? "✓ " : ""}
+      {x}/{y} {unit}
+      {done ? " met" : ""}
+    </span>
+  );
+}
+
 /** One row in the "Lab requirements" section. */
 function renderLabRow(item: LabItem, term: string) {
   const { gp, tier } = item;
@@ -527,24 +549,58 @@ function renderLabRow(item: LabItem, term: string) {
     counts.push(`${gp.haveCourses}/${g.min_courses} course${g.min_courses === 1 ? "" : "s"}`);
   if (g.min_credits) counts.push(`${cr(gp.haveCredits)}/${cr(g.min_credits)} 5C credits`);
 
-  /* Prose-only lab sub-requirement: the box counts the whole group, so the
-     lab part is surfaced as an advisor-check item with its catalog note. */
-  if (tier === "note") {
+  /* Prose sub-requirements: the checklist rule counts the whole group, but
+     the catalog prose demands laboratory and/or upper-division courses.
+     Both sub-counts are tracked live over the courses that count for it. */
+  if (tier === "note" || tier === "upper") {
+    const labChip =
+      item.labNeed != null ? (
+        subChip(
+          item.labCount,
+          item.labNeed,
+          "labs",
+          `Catalog prose requires at least ${item.labNeed} laboratory course${
+            item.labNeed === 1 ? "" : "s"
+          } in this group; ${item.labCount} of your counted courses are labs (L subscript or a lab word in the title).`,
+        )
+      ) : tier === "note" ? (
+        <span
+          className="chip border-ink-200 bg-white text-ink-500"
+          title="The catalog prose mentions labs in this group without a fixed number."
+        >
+          {item.counted.length > 0
+            ? `${item.labCount} lab${item.labCount === 1 ? "" : "s"} among ${item.counted.length} counted`
+            : "no courses counted yet"}
+        </span>
+      ) : null;
+    const upperChip =
+      item.upperNeed != null ? (
+        subChip(
+          item.upperCount,
+          item.upperNeed,
+          `numbered ${item.minNum}+`,
+          `Catalog prose requires ${item.upperNeed} course${
+            item.upperNeed === 1 ? "" : "s"
+          } numbered ${item.minNum} or higher in this group; ${item.upperCount} of your counted courses qualify.`,
+        )
+      ) : null;
     return (
-      <li key={g.id} className="rounded-lg border border-amber-200 bg-amber-50/40 px-3 py-2.5">
+      <li
+        key={g.id}
+        className={cn(
+          "rounded-lg border px-3 py-2.5",
+          tier === "note" ? "border-amber-200 bg-amber-50/40" : "border-indigo-200 bg-indigo-50/40",
+        )}
+      >
         <div className="flex items-start gap-2">
           <span aria-hidden className="mt-0.5">
-            🔬
+            {tier === "note" ? "🔬" : "🎓"}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="text-sm font-semibold text-ink-900">{g.name}</span>
-              <span
-                className="chip border-amber-300 bg-white text-amber-800"
-                title="The catalog note says part of this requirement must be laboratory courses, but the checklist rule counts the whole group — so the lab portion is not separated automatically."
-              >
-                lab portion — not auto-counted
-              </span>
+              {labChip}
+              {upperChip}
               {counts.length > 0 && (
                 <span className="text-xs font-semibold tabular-nums text-ink-700">
                   {counts.join(" · ")}
@@ -914,7 +970,7 @@ export default async function RequirementsPage({
             </h2>
             <p className="text-xs text-ink-500">
               {user
-                ? "Every lab-related box across your sets — majors and minors from any of the five campuses count."
+                ? "Every lab-related box across your sets — majors and minors from any of the five campuses count, with lab and upper-division sub-counts from catalog prose."
                 : `Lab boxes in ${schoolShort(school)} general education. Program-specific labs appear here once you sign in and pick a major.`}
             </p>
           </div>
@@ -945,17 +1001,18 @@ export default async function RequirementsPage({
 
           <p className="text-xs leading-relaxed text-ink-500">
             Lab boxes are counted by the same matching engine as the checklist below — a lab from
-            any campus (HMC 053-series, Keck “L” courses, Pomona “with Lab” sections, …) ticks its
-            box wherever the rule allows it.
+            any campus (HMC “… Laboratory” courses, Keck “L” subscripts, Pomona “with Lab” sections,
+            …) ticks its box wherever the rule allows it. A course counts as a lab when its code
+            carries an L subscript (NEUR 148L) or its title names a lab.
             {user && (
               <>
                 {" "}
-                Use <span className="kbd">Counting boxes</span> to pin a specific course to a lab
+                Use <span className="kbd">Counting boxes</span> to pin a specific course to a
                 requirement.
               </>
             )}{" "}
-            Items marked “not auto-counted” state their lab portion only in catalog prose — confirm
-            with your adviser.
+            Chips like “2/3 labs” and “4/6 numbered 100+” track the sub-requirements the catalog
+            prose states — edge cases are worth confirming with your adviser.
           </p>
         </section>
       )}
