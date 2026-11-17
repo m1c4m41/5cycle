@@ -12,7 +12,7 @@
  * action reads fd.getAll("groupId") and re-checks every rule.
  */
 import { useEffect, useRef, useState } from "react";
-import { boxBlockReason, nonMatching, type CountingSet } from "@/lib/counting";
+import { boxBlockReason, nonMatching, type CountingSet, type OverlapPolicy } from "@/lib/counting";
 import { cn } from "@/lib/util";
 
 const KIND_LABEL: Record<string, string> = { ge: "GE", major: "Major", minor: "Minor" };
@@ -20,15 +20,18 @@ const KIND_LABEL: Record<string, string> = { ge: "GE", major: "Major", minor: "M
 export function GroupCheckboxes({
   sets,
   checked: initiallyChecked = [],
-  usedPairs = [],
+  policy,
+  pairUse = {},
   strictGe = true,
   half = false,
 }: {
   sets: CountingSet[];
   /** group ids already checked (the saved assignments). */
   checked?: string[];
-  /** Program pairs whose one allowed shared course is already used elsewhere. */
-  usedPairs?: string[];
+  /** The student's campus double-counting policy. */
+  policy: OverlapPolicy;
+  /** How many other courses already share each pair of sets. */
+  pairUse?: Record<string, number>;
   /** Catalog courses can only tick GE boxes they have; manual courses can't be
    *  matched, so they go through the advisor-warning path instead. */
   strictGe?: boolean;
@@ -39,7 +42,6 @@ export function GroupCheckboxes({
   const [warn, setWarn] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const confirmed = useRef(false);
-  const used = new Set(usedPairs);
 
   const flagged = nonMatching(sets, checked);
 
@@ -83,15 +85,19 @@ export function GroupCheckboxes({
             </legend>
             <div className="grid grid-cols-1 gap-y-0.5">
               {set.groups.map((g) => {
-                const reason = boxBlockReason({ set, group: g, strictGe, half, checked, usedPairs: used, sets });
+                const reason = boxBlockReason({ set, group: g, strictGe, half, checked, policy, pairUse, sets });
                 const off = reason !== null;
-                const needsAdvisor = !g.matches && !(set.kind === "ge" && strictGe);
+                const needsAdvisor = !g.matches && !g.auto && !(set.kind === "ge" && strictGe);
                 return (
                   <label
                     key={g.id}
                     className={cn(
                       "flex items-start gap-1.5 text-xs leading-snug",
-                      off ? "cursor-not-allowed text-ink-300" : "cursor-pointer text-ink-700",
+                      g.auto
+                        ? "cursor-default text-emerald-800"
+                        : off
+                          ? "cursor-not-allowed text-ink-300"
+                          : "cursor-pointer text-ink-700",
                     )}
                     title={reason ?? undefined}
                   >
@@ -99,14 +105,19 @@ export function GroupCheckboxes({
                       type="checkbox"
                       name="groupId"
                       value={g.id}
-                      checked={checked.has(g.id)}
+                      checked={checked.has(g.id) || !!g.auto}
                       onChange={(e) => toggle(g.id, e.target.checked)}
                       disabled={off}
                       className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-brand-600"
                     />
                     <span>
                       {g.name}
-                      {needsAdvisor && !off && (
+                      {g.auto && (
+                        <span className="ml-1 text-[10px] font-semibold text-emerald-700" title={reason ?? undefined}>
+                          (required course — counts automatically)
+                        </span>
+                      )}
+                      {needsAdvisor && !off && !g.auto && (
                         <span className="ml-1 text-[10px] text-amber-700" title="No rule match — counts only with advisor approval">
                           (advisor approval)
                         </span>

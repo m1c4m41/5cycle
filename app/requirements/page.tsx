@@ -16,7 +16,7 @@ import {
 } from "@/actions/requirements";
 import { GroupCheckboxes } from "@/components/GroupCheckboxes";
 import { SetCard } from "@/components/SetCard";
-import { overlapLimitFor } from "@/lib/counting";
+import { overlapPolicyFor } from "@/lib/counting";
 import { SCHOOLS } from "@/lib/constants";
 import { currentTermId } from "@/lib/ingest";
 import {
@@ -35,7 +35,7 @@ import {
   progressForUser,
   requirementsLoaded,
   setsForUser,
-  usedPairsFrom,
+  pairUseFrom,
   type Assignment,
   type LabItem,
 } from "@/lib/requirements";
@@ -1130,13 +1130,15 @@ export default async function RequirementsPage({
             </li>
             <li>
               <strong>Major &amp; minor:</strong> inside one major or minor a course fills only{" "}
-              <strong>one</strong> box — once you pick it, that program&apos;s other boxes lock. A
-              course may count toward a GE <em>and</em> your major or minor. Between programs (major↔major, major↔minor, minor↔minor) at most{" "}
-              <strong>
-                {overlapLimitFor(user?.school)} course{overlapLimitFor(user?.school) === 1 ? "" : "s"}
-              </strong>{" "}
-              can be shared at {schoolShort(user?.school ?? "")} — once that&apos;s used up, the boxes
-              that would need another overlap close. Other colleges set their own limits.
+              <strong>one</strong> box — once you pick it, that program&apos;s other boxes lock. How
+              many courses can be shared <em>between</em> programs depends on your college, and
+              boxes close when that limit is used up.{" "}
+              <span className="text-ink-500">{overlapPolicyFor(user?.school).summary}</span>
+            </li>
+            <li>
+              <strong>Named requirements:</strong> when a major or minor lists a course by name
+              (for example “take CSCI 081”), that course counts toward it automatically — the box
+              shows ticked and locked, and the program&apos;s other boxes lock for that course.
             </li>
             <li>
               <strong>Advisor exceptions:</strong> if a course doesn&apos;t officially fit a major or
@@ -1221,7 +1223,8 @@ export default async function RequirementsPage({
                             key={currentIds.join(",")}
                             sets={countingSetsFor(sets, s)}
                             checked={currentIds}
-                            usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, s.id, overlapLimitFor(user.school))]}
+                            policy={overlapPolicyFor(user.school)}
+                  pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, s.id, plannedAll)}
                             strictGe={!isManual}
                             half={s.credits_5c < 1}
                           />
@@ -1331,7 +1334,8 @@ export default async function RequirementsPage({
                 <GroupCheckboxes
                   sets={blankCountingSets(sets)}
                   checked={[]}
-                  usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", overlapLimitFor(user.school))]}
+                  policy={overlapPolicyFor(user.school)}
+                  pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", plannedAll)}
                   strictGe={false}
                 />
               </div>

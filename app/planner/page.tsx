@@ -18,7 +18,7 @@ import { Stars } from "@/components/Stars";
 import { Timetable } from "@/components/Timetable";
 import { TermSelect } from "@/components/TermSelect";
 import { GroupCheckboxes } from "@/components/GroupCheckboxes";
-import { overlapLimitFor } from "@/lib/counting";
+import { overlapPolicyFor } from "@/lib/counting";
 import { SCHOOLS, SCHOOL_BY_CODE } from "@/lib/constants";
 import { facets } from "@/lib/catalog";
 import {
@@ -34,7 +34,7 @@ import {
   assignmentsFor,
   blankCountingSets,
   manualCoursesFor,
-  usedPairsFrom,
+  pairUseFrom,
   manualPseudoSection,
   progressForUser,
   setsForUser,
@@ -548,7 +548,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 <GroupCheckboxes
                   sets={blankCountingSets(sets)}
                   checked={[]}
-                  usedPairs={[...usedPairsFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", overlapLimitFor(user?.school))]}
+                  policy={overlapPolicyFor(user?.school)}
+                  pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", sections)}
                   strictGe={false}
                 />
               </div>

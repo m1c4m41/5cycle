@@ -38,8 +38,7 @@ import { schoolShort, termLabel as termLabelOf } from "./util";
 import {
   boxSection,
   pairKey,
-  DEFAULT_OVERLAP_LIMIT,
-  overlapLimitFor,
+  overlapPolicyFor,
   validateCounting,
   type CountingSet,
 } from "./counting";
@@ -1036,8 +1035,18 @@ export function countingSetsFor(sets: RequirementSet[], course: Section): Counti
       name: g.name,
       section: boxSection(g.name),
       matches: groupMatches(g, course),
+      // A major/minor group that lists this exact course counts it on its own.
+      auto: set.kind !== "ge" && g.rules.some((r) => namesCourse(r.match, course)),
     })),
   }));
+}
+
+/** Does this matcher list the course by code ("CSCI 081"), as opposed to a
+ *  broad rule (department band, area, keyword, "any")? */
+function namesCourse(m: Matcher, s: Section): boolean {
+  if (m.type === "course") return matchSection(m, s);
+  if (m.type === "or") return m.children.some((c) => namesCourse(c, s));
+  return false;
 }
 
 /** Counting sets with no rule matches — for a course that doesn't exist yet. */
@@ -1051,31 +1060,41 @@ export function blankCountingSets(sets: RequirementSet[]): CountingSet[] {
 }
 
 /**
- * Program pairs (major↔major, major↔minor, minor↔minor) whose allowed shared
- * courses (`limit`, per campus) are already taken by some course OTHER than `excludeCourseId`.
- * Only boxes the student explicitly checked count; GE sets never count.
+ * How many courses OTHER than `excludeCourseId` already share each pair of the
+ * student's sets (GE↔program included — the campus policy decides which pairs
+ * are capped). A course belongs to a set when the student checked one of its
+ * boxes OR the set lists the course by code (auto-counted). `courses` is the
+ * student's planned courses, needed to find the auto-counted memberships.
  */
-export function usedPairsFrom(
+export function pairUseFrom(
   assignments: { sections: Map<string, Assignment[]>; manuals: Map<string, Assignment[]> },
   sets: RequirementSet[],
   excludeCourseId: string,
-  limit: number = DEFAULT_OVERLAP_LIMIT,
-): Set<string> {
-  const programSets = new Set(sets.filter((s) => s.kind !== "ge").map((s) => s.id));
-  const uses = new Map<string, number>();
-  for (const map of [assignments.sections, assignments.manuals]) {
-    for (const [courseId, list] of map) {
-      if (courseId === excludeCourseId) continue;
-      const inSets = [...new Set(list.map((a) => a.setId).filter((id) => programSets.has(id)))];
-      for (let i = 0; i < inSets.length; i++)
-        for (let j = i + 1; j < inSets.length; j++) {
-          const k = pairKey(inSets[i], inSets[j]);
-          uses.set(k, (uses.get(k) ?? 0) + 1);
-        }
-    }
+  courses: Section[] = [],
+): Record<string, number> {
+  const members = new Map<string, Set<string>>(); // courseId -> set ids
+  const add = (courseId: string, setId: string) => {
+    if (!members.has(courseId)) members.set(courseId, new Set());
+    members.get(courseId)!.add(setId);
+  };
+  for (const map of [assignments.sections, assignments.manuals])
+    for (const [courseId, list] of map) for (const a of list) add(courseId, a.setId);
+  for (const c of courses)
+    for (const set of sets)
+      if (set.kind !== "ge" && set.groups.some((g) => g.rules.some((r) => namesCourse(r.match, c))))
+        add(c.id, set.id);
+
+  const uses: Record<string, number> = {};
+  for (const [courseId, setIds] of members) {
+    if (courseId === excludeCourseId) continue;
+    const ids = [...setIds];
+    for (let i = 0; i < ids.length; i++)
+      for (let j = i + 1; j < ids.length; j++) {
+        const k = pairKey(ids[i], ids[j]);
+        uses[k] = (uses[k] ?? 0) + 1;
+      }
   }
-  // A pair is "full" once other courses have used up the campus's allowance.
-  return new Set([...uses].filter(([, n]) => n >= limit).map(([k]) => k));
+  return uses;
 }
 
 /**
@@ -1127,7 +1146,13 @@ export async function setCourseAssignments(
           sets: countingSetsFor(sets, course),
           strictGe: courseKind === "section",
           checkedIds: groups.map((g) => g.id),
-          usedPairs: usedPairsFrom(await assignmentsFor(userId), sets, courseId, overlapLimitFor(u.school)),
+          policy: overlapPolicyFor(u.school),
+          pairUse: pairUseFrom(
+            await assignmentsFor(userId),
+            sets,
+            courseId,
+            await (await import("./schedule")).enrolledSections(userId),
+          ),
         });
         if (!verdict.ok) return verdict;
       }
