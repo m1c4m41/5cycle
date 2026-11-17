@@ -473,6 +473,71 @@ function halfBlocked(set: RequirementSet, g: RequirementGroup): boolean {
   return set.kind === "ge" || isBreadthGroup(g);
 }
 
+/* ------------------------------------------------------------------ */
+/* Lab requirement detection                                           */
+/* ------------------------------------------------------------------ */
+
+/** "lab", "labs", "laboratory", "laboratories" as whole words — not
+ *  "syllabus" (no word boundary before the "lab") and not "labor". */
+const LAB_WORD_RE = /\b(lab|labs|laboratory|laboratories)\b/i;
+/** Explicit non-lab phrasing, e.g. "Four non-laboratory chemistry courses". */
+const NON_LAB_RE = /\b(non|without|no)[\s-]*(lab|laborator)/i;
+
+/**
+ * The group's own name declares a laboratory requirement — "Foundation
+ * laboratories", "One laboratory course (PSYC…)", "Natural Sciences (with
+ * laboratory)", "PHYS 106L… Laboratory course". Name-based so it works for
+ * every program at all five campuses without per-major hard-coding; the
+ * satisfaction math is the same matcher the checklist already uses.
+ */
+export function isLabGroup(g: RequirementGroup): boolean {
+  const name = g.name ?? "";
+  return LAB_WORD_RE.test(name) && !NON_LAB_RE.test(name);
+}
+
+/** Lab phrasing that appears only in a group's prose note, e.g.
+ *  "…including at least three laboratory courses" or "three must carry a lab". */
+const LAB_NOTE_RE =
+  /laborator|carry(ing)?\s+(a|an|one|two|three|four|five|six)\s+lab\b|\bwith\s+lab\b/i;
+
+/**
+ * The group is not itself a lab box, but its note says part of it must be
+ * laboratory courses ("six biology electives … including at least three
+ * laboratory courses"). The rule matches the whole group, so how many of the
+ * counted courses actually carry a lab cannot be separated automatically —
+ * the tracker surfaces these as advisor-check items with the note.
+ * Returns the note text, or null.
+ */
+export function labProseNote(g: RequirementGroup): string | null {
+  const note = g.notes ?? "";
+  if (!note || isLabGroup(g)) return null;
+  if (NON_LAB_RE.test(note)) return null;
+  return LAB_NOTE_RE.test(note) ? note : null;
+}
+
+export type LabItem = {
+  set: RequirementSet;
+  gp: GroupProgress;
+  /** "group": the requirement itself is a lab box.
+   *  "note": a lab is part of a larger requirement — only the prose says how many. */
+  tier: "group" | "note";
+};
+
+/** Lab-related items across a list of set progresses (GE, majors, minors). */
+export function labItemsFor(progresses: SetProgress[]): LabItem[] {
+  const out: LabItem[] = [];
+  for (const p of progresses) {
+    for (const gp of p.groups) {
+      if (isLabGroup(gp.group)) {
+        out.push({ set: p.set, gp, tier: "group" });
+      } else {
+        if (labProseNote(gp.group)) out.push({ set: p.set, gp, tier: "note" });
+      }
+    }
+  }
+  return out;
+}
+
 export function progressForSet(
   set: RequirementSet,
   planned: Section[],

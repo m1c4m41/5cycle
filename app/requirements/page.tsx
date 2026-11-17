@@ -23,6 +23,7 @@ import {
   fulfillmentFor,
   groupLabel,
   isBreadthGroup,
+  labItemsFor,
   listSets,
   manualCoursesFor,
   manualPseudoSection,
@@ -31,6 +32,7 @@ import {
   requirementsLoaded,
   setsForUser,
   type Assignment,
+  type LabItem,
 } from "@/lib/requirements";
 import { enrolledSections, plannedTerms } from "@/lib/schedule";
 import { currentUser } from "@/lib/session";
@@ -512,6 +514,127 @@ function renderSet(p: SetProgress, term: string) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Lab tracker                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** One row in the "Lab requirements" section. */
+function renderLabRow(item: LabItem, term: string) {
+  const { gp, tier } = item;
+  const g = gp.group;
+
+  const counts: string[] = [];
+  if (g.min_courses)
+    counts.push(`${gp.haveCourses}/${g.min_courses} course${g.min_courses === 1 ? "" : "s"}`);
+  if (g.min_credits) counts.push(`${cr(gp.haveCredits)}/${cr(g.min_credits)} 5C credits`);
+
+  /* Prose-only lab sub-requirement: the box counts the whole group, so the
+     lab part is surfaced as an advisor-check item with its catalog note. */
+  if (tier === "note") {
+    return (
+      <li key={g.id} className="rounded-lg border border-amber-200 bg-amber-50/40 px-3 py-2.5">
+        <div className="flex items-start gap-2">
+          <span aria-hidden className="mt-0.5">
+            🔬
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-sm font-semibold text-ink-900">{g.name}</span>
+              <span
+                className="chip border-amber-300 bg-white text-amber-800"
+                title="The catalog note says part of this requirement must be laboratory courses, but the checklist rule counts the whole group — so the lab portion is not separated automatically."
+              >
+                lab portion — not auto-counted
+              </span>
+              {counts.length > 0 && (
+                <span className="text-xs font-semibold tabular-nums text-ink-700">
+                  {counts.join(" · ")}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-ink-600">{truncate(g.notes ?? "", 340)}</p>
+            {!gp.satisfied && (
+              <Link href={catalogHref(g, term)} className="link mt-1.5 inline-block text-xs">
+                Browse courses in this group →
+              </Link>
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  }
+
+  /* A lab requirement in its own right — same state math as the checklist. */
+  const state: "full" | "half" | "empty" = gp.satisfied ? "full" : gp.partial ? "half" : "empty";
+  const shown = [...gp.matched];
+  for (const s of gp.pinned) if (!shown.some((x) => x.id === s.id)) shown.push(s);
+  return (
+    <li
+      key={g.id}
+      className={cn(
+        "rounded-lg border px-3 py-2.5",
+        gp.satisfied
+          ? "border-emerald-200 bg-emerald-50/50"
+          : gp.partial
+            ? "border-amber-200 bg-amber-50/50"
+            : "border-ink-200 bg-white",
+      )}
+    >
+      <div className="flex items-start gap-2">
+        {stateGlyph(state)}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-sm font-semibold text-ink-900">{g.name}</span>
+            <span
+              className={cn(
+                "chip",
+                gp.satisfied
+                  ? "border-emerald-300 bg-white text-emerald-800"
+                  : gp.partial
+                    ? "border-amber-300 bg-white text-amber-800"
+                    : "border-ink-200 bg-ink-50 text-ink-500",
+              )}
+            >
+              {gp.satisfied ? "satisfied" : gp.partial ? "in progress" : "not met"}
+            </span>
+            {counts.length > 0 ? (
+              <span className="text-xs font-semibold tabular-nums text-ink-700">
+                {counts.join(" · ")}
+              </span>
+            ) : (
+              <span className="text-xs text-ink-400">no course floor recorded</span>
+            )}
+          </div>
+          {g.notes && (
+            <p className="mt-1 text-xs leading-relaxed text-ink-500">{truncate(g.notes, 220)}</p>
+          )}
+          {shown.length > 0 && (
+            <ul className="mt-1.5 flex flex-wrap gap-1">
+              {shown.slice(0, MAX_CHIPS).map((s) => courseChip(s, false))}
+              {shown.length > MAX_CHIPS && (
+                <li className="chip border-ink-200 bg-white text-ink-500">
+                  +{shown.length - MAX_CHIPS} more
+                </li>
+              )}
+            </ul>
+          )}
+          {gp.pinned.length > 0 && (
+            <p className="mt-1 text-[11px] text-indigo-700">
+              📌 {gp.pinned.length} course{gp.pinned.length === 1 ? "" : "s"} counted here via
+              checked box
+            </p>
+          )}
+          {!gp.satisfied && (
+            <Link href={catalogHref(g, term)} className="link mt-1.5 inline-block text-xs">
+              Find a course that fits →
+            </Link>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Page                                                                       */
 /* -------------------------------------------------------------------------- */
 
@@ -575,6 +698,26 @@ export default async function RequirementsPage({
   const geSets = byKind("ge");
   const majorSets = byKind("major");
   const minorSets = byKind("minor");
+
+  /**
+   * Lab tracker. Signed-in students see lab-related boxes from every set they
+   * track — campus GE plus major / second major / minor, which may be from
+   * another campus. Guests preview only their campus's GE set: program labs
+   * depend on the major a guest hasn't picked yet.
+   */
+  const labItems = labItemsFor(
+    user ? progress : progress.filter((p) => p.set.kind === "ge"),
+  );
+  /** Lab items grouped by set, keeping the set order of `progress`. */
+  const labBySet = (() => {
+    const map = new Map<string, { set: RequirementSet; items: LabItem[] }>();
+    for (const it of labItems) {
+      const e = map.get(it.set.id) ?? { set: it.set, items: [] };
+      e.items.push(it);
+      map.set(it.set.id, e);
+    }
+    return [...map.values()];
+  })();
 
   const totalGroups = progress.reduce((a, p) => a + p.totalGroups, 0);
   const satisfiedGroups = progress.reduce((a, p) => a + p.satisfiedGroups, 0);
@@ -758,6 +901,64 @@ export default async function RequirementsPage({
           </p>
         )}
       </section>
+
+      {/* Lab requirements — cross-set rollup of everything that is a lab box */}
+      {labItems.length > 0 && (
+        <section className="space-y-3" aria-label="Lab requirements">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <h2 className="text-lg font-bold tracking-tight text-ink-900">
+              <span aria-hidden className="mr-1.5">
+                🧪
+              </span>
+              Lab requirements
+            </h2>
+            <p className="text-xs text-ink-500">
+              {user
+                ? "Every lab-related box across your sets — majors and minors from any of the five campuses count."
+                : `Lab boxes in ${schoolShort(school)} general education. Program-specific labs appear here once you sign in and pick a major.`}
+            </p>
+          </div>
+
+          {labBySet.map(({ set, items }) => {
+            const boxes = items.filter((i) => i.tier === "group");
+            const met = boxes.filter((i) => i.gp.satisfied).length;
+            return (
+              <div key={set.id} className="card card-pad">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <h3 className="text-base font-bold text-ink-900">{set.name}</h3>
+                  <span className="chip border-brand-300 bg-white text-brand-700">
+                    {KIND_LABEL[set.kind] ?? set.kind}
+                  </span>
+                  <SchoolBadge code={set.school} small />
+                  {boxes.length > 0 && (
+                    <span className="ml-auto text-xs tabular-nums text-ink-600">
+                      {met}/{boxes.length} lab box{boxes.length === 1 ? "" : "es"} met
+                    </span>
+                  )}
+                </div>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {items.map((it) => renderLabRow(it, term))}
+                </ul>
+              </div>
+            );
+          })}
+
+          <p className="text-xs leading-relaxed text-ink-500">
+            Lab boxes are counted by the same matching engine as the checklist below — a lab from
+            any campus (HMC 053-series, Keck “L” courses, Pomona “with Lab” sections, …) ticks its
+            box wherever the rule allows it.
+            {user && (
+              <>
+                {" "}
+                Use <span className="kbd">Counting boxes</span> to pin a specific course to a lab
+                requirement.
+              </>
+            )}{" "}
+            Items marked “not auto-counted” state their lab portion only in catalog prose — confirm
+            with your adviser.
+          </p>
+        </section>
+      )}
 
       {!user && (
         <section className="card card-pad border-brand-300 bg-ink-50">
