@@ -129,8 +129,8 @@ export function SectionCard({
 
           {(s.description || s.areas.length > 0 || (reasons && reasons.length > 0)) && (
             <details className="group mt-2">
-              <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-ink-800 [&::-webkit-details-marker]:hidden">
-                <span className="inline-block transition-transform group-open:rotate-90">▸</span>
+              <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-ink-500 hover:text-ink-800 [&::-webkit-details-marker]:hidden">
+                <span className="inline-block text-base leading-none transition-transform group-open:rotate-90">▸</span>
                 {[
                   s.description ? "Description" : null,
                   s.areas.length > 0 ? `${s.areas.length} area${s.areas.length === 1 ? "" : "s"}` : null,
