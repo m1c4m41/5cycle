@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getSection, searchSections, facets, termsWithQuery } from "@/lib/catalog";
 import { currentTermId } from "@/lib/ingest";
 import { currentUser } from "@/lib/session";
@@ -99,7 +100,11 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     }),
     user ? enrolledSections(user.id, term) : Promise.resolve([] as Section[]),
     user ? setsForUser(user) : Promise.resolve([] as RequirementSet[]),
-    fill && user ? findGapFillers(user, term) : Promise.resolve(null as GapResult | null),
+    fill && user
+      ? cookies().then((jar) =>
+          findGapFillers(user, term, 24, (jar.get("gapkeep")?.value ?? "").split(",").filter(Boolean)),
+        )
+      : Promise.resolve(null as GapResult | null),
   ]);
   const sectionById = new Map([...rows, ...(gap?.picks.map((g) => g.section) ?? [])].map((r) => [r.id, r]));
 
@@ -443,6 +448,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                       fit={fitFor(pick.section.id)}
                       previewHref={hrefFor(sp, { preview: pick.section.id })}
                       next={hrefFor(sp, {})}
+                      fromFill
                       needTag={{
                         tier: pick.tier,
                         label:

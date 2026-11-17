@@ -5,6 +5,7 @@
  */
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import {
   addToSchedule,
   removeFromSchedule,
@@ -21,6 +22,21 @@ import {
   type ActionState,
 } from "@/lib/server";
 import { currentUser } from "@/lib/session";
+
+const FILL_COOKIE = "gapkeep";
+
+/** Remember (or forget) a class added from the "fill my time slots" list. */
+async function rememberFill(sectionId: string, on: boolean) {
+  const jar = await cookies();
+  const cur = (jar.get(FILL_COOKIE)?.value ?? "").split(",").filter(Boolean);
+  const next = on ? [...new Set([...cur, sectionId])].slice(-40) : cur.filter((x) => x !== sectionId);
+  jar.set(FILL_COOKIE, next.join(","), {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 6,
+  });
+}
 
 export async function addToPlanAction(
   _prev: ActionState,
@@ -54,6 +70,7 @@ export async function addToPlanAction(
     };
   }
 
+  if (formStr(fd, "fromFill") === "1") await rememberFill(sectionId, true);
   revalidateSchedule();
   revalidatePath("/catalog");
   return {
@@ -76,6 +93,7 @@ export async function removeFromPlanAction(
   const sectionId = formStr(fd, "sectionId");
   const section = await getSection(sectionId);
   const removed = await removeFromSchedule(user.id, sectionId);
+  if (formStr(fd, "fromFill") === "1") await rememberFill(sectionId, false);
   revalidateSchedule();
   revalidatePath("/catalog");
   return removed

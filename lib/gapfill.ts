@@ -61,6 +61,9 @@ export async function findGapFillers(
   user: { id: string; school: string; major_id: string | null; major2_id?: string | null; minor_id: string | null },
   term: string,
   limit = 24,
+  /** Sections the student added from this very list: they stay listed (with a
+   *  remove button) instead of vanishing once they're in the plan. */
+  keepIds: string[] = [],
 ): Promise<GapResult> {
   const [termPlanned, allPlanned, manuals, assignments] = await Promise.all([
     enrolledSections(user.id, term),
@@ -76,11 +79,16 @@ export async function findGapFillers(
   // Which boxes are still open, across GE + major(s) + minor.
   const progress = await progressForUser(user as never, plannedAll, { assignments });
   const unmet: UnmetGroup[] = [];
+  const every: UnmetGroup[] = []; // all fixed boxes — kept classes may have just closed one
   for (const p of progress)
-    for (const gp of p.groups)
-      if (!gp.satisfied && gp.group.required !== 0 && !isOpenEnded(gp.group))
-        unmet.push({ set: p.set, group: gp.group });
-  if (unmet.length === 0) return { picks: [], openGroups: 0, plannedCount: termPlanned.length };
+    for (const gp of p.groups) {
+      if (gp.group.required === 0 || isOpenEnded(gp.group)) continue;
+      every.push({ set: p.set, group: gp.group });
+      if (!gp.satisfied) unmet.push({ set: p.set, group: gp.group });
+    }
+  const keep = new Set(keepIds.filter((id) => termPlanned.some((s) => s.id === id)));
+  if (unmet.length === 0 && keep.size === 0)
+    return { picks: [], openGroups: 0, plannedCount: termPlanned.length };
 
   // Term-wide light reads.
   const [rows, areaRows, meetRows] = await Promise.all([
@@ -118,9 +126,12 @@ export async function findGapFillers(
   for (const row of rows) {
     const meetings = meetBy.get(row.id);
     if (!meetings?.length) continue; // TBA — can't be placed on the grid
-    if (plannedIds.has(row.id) || takenCodes.has(row.course_code)) continue;
-    if (row.potential_error) continue;
-    if (gridMeetings.length && meetingsClash(meetings, gridMeetings)) continue; // doesn't fit the grid
+    const kept = keep.has(row.id);
+    if (!kept) {
+      if (plannedIds.has(row.id) || takenCodes.has(row.course_code)) continue;
+      if (row.potential_error) continue;
+      if (gridMeetings.length && meetingsClash(meetings, gridMeetings)) continue; // doesn't fit the grid
+    }
 
     const credits5c = row.school === "HM" ? row.credits / 3 : row.credits;
     if (credits5c <= 0) continue;
@@ -132,7 +143,7 @@ export async function findGapFillers(
       areas: (areasBy.get(row.id) ?? []).map((code) => ({ code, description: "", kind: "", school: null })),
     } as unknown as Section;
 
-    const hits = unmet.filter(({ set, group }) => {
+    const hits = (kept ? every : unmet).filter(({ set, group }) => {
       if (credits5c < 1 && (set.kind === "ge" || isBreadthGroup(group))) return false;
       return groupMatches(group, light);
     });
@@ -147,12 +158,18 @@ export async function findGapFillers(
     const score = TIER_WEIGHT[tier] + 5 * Math.min(hits.length, 4) + (open ? 4 : 0);
 
     const prev = best.get(row.course_code);
-    if (!prev || score > prev.score) best.set(row.course_code, { row, hits, score, tier });
+    // A kept class always wins over other sections of its own course.
+    if (!prev || kept || (score > prev.score && !keep.has(prev.row.id)))
+      best.set(row.course_code, { row, hits, score, tier });
   }
 
-  const ranked = [...best.values()]
-    .sort((a, b) => b.score - a.score || a.row.course_code.localeCompare(b.row.course_code))
-    .slice(0, limit);
+  const bySort = (a: Cand, b: Cand) =>
+    b.score - a.score || a.row.course_code.localeCompare(b.row.course_code);
+  const all_ = [...best.values()];
+  const ranked = [
+    ...all_.filter((c) => !keep.has(c.row.id)).sort(bySort).slice(0, limit),
+    ...all_.filter((c) => keep.has(c.row.id)),
+  ].sort(bySort);
 
   // Hydrate just the winners and re-check with full text (descriptions matter
   // for title-keyword rules) before showing them.

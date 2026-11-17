@@ -66,6 +66,7 @@ export function SectionCard({
   previewHref,
   next,
   needTag,
+  fromFill,
 }: {
   s: Section;
   plannedIds: Set<string>;
@@ -77,6 +78,8 @@ export function SectionCard({
   next?: string;
   /** Gap-filler: what this class is needed for, shown in the header. */
   needTag?: { label: string; tier: "major" | "minor" | "ge" };
+  /** Shown in the gap-filler list: adds stay listed with a remove button. */
+  fromFill?: boolean;
 }) {
   const href = `/section/${encodeURIComponent(s.id)}`;
   const prereq = extractPrerequisites(s.description);
@@ -231,7 +234,7 @@ export function SectionCard({
       </div>
 
       <div className="mt-3 border-t border-ink-100 pt-3">
-        <EnrollSlot s={s} planned={plannedIds.has(s.id)} fit={fit} previewHref={previewHref} next={next} />
+        <EnrollSlot s={s} planned={plannedIds.has(s.id)} fit={fit} previewHref={previewHref} next={next} fromFill={fromFill} />
       </div>
     </article>
   );
@@ -245,16 +248,18 @@ function EnrollSlot({
   fit,
   previewHref,
   next,
+  fromFill,
 }: {
   s: Section;
   planned: boolean;
+  fromFill?: boolean;
   fit?: FitInfo;
   previewHref?: string;
   next?: string;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <EnrollButton sectionId={s.id} inPlan={planned} next={next} />
+      <EnrollButton sectionId={s.id} inPlan={planned} next={next} fromFill={fromFill} />
       <div className="flex flex-wrap items-center gap-2">
         {fit && fit.state !== "planned" && (
           <>

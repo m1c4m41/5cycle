@@ -17,12 +17,16 @@ export function EnrollButton({
   inPlan,
   label = "Add to plan",
   next = "/planner",
+  fromFill = false,
 }: {
   sectionId: string;
   inPlan: boolean;
   label?: string;
   /** Page to return to after sign-in; a guest's add bounces to /login with it. */
   next?: string;
+  /** Rendered in the "fill my time slots" list: the add/remove is remembered so
+   *  the class stays listed. */
+  fromFill?: boolean;
 }) {
   const [addState, addAction, pending] = useActionState<ActionState, FormData>(
     addToPlanAction,
@@ -41,13 +45,15 @@ export function EnrollButton({
       {inPlan ? (
         <form action={removeAction}>
           <input type="hidden" name="sectionId" value={sectionId} />
+          {fromFill && <input type="hidden" name="fromFill" value="1" />}
           <button type="submit" className="btn-secondary" disabled={removing}>
-            {removing ? "Removing…" : "In your plan ✓ (remove)"}
+            {removing ? "Removing…" : fromFill ? "Remove from plan" : "In your plan ✓ (remove)"}
           </button>
         </form>
       ) : (
         <form action={addAction}>
           <input type="hidden" name="sectionId" value={sectionId} />
+          {fromFill && <input type="hidden" name="fromFill" value="1" />}
           <input type="hidden" name="next" value={next} />
           <button type="submit" className="btn-primary" disabled={pending}>
             {pending ? "Adding…" : label}
@@ -58,6 +64,7 @@ export function EnrollButton({
       {conflict && (
         <form action={addAction}>
           <input type="hidden" name="sectionId" value={sectionId} />
+          {fromFill && <input type="hidden" name="fromFill" value="1" />}
           <input type="hidden" name="force" value="1" />
           <input type="hidden" name="next" value={next} />
           <button type="submit" className="btn border border-amber-400 bg-amber-50 text-amber-800">
