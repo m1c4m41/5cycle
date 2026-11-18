@@ -8,7 +8,7 @@
  * thousands of sections; only the winners are hydrated at the end.
  */
 import { all } from "./db";
-import { getSectionsByIds } from "./catalog";
+import { getSectionsByIds, THESIS_TITLE_RE } from "./catalog";
 import { enrolledSections } from "./schedule";
 import {
   assignmentsFor,
@@ -155,7 +155,10 @@ export async function findGapFillers(
         ? "minor"
         : "ge";
     const open = row.status === "O" || row.status === "R";
-    const score = TIER_WEIGHT[tier] + 5 * Math.min(hits.length, 4) + (open ? 4 : 0);
+    // Thesis / senior-project sections go last: students pick those on their own.
+    const score =
+      TIER_WEIGHT[tier] + 5 * Math.min(hits.length, 4) + (open ? 4 : 0) -
+      (THESIS_TITLE_RE.test(row.title) ? 1000 : 0);
 
     const prev = best.get(row.course_code);
     // A kept class always wins over other sections of its own course.

@@ -188,6 +188,29 @@ function fuzzyNumbers(n: number): number[] {
   return out;
 }
 
+/**
+ * Senior-thesis style work (thesis, senior project, grant proposal, senior
+ * research/paper/capstone/comprehensive, …). Students already know which one
+ * they are taking, so browsing lists put these last — the search itself is
+ * unchanged, so searching "thesis" still finds them.
+ */
+const THESIS_WORDS = [
+  "thesis",
+  "senior project",
+  "senior grant",
+  "senior research",
+  "senior paper",
+  "senior capstone",
+  "senior comprehensive",
+  "senior oral",
+  "senior tutorial",
+  "sr thesis",
+  "sr research",
+  "sr libry",
+];
+export const THESIS_TITLE_RE = new RegExp(THESIS_WORDS.join("|"), "i");
+const THESIS_SQL = `(${THESIS_WORDS.map((w) => `lower(s.title) LIKE '%${w}%'`).join(" OR ")})`;
+
 const SORTS: Record<string, string> = {
   code: "s.department ASC, s.course_number ASC, s.affiliation ASC, s.section_number ASC",
   title: "s.title ASC",
@@ -200,7 +223,7 @@ export async function searchSections(q: CatalogQuery): Promise<{ rows: Section[]
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const limit = Math.min(q.limit ?? PAGE_DEFAULT, PAGE_MAX);
   const offset = Math.max(q.offset ?? 0, 0);
-  const order = SORTS[q.sort ?? "code"] ?? SORTS.code;
+  const order = `${THESIS_SQL} ASC, ${SORTS[q.sort ?? "code"] ?? SORTS.code}`;
 
   // COUNT and page SELECT are independent — fire both at once.
   const [totalRow, rows] = await Promise.all([
