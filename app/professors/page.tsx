@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { all, get } from "@/lib/db";
 import { SCHOOLS, SCHOOL_BY_CODE } from "@/lib/constants";
-import { schoolShort } from "@/lib/util";
+import { schoolShort, termLabel } from "@/lib/util";
+import { currentTermId } from "@/lib/ingest";
+import { academicYearOf } from "@/lib/academic-year";
 import { Stars } from "@/components/Stars";
 import { RmpScore } from "@/components/RmpScore";
 
@@ -45,9 +47,9 @@ const SORTS: Record<string, { label: string; short: string; order: string }> = {
     order: "ir.rmp_quality IS NULL, ir.rmp_quality DESC, ir.rmp_num_ratings DESC, ir.name ASC",
   },
   courses: {
-    label: "Most sections taught",
-    short: "Courses",
-    order: "ir.section_count DESC, ir.name ASC",
+    label: "Most sections this year",
+    short: "Sections",
+    order: "COALESCE(ay.n, 0) DESC, ir.name ASC",
   },
 };
 
@@ -123,6 +125,22 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const from = `FROM instructor_ratings ir JOIN instructors i ON i.id = ir.id`;
 
+  // Teaching load = sections in the CURRENT academic year only (Fall → Spring),
+  // so it grows by itself as the year's terms are published and rolls over when
+  // the calendar reaches the next fall.
+  const ay = academicYearOf(await currentTermId());
+  const ayTerms = ay?.termIds ?? [];
+  const ayLabel = ay?.label ?? "this year";
+  const ayTitle = ay
+    ? `Sections taught in ${ay.termIds.map(termLabel).join(", ")} (only terms already published are counted)`
+    : "Sections taught this academic year";
+  const ayJoin = `LEFT JOIN (
+      SELECT si.instructor_id AS iid, COUNT(*) AS n
+      FROM section_instructors si JOIN sections s ON s.id = si.section_id
+      WHERE s.term_id IN (${ayTerms.map(() => "?").join(",") || "NULL"})
+      GROUP BY si.instructor_id
+    ) ay ON ay.iid = ir.id`;
+
   const total = Number(
     (await get<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${clause}`, params))?.n ?? 0,
   );
@@ -134,13 +152,13 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
   const shown = Math.min(page, pages); // a too-large ?page= must not render an empty list
 
   const rows = await all<Row>(
-    `SELECT ir.id, ir.name, ir.section_count, ir.review_count, ir.avg_stars,
+    `SELECT ir.id, ir.name, COALESCE(ay.n, 0) AS section_count, ir.review_count, ir.avg_stars,
             ir.rmp_quality, ir.rmp_difficulty, ir.rmp_num_ratings, ir.rmp_url,
             i.home_school
-     ${from} ${clause}
+     ${from} ${ayJoin} ${clause}
      ORDER BY ${SORTS[sort].order}
      LIMIT ? OFFSET ?`,
-    [...params, PAGE_SIZE, (shown - 1) * PAGE_SIZE],
+    [...ayTerms, ...params, PAGE_SIZE, (shown - 1) * PAGE_SIZE],
   );
 
   const filtered = Boolean(q || school);
@@ -300,7 +318,9 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
                 <tr className="border-b border-ink-200 bg-ink-50 text-left text-[11px] uppercase tracking-wide text-ink-500">
                   <th className="px-4 py-2.5 font-semibold">Professor</th>
                   <th className="px-2 py-2.5 font-semibold">Campus</th>
-                  <th className="px-2 py-2.5 text-right font-semibold">Sections</th>
+                  <th className="px-2 py-2.5 text-right font-semibold" title={ayTitle}>
+                    Sections <span className="font-normal normal-case text-ink-400">{ayLabel}</span>
+                  </th>
                   <th className="px-2 py-2.5 font-semibold">Our students</th>
                   <th className="px-2 py-2.5 font-semibold">Review</th>
                   <th className="px-4 py-2.5 font-semibold">RateMyProfessors</th>
@@ -415,7 +435,7 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
                       Full profile
                     </Link>
                     {" · "}
-                    {r.section_count ?? 0} section{(r.section_count ?? 0) === 1 ? "" : "s"} taught
+                    {r.section_count ?? 0} section{(r.section_count ?? 0) === 1 ? "" : "s"} in {ayLabel}
                   </p>
                 </div>
               </li>
