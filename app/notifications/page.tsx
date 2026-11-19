@@ -30,8 +30,7 @@ export default async function NotificationsPage() {
 
       <p className="text-sm text-ink-600">
         Tick <strong>Notify me when a spot opens</strong> on a full class in your planner and you&rsquo;ll
-        get an alert here every time a seat opens, until you mark the class Registered or Perm requested (or untick it){isGuestUser(user) ? "" : " (and an email, when email alerts are switched on)"}.
-        Classes that need a perm aren&rsquo;t covered — those seats are approved by the instructor.
+        get an alert here every time a seat opens, until you mark the class Registered (or untick it){isGuestUser(user) ? "" : " (and an email, when email alerts are switched on)"}.
         {isGuestUser(user) && (
           <>
             {" "}

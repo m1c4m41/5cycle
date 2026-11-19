@@ -118,8 +118,8 @@ export async function setStatusAction(
   const target = await getSection(sectionId);
   if (!target) return { ok: false, error: "Unknown section." };
   await setEnrollmentStatus(user.id, sectionId, status);
-  // Seat alerts only make sense while the class is just planned.
-  if (status !== "planned") await setSeatAlert(user.id, sectionId, false);
+  // Seat alerts end once you're registered (they stay for Planned and Perm requested).
+  if (status === "registered") await setSeatAlert(user.id, sectionId, false);
   revalidateSchedule();
   return { ok: true, notice: `Marked as ${status.replace("_", " ")}.` };
 }
@@ -135,9 +135,7 @@ export async function toggleSeatAlertAction(_prev: ActionState, fd: FormData): P
   const mine = (await listEnrollments(user.id, section.term_id)).find((e) => e.section.id === sectionId);
   if (!mine) return { ok: false, error: "Add the class to your plan first." };
   if (on) {
-    if (mine.status !== "planned") return { ok: false, error: "Seat alerts are for classes that are still just planned." };
-    if (section.perm_count > 0)
-      return { ok: false, error: "No alerts for perm classes — those seats are approved by the instructor." };
+    if (mine.status === "registered") return { ok: false, error: "You're already registered for this class." };
     if (!(section.seats_total > 0 && section.seats_filled >= section.seats_total))
       return { ok: false, error: "This class has open seats right now." };
   }

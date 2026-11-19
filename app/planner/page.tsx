@@ -308,7 +308,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
         <Stat
           label="Cross-campus"
           value={String(summary.crossCampus)}
-          hint={summary.needsPerm ? `${summary.needsPerm} need a perm` : "all home-campus"}
+          hint={summary.crossCampus ? "taught at another campus" : "all home-campus"}
         />
         <Stat
           label="Time conflicts"
@@ -498,11 +498,6 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                           conflict
                         </span>
                       )}
-                      {perm && (
-                        <span className="chip border-indigo-300 bg-indigo-50 text-indigo-700">
-                          perm needed
-                        </span>
-                      )}
                     </div>
                     <p className="mt-0.5 text-sm font-medium text-ink-800">
                       {truncate(s.title, 90)}
@@ -583,8 +578,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                     const on = e.status === "waitlist" || alertIds.has(s.id);
                     const full = s.seats_total > 0 && s.seats_filled >= s.seats_total;
                     // Offered on full classes; stays visible while ticked so it can be switched off.
-                    return (e.status === "planned" || e.status === "waitlist") &&
-                      s.perm_count === 0 &&
+                    return (e.status === "planned" || e.status === "perm_requested" || e.status === "waitlist") &&
                       (full || on) ? (
                       <SeatAlertToggle sectionId={s.id} on={on} />
                     ) : null;

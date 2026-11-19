@@ -114,14 +114,16 @@ export function SectionCard({
                 ✓ {needTag.label}
               </span>
             )}
-            {s.perm_count > 0 && (
-              <span
-                className="chip border-violet-300 bg-violet-50 text-violet-700"
-                title={`${s.perm_count} seat(s) reserved for 5C cross-registration (perm required)`}
-              >
-                {s.perm_count} perm {s.perm_count === 1 ? "seat" : "seats"}
-              </span>
-            )}
+            <span
+              className={
+                s.perm_count > 0
+                  ? "chip border-violet-300 bg-violet-50 text-violet-700"
+                  : "chip border-ink-200 bg-ink-50 text-ink-500"
+              }
+              title="Perms the registrar lists for this section (cross-registration / permission-to-enroll)"
+            >
+              {s.perm_count} perm{s.perm_count === 1 ? "" : "s"}
+            </span>
           </div>
 
           <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0">

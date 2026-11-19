@@ -1,10 +1,10 @@
 /**
  * Seat-opening alerts. When a sync sees a full class gain a seat, every student
- * who ticked "Notify me when a spot opens" on it (while it is still Planned) gets an in-app notification and —
+ * who ticked "Notify me when a spot opens" on it (while it is Planned or Perm requested) gets an in-app notification and —
  * if they have a real email and mail is configured — an email.
  *
- * Classes that require a perm are never alerted: those seats are approved by the
- * instructor, not first-come, so "a spot opened" doesn't mean you can register.
+ * The tick is available while the class is Planned or Perm requested, and ends
+ * once it is marked Registered.
  */
 import { all, get, newId, nowIso, run } from "./db";
 import { SCHOOL_BY_CODE } from "./constants";
@@ -19,7 +19,6 @@ const hasRoom = (s: SeatSnapshot) => s.seats_total > 0 && s.seats_filled < s.sea
 
 /** Did this section go from full to having a seat — and is it a normal (no-perm) class? */
 export function seatOpened(before: SeatSnapshot, after: SeatSnapshot): boolean {
-  if (Number(after.perm_count) > 0 || Number(before.perm_count) > 0) return false;
   return isFull(before) && hasRoom(after);
 }
 
@@ -39,13 +38,13 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
     const chunk = sectionIds.slice(i, i + 200);
     const ph = chunk.map(() => "?").join(",");
     const waiters = await all<Waiter>(
-      `SELECT e.user_id, u.email, u.school, s.code_string, s.title, s.id AS section_id
+      `SELECT e.user_id, u.email, u.school, s.code_string, s.title, s.id AS section_id,
        FROM enrollments e
        JOIN users u ON u.id = e.user_id
        JOIN sections s ON s.id = e.section_id
-       WHERE s.perm_count = 0 AND e.section_id IN (${ph})
+       WHERE e.section_id IN (${ph})
          AND (e.status = 'waitlist'  -- legacy status, still honoured
-              OR (e.status = 'planned' AND EXISTS (
+              OR (e.status IN ('planned', 'perm_requested') AND EXISTS (
                     SELECT 1 FROM seat_alerts a WHERE a.user_id = e.user_id AND a.section_id = e.section_id)))`,
       chunk,
     );
