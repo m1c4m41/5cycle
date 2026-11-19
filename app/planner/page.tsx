@@ -579,15 +579,16 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                       Save
                     </button>
                   </form>
-                  {(e.status === "planned" || e.status === "waitlist") &&
-                    s.perm_count === 0 &&
-                    s.seats_total > 0 &&
-                    s.seats_filled >= s.seats_total && (
-                      <SeatAlertToggle
-                        sectionId={s.id}
-                        on={e.status === "waitlist" || alertIds.has(s.id)}
-                      />
-                    )}
+                  {(() => {
+                    const on = e.status === "waitlist" || alertIds.has(s.id);
+                    const full = s.seats_total > 0 && s.seats_filled >= s.seats_total;
+                    // Offered on full classes; stays visible while ticked so it can be switched off.
+                    return (e.status === "planned" || e.status === "waitlist") &&
+                      s.perm_count === 0 &&
+                      (full || on) ? (
+                      <SeatAlertToggle sectionId={s.id} on={on} />
+                    ) : null;
+                  })()}
                   {perm && (
                     <a
                       href={SCHOOL_BY_CODE[user.school].registrarUrl}

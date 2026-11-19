@@ -2,6 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser, isGuestUser } from "@/lib/session";
 import { listNotifications } from "@/lib/notify";
+import { DesktopToggle } from "@/components/DesktopToggle";
+import { SoundToggle } from "@/components/SoundToggle";
+import { LocalTime } from "@/components/LocalTime";
 import { markAllReadAction } from "@/actions/notifications";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +30,7 @@ export default async function NotificationsPage() {
 
       <p className="text-sm text-ink-600">
         Tick <strong>Notify me when a spot opens</strong> on a full class in your planner and you&rsquo;ll
-        get an alert here when a seat opens{isGuestUser(user) ? "" : " (and an email, when email alerts are switched on)"}.
+        get an alert here every time a seat opens, until you mark the class Registered or Perm requested (or untick it){isGuestUser(user) ? "" : " (and an email, when email alerts are switched on)"}.
         Classes that need a perm aren&rsquo;t covered — those seats are approved by the instructor.
         {isGuestUser(user) && (
           <>
@@ -40,6 +43,18 @@ export default async function NotificationsPage() {
           </>
         )}
       </p>
+
+      <div className="card card-pad">
+        <div className="space-y-2">
+          <SoundToggle />
+          <DesktopToggle />
+        </div>
+        <p className="mt-2 text-xs text-ink-500">
+          The chime and the pop-up work while 5Cycle is open in a browser tab (checked about every 30
+          seconds) — keep a tab open in the background. Your browser may stay silent until you&rsquo;ve
+          clicked on the page once, and each browser or device has its own settings.
+        </p>
+      </div>
 
       {items.length === 0 ? (
         <div className="card card-pad text-sm text-ink-600">No alerts yet.</div>
@@ -56,7 +71,7 @@ export default async function NotificationsPage() {
               </p>
               <p className="mt-0.5 text-sm text-ink-700">{n.body}</p>
               <p className="mt-1 text-xs text-ink-400">
-                {new Date(n.created_at).toLocaleString()}
+                <LocalTime iso={n.created_at} />
                 {n.section_id && (
                   <>
                     {" · "}

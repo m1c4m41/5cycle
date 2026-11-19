@@ -50,16 +50,12 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
       chunk,
     );
     for (const w of waiters) {
-      // One unread alert per class at a time.
-      const dup = await get(
-        "SELECT id FROM notifications WHERE user_id = ? AND section_id = ? AND kind = 'seat_open' AND read_at IS NULL",
-        [w.user_id, w.section_id],
-      );
-      if (dup) continue;
+      // Every opening gets its own alert (with its own timestamp), read or not.
       const registrar = SCHOOL_BY_CODE[w.school]?.registrarUrl ?? "";
       const title = `A seat opened in ${w.code_string}`;
+      const when = new Date().toISOString().replace("T", " ").slice(0, 16);
       const body =
-        `${w.code_string} — ${w.title} has an open seat. Seats go fast: register for it` +
+        `${w.code_string} — ${w.title} opened up at ${when} UTC. Seats go fast: register for it` +
         (registrar ? ` at your registrar (${registrar}).` : " at your registrar.");
       const id = newId("ntf-");
       await run(
@@ -67,8 +63,8 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
         [id, w.user_id, w.section_id, "seat_open", title, body, nowIso()],
       );
       sent++;
-      // One-shot: the tick clears once the alert has gone out (re-tick if it fills again).
-      await run("DELETE FROM seat_alerts WHERE user_id = ? AND section_id = ?", [w.user_id, w.section_id]);
+      // The tick stays on: alerts keep coming each time the class fills and reopens,
+      // until the student changes the status (Registered / Perm requested) or unticks it.
       if (!isGuestEmail(w.email) && (await sendEmail(w.email, title, body))) {
         await run("UPDATE notifications SET emailed_at = ? WHERE id = ?", [nowIso(), id]);
       }
@@ -113,6 +109,14 @@ export async function unreadCount(userId: string): Promise<number> {
     [userId],
   );
   return Number(r?.n ?? 0);
+}
+
+export async function latestUnreadId(userId: string): Promise<string | null> {
+  const r = await get<{ id: string }>(
+    "SELECT id FROM notifications WHERE user_id = ? AND read_at IS NULL ORDER BY created_at DESC LIMIT 1",
+    [userId],
+  );
+  return r?.id ?? null;
 }
 
 export type NotificationRow = {

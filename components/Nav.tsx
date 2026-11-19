@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { currentUser, isGuestUser } from "@/lib/session";
-import { unreadCount } from "@/lib/notify";
+import { unreadCount, latestUnreadId } from "@/lib/notify";
+import { BellLink } from "@/components/BellLink";
 import { GuestKeepAlive } from "@/components/GuestKeepAlive";
 import { logoutAction } from "@/actions/auth";
 import { schoolShort } from "@/lib/util";
@@ -14,7 +15,7 @@ const LINKS = [
 
 export async function Nav() {
   const user = await currentUser();
-  const unread = user ? await unreadCount(user.id) : 0;
+  const [unread, latestId] = user ? await Promise.all([unreadCount(user.id), latestUnreadId(user.id)]) : [0, null];
   return (
     <header className="sticky top-0 z-30 border-b border-ink-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
@@ -44,19 +45,7 @@ export async function Nav() {
         <div className="ml-auto flex items-center gap-2 text-sm">
           {user ? (
             <>
-              <Link
-                href="/notifications"
-                className="relative rounded-lg px-2 py-1.5 text-ink-600 hover:bg-ink-100"
-                aria-label={unread ? `${unread} unread notifications` : "Notifications"}
-                title="Seat alerts"
-              >
-                🔔
-                {unread > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-red-600 px-1 text-center text-[10px] font-bold leading-4 text-white">
-                    {unread}
-                  </span>
-                )}
-              </Link>
+              <BellLink initialUnread={unread} initialLatestId={latestId} />
               <span className="hidden text-ink-500 sm:inline">
                 {isGuestUser(user) ? "No account" : user.name}
                 <span className="ml-1.5 chip border-ink-300 bg-ink-100 text-ink-600">
