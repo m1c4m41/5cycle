@@ -1,168 +1,34 @@
 import Link from "next/link";
-import { all, get } from "@/lib/db";
-import { SCHOOLS, SCHOOL_BY_CODE } from "@/lib/constants";
-import { schoolShort, termLabel } from "@/lib/util";
-import { currentTermId } from "@/lib/ingest";
-import { academicYearOf } from "@/lib/academic-year";
-import { Stars } from "@/components/Stars";
-import { RmpScore } from "@/components/RmpScore";
+import { get } from "@/lib/db";
+import { SCHOOLS } from "@/lib/constants";
+import { schoolShort } from "@/lib/util";
+import { SORTS, buildFilters, fetchProfessors, one, type SP } from "@/lib/professors-list";
+import { InfiniteProfessors } from "@/components/InfiniteProfessors";
+import { ProfessorLis, ProfessorTrs } from "@/components/ProfessorRows";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Professors" };
 
-const PAGE_SIZE = 30;
-
-/** `instructor_ratings` (lib/schema.sql) joined with the instructor's home campus. */
-type Row = {
-  id: string;
-  name: string;
-  home_school: string | null;
-  section_count: number | null;
-  review_count: number | null;
-  avg_stars: number | null;
-  rmp_quality: number | null;
-  rmp_difficulty: number | null;
-  rmp_num_ratings: number | null;
-  rmp_url: string | null;
-};
-
-type SP = Record<string, string | string[] | undefined>;
-
-function one(v: string | string[] | undefined): string {
-  return (Array.isArray(v) ? v[0] : v)?.toString().trim() ?? "";
-}
-
-/** Whitelisted ORDER BY clauses — user input never reaches the SQL string. */
-const SORTS: Record<string, { label: string; short: string; order: string }> = {
-  name: { label: "Name (A–Z)", short: "Name", order: "ir.name ASC" },
-  stars: {
-    label: "Our stars (high → low)",
-    short: "Our stars",
-    order: "ir.avg_stars IS NULL, ir.avg_stars DESC, ir.review_count DESC, ir.name ASC",
-  },
-  rmp: {
-    label: "RateMyProfessors (high → low)",
-    short: "RMP",
-    order: "ir.rmp_quality IS NULL, ir.rmp_quality DESC, ir.rmp_num_ratings DESC, ir.name ASC",
-  },
-  courses: {
-    label: "Most sections this year",
-    short: "Sections",
-    order: "COALESCE(ay.n, 0) DESC, ir.name ASC",
-  },
-};
-
-/** node:sqlite hands us numbers; keep null/NaN out of the render path. */
-function num(v: number | null | undefined): number | null {
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
-}
-
-/** Quote LIKE wildcards so a literal "%" searches for "%". */
-function likeTerm(q: string): string {
-  return `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
-}
-
-function buildFilters(sp: SP) {
-  const q = one(sp.q);
-  const sort = SORTS[one(sp.sort)] ? one(sp.sort) : "name";
-  const rawSchool = one(sp.school).toUpperCase();
-  const school = SCHOOLS.some((s) => s.code === rawSchool) ? rawSchool : "";
-  const page = Math.max(1, Number(one(sp.page)) || 1);
-
-  const where: string[] = [];
-  const params: (string | number)[] = [];
-  if (q) {
-    where.push(`ir.name LIKE ? ESCAPE '\\'`);
-    params.push(likeTerm(q));
-  }
-  if (school) {
-    where.push("i.home_school = ?");
-    params.push(school);
-  }
-  return { q, sort, school, page, where, params };
-}
-
-/** Rebuild the directory URL with one key changed (sort + pagination links). */
-function hrefFor(sp: SP, overrides: Record<string, string | undefined>) {
-  const merged: SP = { ...sp, ...overrides };
-  const qs = new URLSearchParams();
-  for (const [k, v] of Object.entries(merged)) {
-    if (v === undefined || v === "" || (Array.isArray(v) && !v.length)) continue;
-    qs.set(k, Array.isArray(v) ? v.join(",") : String(v));
-  }
-  const s = qs.toString();
-  return `/professors${s ? `?${s}` : ""}`;
-}
-
-function CampusBadge({ code }: { code: string | null }) {
-  const s = code ? SCHOOL_BY_CODE[code] : undefined;
-  if (!s) {
-    return (
-      <span className="chip border-ink-200 bg-ink-50 text-ink-400" title="Campus not recorded">
-        5C
-      </span>
-    );
-  }
-  return (
-    <span
-      className="chip"
-      style={{
-        borderColor: `color-mix(in srgb, ${s.accent} 40%, transparent)`,
-        backgroundColor: `color-mix(in srgb, ${s.accent} 8%, transparent)`,
-        color: s.accent,
-      }}
-      title={s.name}
-    >
-      {s.short}
-    </span>
-  );
-}
+const PAGE_SIZE = 30; // first batch; more load as you scroll
 
 export default async function ProfessorsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
-  const { q, sort, school, page, where, params } = buildFilters(sp);
-  const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  const from = `FROM instructor_ratings ir JOIN instructors i ON i.id = ir.id`;
-
-  // Teaching load = sections in the CURRENT academic year only (Fall → Spring),
-  // so it grows by itself as the year's terms are published and rolls over when
-  // the calendar reaches the next fall.
-  const ay = academicYearOf(await currentTermId());
-  const ayTerms = ay?.termIds ?? [];
-  const ayLabel = ay?.label ?? "this year";
-  const ayTitle = ay
-    ? `Sections taught in ${ay.termIds.map(termLabel).join(", ")} (only terms already published are counted)`
-    : "Sections taught this academic year";
-  const ayJoin = `LEFT JOIN (
-      SELECT si.instructor_id AS iid, COUNT(*) AS n
-      FROM section_instructors si JOIN sections s ON s.id = si.section_id
-      WHERE s.term_id IN (${ayTerms.map(() => "?").join(",") || "NULL"})
-      GROUP BY si.instructor_id
-    ) ay ON ay.iid = ir.id`;
-
-  const total = Number(
-    (await get<{ n: number }>(`SELECT COUNT(*) AS n ${from} ${clause}`, params))?.n ?? 0,
-  );
+  const { q, sort, school } = buildFilters(sp);
+  const { rows, total, ayLabel, ayTitle } = await fetchProfessors(sp, 0, PAGE_SIZE);
   const known = Number(
     (await get<{ n: number }>("SELECT COUNT(*) AS n FROM instructor_ratings"))?.n ?? 0,
   );
 
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const shown = Math.min(page, pages); // a too-large ?page= must not render an empty list
-
-  const rows = await all<Row>(
-    `SELECT ir.id, ir.name, COALESCE(ay.n, 0) AS section_count, ir.review_count, ir.avg_stars,
-            ir.rmp_quality, ir.rmp_difficulty, ir.rmp_num_ratings, ir.rmp_url,
-            i.home_school
-     ${from} ${ayJoin} ${clause}
-     ORDER BY ${SORTS[sort].order}
-     LIMIT ? OFFSET ?`,
-    [...ayTerms, ...params, PAGE_SIZE, (shown - 1) * PAGE_SIZE],
-  );
-
   const filtered = Boolean(q || school);
-  const sortHref = (key: string) => hrefFor(sp, { sort: key, page: undefined });
+  const sortHref = (key: string) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries({ ...sp, sort: key })) {
+      if (v === undefined || v === "" || k === "page") continue;
+      qs.set(k, Array.isArray(v) ? v.join(",") : String(v));
+    }
+    return `/professors?${qs.toString()}`;
+  };
 
   return (
     <div className="space-y-5">
@@ -246,7 +112,7 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
             ? "No matches"
             : `${total.toLocaleString()} ${total === 1 ? "professor" : "professors"}${
                 filtered ? " match your filters" : ""
-              } · page ${shown} of ${pages}`}
+              }`}
           <span className="hidden sm:inline"> · sort:</span>
           {Object.keys(SORTS).map((key) => (
             <Link
@@ -305,177 +171,19 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
           </div>
         )
       ) : (
-        <>
-          {/* table on sm and up */}
-          <div className="card hidden overflow-hidden sm:block">
-            {/* Fixed layout: column widths come from the colgroup, not from whatever
-                happens to be on the page, so every page of results looks the same. */}
-            <table className="w-full table-fixed border-collapse text-sm">
-              <colgroup>
-                <col className="w-[26%]" />
-                <col className="w-[9%]" />
-                <col className="w-[9%]" />
-                <col className="w-[18%]" />
-                <col className="w-[11%]" />
-                <col className="w-[27%]" />
-              </colgroup>
-              <thead>
-                <tr className="border-b border-ink-200 bg-ink-50 text-left text-[11px] uppercase tracking-wide text-ink-500">
-                  <th className="px-4 py-2.5 font-semibold">Professor</th>
-                  <th className="px-2 py-2.5 font-semibold">Campus</th>
-                  <th className="px-2 py-2.5 text-right font-semibold" title={ayTitle}>
-                    Sections <span className="font-normal normal-case text-ink-400">{ayLabel}</span>
-                  </th>
-                  <th className="px-2 py-2.5 font-semibold">Our students</th>
-                  <th className="px-2 py-2.5 font-semibold">Review</th>
-                  <th className="px-4 py-2.5 font-semibold">RateMyProfessors</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-ink-100 last:border-0 hover:bg-ink-50/70">
-                    <td className="px-4 py-2.5">
-                      <Link
-                        href={`/professors/${encodeURIComponent(r.id)}`}
-                        className="break-words font-semibold text-ink-900 hover:underline"
-                      >
-                        {r.name}
-                      </Link>
-                    </td>
-                    <td className="px-2 py-2.5">
-                      <CampusBadge code={r.home_school} />
-                    </td>
-                    <td className="px-2 py-2.5 text-right text-ink-600 tabular-nums">
-                      {r.section_count ?? 0}
-                    </td>
-                    <td className="px-2 py-2.5">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <Stars
-                          value={num(r.avg_stars)}
-                          href={`/professors/${encodeURIComponent(r.id)}#reviews`}
-                          title="View written reviews"
-                        />
-                        <Link
-                          href={`/professors/${encodeURIComponent(r.id)}#reviews`}
-                          className="text-[11px] text-ink-400 hover:text-ink-700 hover:underline"
-                        >
-                          {r.review_count ?? 0} review{(r.review_count ?? 0) === 1 ? "" : "s"}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="px-2 py-2.5">
-                      <Link
-                        href={`/professors/${encodeURIComponent(r.id)}#write-review`}
-                        className="btn-ghost px-2 py-1 text-xs"
-                        title="Write an anonymous review (one per account, editable later)"
-                      >
-                        Write one
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <RmpScore
-                        name={r.name}
-                        schoolCode={r.home_school}
-                        quality={num(r.rmp_quality)}
-                        difficulty={num(r.rmp_difficulty)}
-                        numRatings={num(r.rmp_num_ratings)}
-                        url={r.rmp_url}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* stacked cards below sm */}
-          <ul className="space-y-3 sm:hidden">
-            {rows.map((r) => (
-              <li key={r.id} className="card card-pad">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Link
-                    href={`/professors/${encodeURIComponent(r.id)}`}
-                    className="text-base font-semibold text-ink-900 hover:underline"
-                  >
-                    {r.name}
-                  </Link>
-                  <CampusBadge code={r.home_school} />
-                </div>
-                <div className="mt-2 space-y-1.5 text-sm">
-                  <div className="flex items-center gap-1.5">
-                    <Stars
-                      value={num(r.avg_stars)}
-                      href={`/professors/${encodeURIComponent(r.id)}#reviews`}
-                      title="View written reviews"
-                    />
-                    <Link
-                      href={`/professors/${encodeURIComponent(r.id)}#reviews`}
-                      className="text-[11px] text-ink-400 hover:text-ink-700 hover:underline"
-                    >
-                      {r.review_count ?? 0} review{(r.review_count ?? 0) === 1 ? "" : "s"}
-                    </Link>
-                    <Link
-                      href={`/professors/${encodeURIComponent(r.id)}#write-review`}
-                      className="btn-ghost px-2 py-0.5 text-[11px]"
-                    >
-                      Write one
-                    </Link>
-                  </div>
-                  <div>
-                    <span className="text-[11px] uppercase tracking-wide text-ink-400">
-                      RateMyProfessors
-                    </span>
-                    <RmpScore
-                      className="mt-0.5"
-                      name={r.name}
-                      schoolCode={r.home_school}
-                      quality={num(r.rmp_quality)}
-                      difficulty={num(r.rmp_difficulty)}
-                      numRatings={num(r.rmp_num_ratings)}
-                      url={r.rmp_url}
-                    />
-                  </div>
-                  <p className="text-xs text-ink-500">
-                    <Link href={`/professors/${encodeURIComponent(r.id)}`} className="link">
-                      Full profile
-                    </Link>
-                    {" · "}
-                    {r.section_count ?? 0} section{(r.section_count ?? 0) === 1 ? "" : "s"} in {ayLabel}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          {/* ------------------------------ pagination ---------------------------- */}
-          {pages > 1 ? (
-            <nav className="flex flex-wrap items-center justify-between gap-2" aria-label="Pagination">
-              <span className="text-xs text-ink-500">
-                Showing {(shown - 1) * PAGE_SIZE + 1}–{Math.min(shown * PAGE_SIZE, total)} of{" "}
-                {total.toLocaleString()}
-              </span>
-              <div className="flex items-center gap-1">
-                {shown > 1 ? (
-                  <Link href={hrefFor(sp, { page: String(shown - 1) })} className="btn-secondary">
-                    ← Prev
-                  </Link>
-                ) : (
-                  <span className="btn-secondary pointer-events-none opacity-40">← Prev</span>
-                )}
-                <span className="px-2 text-sm text-ink-600 tabular-nums">
-                  {shown} / {pages}
-                </span>
-                {shown < pages ? (
-                  <Link href={hrefFor(sp, { page: String(shown + 1) })} className="btn-secondary">
-                    Next →
-                  </Link>
-                ) : (
-                  <span className="btn-secondary pointer-events-none opacity-40">Next →</span>
-                )}
-              </div>
-            </nav>
-          ) : null}
-        </>
+        <InfiniteProfessors
+          // New filters / sort => a fresh list.
+          key={JSON.stringify(sp)}
+          firstTrs={<ProfessorTrs rows={rows} />}
+          firstLis={<ProfessorLis rows={rows} ayLabel={ayLabel} />}
+          firstCount={rows.length}
+          total={total}
+          sp={Object.fromEntries(
+            Object.entries(sp).flatMap(([k, v]) => (v === undefined ? [] : [[k, Array.isArray(v) ? v.join(",") : v]])),
+          )}
+          ayLabel={ayLabel}
+          ayTitle={ayTitle}
+        />
       )}
     </div>
   );
