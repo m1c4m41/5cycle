@@ -15,6 +15,8 @@ import { EnrollButton } from "@/components/EnrollButton";
 import { SchoolBadge, SeatsMeter } from "@/components/SectionCard";
 import { Stars } from "@/components/Stars";
 import { academicYearOf } from "@/lib/academic-year";
+import { SeatAlertToggle } from "@/components/SeatAlertToggle";
+import { alertSectionIds } from "@/lib/notify";
 import { AbroadPicker } from "@/components/AbroadPicker";
 import { CourseHistory, type HistoryCourse } from "@/components/CourseHistory";
 import { Timetable } from "@/components/Timetable";
@@ -30,7 +32,7 @@ import {
   type Enrollment,
   type TermSummary,
 } from "@/lib/schedule";
-import { currentUser } from "@/lib/session";
+import { currentUser, isGuestUser } from "@/lib/session";
 import {
   abroadFlagsFor,
   assignmentsFor,
@@ -63,7 +65,6 @@ const one = (v: SP[string]) => (Array.isArray(v) ? v[0] : v) ?? "";
 const PLAN_STATUSES: { value: string; label: string }[] = [
   { value: "planned", label: "Planned" },
   { value: "registered", label: "Registered" },
-  { value: "waitlist", label: "Waitlisted" },
   { value: "perm_requested", label: "Perm requested" },
 ];
 
@@ -126,13 +127,14 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   // Guests browse a live-but-empty plan; every user-owned state degrades to
   // its empty form so the same markup renders for both. All four user reads
   // are independent given (user, term) — one parallel fan-out.
-  const [enrollments, manualCourses, abroadMap, summary, assignments, allEnrollments] = await Promise.all([
+  const [enrollments, manualCourses, abroadMap, summary, assignments, allEnrollments, alertIds] = await Promise.all([
     user ? listEnrollments(user.id, term) : Promise.resolve([] as Enrollment[]),
     user ? manualCoursesFor(user.id) : Promise.resolve([] as ManualCourse[]),
     user ? abroadFlagsFor(user.id) : Promise.resolve(new Map<string, boolean>()),
     user ? summarizeTerm(user.id, term, user.school) : Promise.resolve(emptySummary(term)),
     user ? assignmentsFor(user.id) : Promise.resolve(null),
     user ? listEnrollments(user.id) : Promise.resolve([] as Enrollment[]),
+    user ? alertSectionIds(user.id) : Promise.resolve(new Set<string>()),
   ]);
   const sections = enrollments.map((e) => e.section);
   // Manually entered courses (study-abroad classes, transfer credit,
@@ -561,11 +563,14 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                     <select
                       id={`st-${e.id}`}
                       name="status"
-                      defaultValue={e.status}
+                      defaultValue={e.status === "waitlist" ? "planned" : e.status}
                       className="input w-auto py-1 text-xs"
                     >
                       {PLAN_STATUSES.map((o) => (
-                        <option key={o.value} value={o.value}>
+                        <option
+                          key={o.value}
+                          value={o.value}
+                        >
                           {o.label}
                         </option>
                       ))}
@@ -574,6 +579,15 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                       Save
                     </button>
                   </form>
+                  {(e.status === "planned" || e.status === "waitlist") &&
+                    s.perm_count === 0 &&
+                    s.seats_total > 0 &&
+                    s.seats_filled >= s.seats_total && (
+                      <SeatAlertToggle
+                        sectionId={s.id}
+                        on={e.status === "waitlist" || alertIds.has(s.id)}
+                      />
+                    )}
                   {perm && (
                     <a
                       href={SCHOOL_BY_CODE[user.school].registrarUrl}

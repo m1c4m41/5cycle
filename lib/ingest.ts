@@ -3,6 +3,7 @@
  * with the things a planner needs (instructor identity, GE-vs-department
  * course areas, full-text search haystack).
  */
+import { notifyOpenings, seatOpened } from "./notify";
 import { all, get, newId, nowIso, run, setMeta, tx } from "./db";
 import {
   getAllTerms,
@@ -554,6 +555,27 @@ export async function refreshTerm(termId: string): Promise<RefreshReport> {
     ),
   ]);
 
+  // Full classes that gained a seat (checked against the pre-update rows, so it
+  // also holds when the update takes the full-rewrite path below).
+  const opened: string[] = [];
+  {
+    const before = new Map(rows.map((r) => [r.id as string, r]));
+    for (const b of built) {
+      const r = before.get(b.sectionRow.id);
+      if (!r) continue;
+      if (
+        seatOpened(
+          { seats_total: Number(r.seats_total), seats_filled: Number(r.seats_filled), perm_count: Number(r.perm_count) },
+          {
+            seats_total: Number(b.sectionRow.seats_total),
+            seats_filled: Number(b.sectionRow.seats_filled),
+            perm_count: Number(b.sectionRow.perm_count),
+          },
+        )
+      )
+        opened.push(b.sectionRow.id);
+    }
+  }
   const dbIds = new Set(rows.map((r) => r.id as string));
   const incoming = new Set(built.map((b) => b.sectionRow.id));
   const added = built.filter((b) => !dbIds.has(b.sectionRow.id)).length;
@@ -561,6 +583,7 @@ export async function refreshTerm(termId: string): Promise<RefreshReport> {
   if (added > 0 || removed > 0) {
     const r = await ingestSections(upstream, termId);
     await syncCourseAreas(false);
+    await notifyOpenings(opened).catch(() => 0);
     return { term: termId, status: "full", changed: r.sections, added, removed, ms: Date.now() - t0 };
   }
 
@@ -607,6 +630,7 @@ export async function refreshTerm(termId: string): Promise<RefreshReport> {
       await recomputeSectionCounts();
     });
   }
+  await notifyOpenings(opened).catch(() => 0);
   return done(changed.length ? "patched" : "unchanged", changed.length);
 }
 

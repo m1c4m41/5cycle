@@ -8,10 +8,12 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
   addToSchedule,
+  listEnrollments,
   removeFromSchedule,
   setEnrollmentStatus,
 } from "@/lib/schedule";
 import { getSection } from "@/lib/catalog";
+import { setSeatAlert } from "@/lib/notify";
 import { run } from "@/lib/db";
 import {
   assertActionsEnabled,
@@ -102,7 +104,7 @@ export async function removeFromPlanAction(
     : { ok: false, error: "That course wasn't in your plan." };
 }
 
-const STATUSES = new Set(["planned", "waitlist", "perm_requested", "registered"]);
+const STATUSES = new Set(["planned", "perm_requested", "registered"]);
 
 export async function setStatusAction(
   _prev: ActionState,
@@ -113,11 +115,35 @@ export async function setStatusAction(
   const sectionId = formStr(fd, "sectionId");
   const status = formStr(fd, "status");
   if (!STATUSES.has(status)) return { ok: false, error: "Unknown status." };
-  if (!(await getSection(sectionId))) return { ok: false, error: "Unknown section." };
-
+  const target = await getSection(sectionId);
+  if (!target) return { ok: false, error: "Unknown section." };
   await setEnrollmentStatus(user.id, sectionId, status);
+  // Seat alerts only make sense while the class is just planned.
+  if (status !== "planned") await setSeatAlert(user.id, sectionId, false);
   revalidateSchedule();
   return { ok: true, notice: `Marked as ${status.replace("_", " ")}.` };
+}
+
+/** The "Notify me when a spot opens" checkbox. Form fields: sectionId, on (1/0). */
+export async function toggleSeatAlertAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
+  assertActionsEnabled();
+  const user = await userOrRedirect();
+  const sectionId = formStr(fd, "sectionId");
+  const on = formStr(fd, "on") === "1";
+  const section = await getSection(sectionId);
+  if (!section) return { ok: false, error: "Unknown section." };
+  const mine = (await listEnrollments(user.id, section.term_id)).find((e) => e.section.id === sectionId);
+  if (!mine) return { ok: false, error: "Add the class to your plan first." };
+  if (on) {
+    if (mine.status !== "planned") return { ok: false, error: "Seat alerts are for classes that are still just planned." };
+    if (section.perm_count > 0)
+      return { ok: false, error: "No alerts for perm classes — those seats are approved by the instructor." };
+    if (!(section.seats_total > 0 && section.seats_filled >= section.seats_total))
+      return { ok: false, error: "This class has open seats right now." };
+  }
+  await setSeatAlert(user.id, sectionId, on);
+  revalidateSchedule();
+  return { ok: true, notice: on ? "We'll alert you when a spot opens." : "Alert turned off." };
 }
 
 export async function clearTermAction(

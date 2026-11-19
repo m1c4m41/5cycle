@@ -27,7 +27,7 @@ import {
 import { getSections } from "./hyperschedule";
 
 /** How stale a term may get before a page view triggers a refresh. */
-const MAX_AGE_MS = Number(process.env.CYCLE_REFRESH_SECONDS || 300) * 1000;
+const MAX_AGE_MS = Number(process.env.CYCLE_REFRESH_SECONDS || 60) * 1000;
 /** A claim older than this is assumed to belong to a crashed run. */
 const CLAIM_MS = 3 * 60 * 1000;
 

@@ -230,6 +230,28 @@ CREATE TABLE IF NOT EXISTS user_term_flags (
   PRIMARY KEY (user_id, term_id)
 );
 
+-- In-app notifications (a seat opened in a class the student is waitlisted for).
+CREATE TABLE IF NOT EXISTS notifications (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  section_id  TEXT,
+  kind        TEXT NOT NULL,               -- seat_open
+  title       TEXT NOT NULL,
+  body        TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  read_at     TEXT,
+  emailed_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_notif_user ON notifications(user_id, read_at);
+
+-- "Notify me when a spot opens" ticks on full, planned classes.
+CREATE TABLE IF NOT EXISTS seat_alerts (
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  section_id  TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  PRIMARY KEY (user_id, section_id)
+);
+
 -- Terms a student studies abroad. No FK to terms: students mark summers and
 -- future terms the catalog hasn't published yet.
 CREATE TABLE IF NOT EXISTS study_abroad_terms (
