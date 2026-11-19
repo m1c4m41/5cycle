@@ -13,7 +13,7 @@ import {
   setAbroadAction,
 } from "@/actions/requirements";
 import { EnrollButton } from "@/components/EnrollButton";
-import { SchoolBadge } from "@/components/SectionCard";
+import { SchoolBadge, SeatsMeter } from "@/components/SectionCard";
 import { Stars } from "@/components/Stars";
 import { Timetable } from "@/components/Timetable";
 import { TermSelect } from "@/components/TermSelect";
@@ -365,6 +365,19 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                             .join("; ")
                         : "no meeting time in feed"}
                     </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <SeatsMeter s={s} />
+                      <span
+                        className={
+                          s.perm_count > 0
+                            ? "chip border-violet-300 bg-violet-50 text-violet-700"
+                            : "chip border-ink-200 bg-ink-50 text-ink-500"
+                        }
+                        title="Perm seats the registrar lists for this section (cross-registration / permission-to-enroll)"
+                      >
+                        {s.perm_count} perm{s.perm_count === 1 ? "" : "s"}
+                      </span>
+                    </div>
                     {s.instructors.length > 0 && (
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-600">
                         {s.instructors.map((i) => (
