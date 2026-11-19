@@ -5,7 +5,7 @@ import { unstable_cache } from "next/cache";
 import { all, get } from "./db";
 import { termChronoKey } from "./hyperschedule";
 import type { AreaRef, InstructorRef, Meeting, Section, SectionRow } from "./types";
-import { schoolShort } from "./util";
+import { nameTokens, schoolShort } from "./util";
 
 export type CatalogQuery = {
   q?: string;
@@ -60,11 +60,15 @@ function buildWhere(q: CatalogQuery): Built {
     }
   }
   if (q.instructor) {
-    where.push(
-      `EXISTS (SELECT 1 FROM section_instructors si JOIN instructors i ON i.id = si.instructor_id
-              WHERE si.section_id = s.id AND i.normalized LIKE ?)`,
-    );
-    params.push(`%${q.instructor.toLowerCase().trim()}%`);
+    // Titles and hyphens ignored; every word must match the same instructor.
+    const toks = nameTokens(q.instructor);
+    if (toks.length) {
+      where.push(
+        `EXISTS (SELECT 1 FROM section_instructors si JOIN instructors i ON i.id = si.instructor_id
+                WHERE si.section_id = s.id ${toks.map(() => "AND REPLACE(i.normalized, '-', ' ') LIKE ? ESCAPE '\\'").join(" ")})`,
+      );
+      for (const t of toks) params.push(`%${t.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
+    }
   }
   if (typeof q.minCredits === "number" && !Number.isNaN(q.minCredits)) {
     where.push("s.credits >= ?");

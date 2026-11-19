@@ -133,6 +133,16 @@ export function normalizeName(name: string): string {
     .trim();
 }
 
+/**
+ * Search words for a professor name: titles ("Dr.", "Prof.") dropped, accents and
+ * punctuation ignored, and hyphens treated as spaces — so "garcia lopez" finds
+ * "Garcia-Lopez" and "Dr. Medero" finds "Julie Medero". Match each word against
+ * `REPLACE(instructors.normalized, '-', ' ')`.
+ */
+export function nameTokens(q: string): string[] {
+  return normalizeName(q).replace(/-/g, " ").split(/\s+/).filter(Boolean);
+}
+
 export function slugify(input: string): string {
   return normalizeName(input).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }

@@ -1,7 +1,7 @@
 /** Shared by the professors page and its "load more" action. */
 import { all, get } from "./db";
 import { SCHOOLS } from "./constants";
-import { schoolShort, termLabel } from "./util";
+import { nameTokens, schoolShort, termLabel } from "./util";
 import { currentTermId } from "./ingest";
 import { academicYearOf } from "./academic-year";
 
@@ -57,9 +57,10 @@ export function buildFilters(sp: SP) {
 
   const where: string[] = [];
   const params: (string | number)[] = [];
-  if (q) {
-    where.push(`ir.name LIKE ? ESCAPE '\\'`);
-    params.push(likeTerm(q));
+  // Word-by-word, ignoring titles and hyphens ("dr medero", "garcia lopez").
+  for (const tok of nameTokens(q)) {
+    where.push(`REPLACE(i.normalized, '-', ' ') LIKE ? ESCAPE '\\'`);
+    params.push(likeTerm(tok));
   }
   if (school) {
     where.push("i.home_school = ?");
