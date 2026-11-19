@@ -1,4 +1,5 @@
 "use client";
+import { rememberTerm } from "./TermRemember";
 
 type TermOption = { id: string; label: string; is_current?: number | boolean };
 
@@ -27,6 +28,7 @@ export function TermSelect({
       defaultValue={value}
       className={className}
       onChange={(e) => {
+        rememberTerm(e.currentTarget.value);
         const form = e.currentTarget.form;
         if (!form) return;
         if (typeof form.requestSubmit === "function") form.requestSubmit();

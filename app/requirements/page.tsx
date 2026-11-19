@@ -19,6 +19,8 @@ import { SetCard } from "@/components/SetCard";
 import { overlapPolicyFor } from "@/lib/counting";
 import { SCHOOLS } from "@/lib/constants";
 import { currentTermId } from "@/lib/ingest";
+import { preferredTerm } from "@/lib/term-pref";
+import { TermRemember } from "@/components/TermRemember";
 import {
   assignmentsFor,
   blankCountingSets,
@@ -781,8 +783,9 @@ export default async function RequirementsPage({
 
   // Every DB read this page needs is independent once (user, school) are
   // known — one parallel fan-out (was ~10 serial Turso round-trips).
-  const [cur, loaded, manuals, plannedEnrolled, sets, assignments, lxKeys, termIds] = await Promise.all([
+  const [cur, pref, loaded, manuals, plannedEnrolled, sets, assignments, lxKeys, termIds] = await Promise.all([
     currentTermId(),
+    one(sp.term) ? Promise.resolve("") : preferredTerm(),
     requirementsLoaded(),
     user ? manualCoursesFor(user.id) : Promise.resolve([] as ManualCourse[]),
     user ? enrolledSections(user.id) : Promise.resolve([] as Section[]),
@@ -792,7 +795,7 @@ export default async function RequirementsPage({
     user ? plannedTerms(user.id) : Promise.resolve([] as string[]),
   ]);
 
-  const term = one(sp.term) || cur;
+  const term = one(sp.term) || pref || cur;
   const scope = one(sp.scope) === "term" ? "term" : "all";
 
   // Manually entered courses (study abroad, transfer, create-your-own) become
@@ -872,6 +875,7 @@ export default async function RequirementsPage({
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
+      <TermRemember term={term} />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Requirement checklist</h1>

@@ -9,6 +9,8 @@ import { SCHOOLS } from "@/lib/constants";
 import { termLabel } from "@/lib/util";
 import { findGapFillers, type GapResult } from "@/lib/gapfill";
 import { refreshInBackground } from "@/lib/refresh";
+import { preferredTerm } from "@/lib/term-pref";
+import { TermRemember } from "@/components/TermRemember";
 import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
@@ -61,7 +63,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const user = await currentUser();
 
-  const term = one(sp.term) || (await currentTermId());
+  const term = one(sp.term) || (await preferredTerm()) || (await currentTermId());
   refreshInBackground(term); // seats / perms / times: re-check the live feed after responding
   const page = Math.max(1, num(sp.page) ?? 1);
   const q = one(sp.q);
@@ -165,6 +167,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="flex flex-col gap-5">
+      <TermRemember term={term} />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Course catalog</h1>

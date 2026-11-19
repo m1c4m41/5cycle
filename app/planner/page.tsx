@@ -42,6 +42,8 @@ import {
 import type { ManualCourse, RequirementSet, Section, SetProgress } from "@/lib/types";
 import { currentTermId } from "@/lib/ingest";
 import { refreshInBackground } from "@/lib/refresh";
+import { preferredTerm } from "@/lib/term-pref";
+import { TermRemember } from "@/components/TermRemember";
 import { permNeededFor } from "@/lib/perm";
 import {
   formatCredits,
@@ -107,7 +109,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   // facets() (no term) and currentTermId() are independent — parallel.
   const [fxAll, curTerm] = await Promise.all([
     facets(),
-    one(sp.term) ? Promise.resolve("") : currentTermId(),
+    one(sp.term) ? Promise.resolve("") : preferredTerm().then((t) => t || currentTermId()),
   ]);
   const synced = fxAll.terms;
   const term = one(sp.term) || curTerm || synced[0]?.id || "";
@@ -158,6 +160,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
+      <TermRemember term={term} />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
