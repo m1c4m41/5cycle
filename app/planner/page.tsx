@@ -538,7 +538,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                             className="link inline-flex items-center gap-1"
                           >
                             {i.name}
-                            <Stars value={i.avg_stars} />
+                            <Stars value={i.avg_stars} hideEmpty />
                           </Link>
                         ))}
                       </p>

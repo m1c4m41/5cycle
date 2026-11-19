@@ -139,6 +139,7 @@ export function SectionCard({
                     {i.name}
                   </Link>
                   <Stars
+                    hideEmpty
                     value={i.avg_stars}
                     title="5Cycle students — click to read the reviews"
                     href={`/professors/${encodeURIComponent(i.id)}#reviews`}

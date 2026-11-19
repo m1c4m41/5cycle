@@ -213,6 +213,7 @@ export default async function SectionPage({
                         </Link>
                         <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-ink-600">
                           <Stars
+                            hideEmpty
                             value={i.avg_stars}
                             title="5Cycle students — click to read the reviews"
                             href={`/professors/${encodeURIComponent(i.id)}#reviews`}

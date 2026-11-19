@@ -11,13 +11,17 @@ export function Stars({
   size = 14,
   title,
   href,
+  hideEmpty = false,
 }: {
   value: number | null | undefined;
   size?: number;
   title?: string;
   /** Internal route — renders the stars as a link (e.g. to #reviews). */
   href?: string;
+  /** Show nothing (instead of "— unrated") when there is no rating. */
+  hideEmpty?: boolean;
 }) {
+  if (hideEmpty && (value === null || value === undefined || Number.isNaN(value))) return null;
   const display =
     value === null || value === undefined || Number.isNaN(value) ? (
       <span className="text-[11px] font-medium text-ink-400" title={title ?? "No ratings yet"}>
