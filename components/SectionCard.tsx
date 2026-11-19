@@ -133,7 +133,7 @@ export function SectionCard({
 
           {s.instructors.length > 0 ? (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-xs text-ink-600">
-              {s.instructors.map((i) => (
+              {s.instructors.map((i, idx) => (
                 <span key={i.id} className="inline-flex items-center gap-1">
                   <Link href={`/professors/${encodeURIComponent(i.id)}`} className="hover:underline">
                     {i.name}
@@ -144,6 +144,11 @@ export function SectionCard({
                     title="5Cycle students — click to read the reviews"
                     href={`/professors/${encodeURIComponent(i.id)}#reviews`}
                   />
+                  {idx < s.instructors.length - 1 && (
+                    <span aria-hidden="true" className="-ml-1">
+                      ,
+                    </span>
+                  )}
                 </span>
               ))}
             </div>

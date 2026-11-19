@@ -531,15 +531,21 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                     </div>
                     {s.instructors.length > 0 && (
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-600">
-                        {s.instructors.map((i) => (
-                          <Link
-                            key={i.id}
-                            href={`/professors/${encodeURIComponent(i.id)}`}
-                            className="link inline-flex items-center gap-1"
-                          >
-                            {i.name}
-                            <Stars value={i.avg_stars} hideEmpty />
-                          </Link>
+                        {s.instructors.map((i, idx) => (
+                          <span key={i.id} className="inline-flex items-center gap-1">
+                            <Link
+                              href={`/professors/${encodeURIComponent(i.id)}`}
+                              className="link inline-flex items-center gap-1"
+                            >
+                              {i.name}
+                              <Stars value={i.avg_stars} hideEmpty />
+                            </Link>
+                            {idx < s.instructors.length - 1 && (
+                              <span aria-hidden="true" className="-ml-1">
+                                ,
+                              </span>
+                            )}
+                          </span>
                         ))}
                       </p>
                     )}
