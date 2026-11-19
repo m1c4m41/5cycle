@@ -207,7 +207,18 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   const [sets, progress] = await Promise.all([
     user ? setsForUser(user) : Promise.resolve([] as RequirementSet[]),
     // Checklist includes the manual pseudo-sections so entered credits count.
-    user ? progressForUser(user, allSections) : Promise.resolve([] as SetProgress[]),
+    // Same inputs as the full checklist page (every term + every hand-entered class +
+    // the pinned boxes), so the snapshot always matches it.
+    user
+      ? progressForUser(
+          user,
+          [
+            ...allEnrollments.map((e) => e.section),
+            ...manualCourses.map((m) => manualPseudoSection(m, user.school)),
+          ],
+          assignments ? { assignments } : {},
+        )
+      : Promise.resolve([] as SetProgress[]),
   ]);
 
   const notices = {
