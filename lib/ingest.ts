@@ -296,6 +296,126 @@ export function sectionToRows(s: HS_Section, termId: string) {
   return { sectionRow, meetings, instNames, areas: s.courseAreas, search };
 }
 
+/**
+ * Denormalized teaching load, used to rank the professor directory. Must be
+ * recomputed across *every* synced term: an instructor who also teaches in
+ * another term's catalog would otherwise be zeroed out by this term's sync.
+ */
+async function recomputeSectionCounts() {
+  await run("UPDATE instructors SET section_count = 0");
+  for (const r of await all<{ instructor_id: string; n: number }>(
+    "SELECT instructor_id, COUNT(*) n FROM section_instructors GROUP BY instructor_id",
+  )) {
+    await run("UPDATE instructors SET section_count = ? WHERE id = ?", [r.n, r.instructor_id]);
+  }
+}
+
+type BuiltSection = ReturnType<typeof sectionToRows>;
+
+/**
+ * Write one section (row + meetings + instructors + areas). Child rows must
+ * already be cleared for this section. Shared by the full term ingest and the
+ * incremental refresh so both always store exactly the same thing.
+ */
+async function writeSection(
+  b: BuiltSection,
+  touchedInstructors: Set<string>,
+): Promise<{ meetings: number; areaLinks: number }> {
+  const { sectionRow, meetings: ms, instNames, areas, search } = b;
+  let meetings = 0;
+  let areaLinks = 0;
+  await run(
+    // NOT `INSERT OR REPLACE`: SQLite resolves a conflict that way by
+    // DELETE-ing the row first, and enrollments/reviews hang off
+    // sections(id) ON DELETE CASCADE — so a routine re-sync of a section a
+    // student had planned would silently drop their enrollment. Upsert in
+    // place instead.
+    `INSERT INTO sections(
+       id, term_id, department, course_number, suffix, affiliation, section_number, half,
+       code_string, course_code, title, description, school, credits, perm_count,
+       seats_total, seats_filled, status, start_date, end_date, potential_error, search)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+     ON CONFLICT(id) DO UPDATE SET
+       department = excluded.department,
+       course_number = excluded.course_number,
+       suffix = excluded.suffix,
+       affiliation = excluded.affiliation,
+       section_number = excluded.section_number,
+       half = excluded.half,
+       code_string = excluded.code_string,
+       course_code = excluded.course_code,
+       title = excluded.title,
+       description = excluded.description,
+       school = excluded.school,
+       credits = excluded.credits,
+       perm_count = excluded.perm_count,
+       seats_total = excluded.seats_total,
+       seats_filled = excluded.seats_filled,
+       status = excluded.status,
+       start_date = excluded.start_date,
+       end_date = excluded.end_date,
+       potential_error = excluded.potential_error,
+       search = excluded.search`,
+    [
+      sectionRow.id,
+      sectionRow.term_id,
+      sectionRow.department,
+      sectionRow.course_number,
+      sectionRow.suffix,
+      sectionRow.affiliation,
+      sectionRow.section_number,
+      sectionRow.half,
+      sectionRow.code_string,
+      sectionRow.course_code,
+      sectionRow.title,
+      sectionRow.description,
+      sectionRow.school,
+      sectionRow.credits,
+      sectionRow.perm_count,
+      sectionRow.seats_total,
+      sectionRow.seats_filled,
+      sectionRow.status,
+      sectionRow.start_date,
+      sectionRow.end_date,
+      sectionRow.potential_error,
+      search,
+    ],
+  );
+    for (const m of ms) {
+    await run(
+      `INSERT INTO section_schedules(section_id, days, start_time, end_time, locations)
+       VALUES(?,?,?,?,?)`,
+      [sectionRow.id, m.days, m.start_time, m.end_time, m.locations],
+    );
+    meetings++;
+  }
+
+  for (const name of instNames) {
+    const iid = await upsertInstructor(name, sectionRow.school);
+    if (!iid) continue;
+    await run("INSERT OR IGNORE INTO section_instructors(section_id, instructor_id) VALUES(?,?)", [
+      sectionRow.id,
+      iid,
+    ]);
+    touchedInstructors.add(iid);
+  }
+
+  for (const a of areas) {
+    await run("INSERT OR IGNORE INTO course_areas(code, description, school, kind) VALUES(?,?,?,?)", [
+      a,
+      a,
+      areaSchool(a),
+      areaKind(a),
+    ]);
+    await run("INSERT OR IGNORE INTO section_areas(section_id, area_code) VALUES(?,?)", [
+      sectionRow.id,
+      a,
+    ]);
+    areaLinks++;
+  }
+  return { meetings, areaLinks };
+}
+
 export async function ingestSections(upstream: HS_Section[], termId: string): Promise<SyncReport> {
   const t0 = Date.now();
   let sections = 0;
@@ -346,109 +466,14 @@ export async function ingestSections(upstream: HS_Section[], termId: string): Pr
         [termId],
       );
     }
-    for (const { sectionRow, meetings: ms, instNames, areas, search } of built) {
-      await run(
-        // NOT `INSERT OR REPLACE`: SQLite resolves a conflict that way by
-        // DELETE-ing the row first, and enrollments/reviews hang off
-        // sections(id) ON DELETE CASCADE — so a routine re-sync of a section a
-        // student had planned would silently drop their enrollment. Upsert in
-        // place instead.
-        `INSERT INTO sections(
-           id, term_id, department, course_number, suffix, affiliation, section_number, half,
-           code_string, course_code, title, description, school, credits, perm_count,
-           seats_total, seats_filled, status, start_date, end_date, potential_error, search)
-         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-         ON CONFLICT(id) DO UPDATE SET
-           department = excluded.department,
-           course_number = excluded.course_number,
-           suffix = excluded.suffix,
-           affiliation = excluded.affiliation,
-           section_number = excluded.section_number,
-           half = excluded.half,
-           code_string = excluded.code_string,
-           course_code = excluded.course_code,
-           title = excluded.title,
-           description = excluded.description,
-           school = excluded.school,
-           credits = excluded.credits,
-           perm_count = excluded.perm_count,
-           seats_total = excluded.seats_total,
-           seats_filled = excluded.seats_filled,
-           status = excluded.status,
-           start_date = excluded.start_date,
-           end_date = excluded.end_date,
-           potential_error = excluded.potential_error,
-           search = excluded.search`,
-        [
-          sectionRow.id,
-          sectionRow.term_id,
-          sectionRow.department,
-          sectionRow.course_number,
-          sectionRow.suffix,
-          sectionRow.affiliation,
-          sectionRow.section_number,
-          sectionRow.half,
-          sectionRow.code_string,
-          sectionRow.course_code,
-          sectionRow.title,
-          sectionRow.description,
-          sectionRow.school,
-          sectionRow.credits,
-          sectionRow.perm_count,
-          sectionRow.seats_total,
-          sectionRow.seats_filled,
-          sectionRow.status,
-          sectionRow.start_date,
-          sectionRow.end_date,
-          sectionRow.potential_error,
-          search,
-        ],
-      );
+    for (const b of built) {
+      const r = await writeSection(b, touchedInstructors);
       sections++;
-
-      for (const m of ms) {
-        await run(
-          `INSERT INTO section_schedules(section_id, days, start_time, end_time, locations)
-           VALUES(?,?,?,?,?)`,
-          [sectionRow.id, m.days, m.start_time, m.end_time, m.locations],
-        );
-        meetings++;
-      }
-
-      for (const name of instNames) {
-        const iid = await upsertInstructor(name, sectionRow.school);
-        if (!iid) continue;
-        await run("INSERT OR IGNORE INTO section_instructors(section_id, instructor_id) VALUES(?,?)", [
-          sectionRow.id,
-          iid,
-        ]);
-        touchedInstructors.add(iid);
-      }
-
-      for (const a of areas) {
-        await run("INSERT OR IGNORE INTO course_areas(code, description, school, kind) VALUES(?,?,?,?)", [
-          a,
-          a,
-          areaSchool(a),
-          areaKind(a),
-        ]);
-        await run("INSERT OR IGNORE INTO section_areas(section_id, area_code) VALUES(?,?)", [
-          sectionRow.id,
-          a,
-        ]);
-        areaLinks++;
-      }
+      meetings += r.meetings;
+      areaLinks += r.areaLinks;
     }
 
-    // Denormalized teaching load, used to rank the professor directory. Must be
-    // recomputed across *every* synced term: an instructor who also teaches in
-    // another term's catalog would otherwise be zeroed out by this term's sync.
-    await run("UPDATE instructors SET section_count = 0");
-    for (const r of await all<{ instructor_id: string; n: number }>(
-      "SELECT instructor_id, COUNT(*) n FROM section_instructors GROUP BY instructor_id",
-    )) {
-      await run("UPDATE instructors SET section_count = ? WHERE id = ?", [r.n, r.instructor_id]);
-    }
+    await recomputeSectionCounts();
 
     await setMeta(`synced_${termId}`, nowIso());
   });
@@ -462,6 +487,127 @@ export async function ingestSections(upstream: HS_Section[], termId: string): Pr
     dropped,
     ms: Date.now() - t0,
   };
+}
+
+export type RefreshReport = {
+  term: string;
+  status: "unchanged" | "patched" | "full" | "skipped";
+  /** Sections whose seats, perms, times, locations, instructors … changed. */
+  changed: number;
+  added: number;
+  removed: number;
+  ms: number;
+};
+
+/** Everything about a section a student can see, as one comparable string. */
+function signature(b: BuiltSection, instNorm: string[]): string {
+  const r = b.sectionRow;
+  return JSON.stringify([
+    r.title, r.description, r.credits, r.perm_count, r.seats_total, r.seats_filled, r.status,
+    r.start_date, r.end_date, r.potential_error, r.half, r.school, r.code_string,
+    b.meetings.map((m) => `${m.days}|${m.start_time}|${m.end_time}|${m.locations}`).sort(),
+    [...instNorm].sort(),
+    [...b.areas].sort(),
+  ]);
+}
+
+/**
+ * Incremental refresh: re-read the live upstream term and rewrite ONLY the
+ * sections that actually changed — seats, perm counts, status, meeting days /
+ * times / locations, instructors, areas, titles, descriptions, credits.
+ * Typically a handful of rows, so it is cheap enough to run every few minutes
+ * (even over the network to Turso). If sections were added or dropped upstream
+ * it falls back to the full term ingest, which also creates profiles for new
+ * professors.
+ */
+export async function refreshTerm(termId: string): Promise<RefreshReport> {
+  const t0 = Date.now();
+  const upstream = await getSections(termId, true);
+  const done = (status: RefreshReport["status"], changed = 0, added = 0, removed = 0): RefreshReport => ({
+    term: termId, status, changed, added, removed, ms: Date.now() - t0,
+  });
+  if (upstream.length === 0) return done("skipped"); // an empty payload is a failure, not "no courses"
+
+  const built = upstream.map((s) => sectionToRows(s, termId));
+  const [rows, sched, inst, areas] = await Promise.all([
+    all<Record<string, string | number | null>>(
+      `SELECT id, title, description, credits, perm_count, seats_total, seats_filled, status,
+              start_date, end_date, potential_error, half, school, code_string
+       FROM sections WHERE term_id = ?`,
+      [termId],
+    ),
+    all<{ section_id: string; days: string; start_time: number; end_time: number; locations: string }>(
+      `SELECT ss.section_id, ss.days, ss.start_time, ss.end_time, ss.locations
+       FROM section_schedules ss JOIN sections s ON s.id = ss.section_id WHERE s.term_id = ?`,
+      [termId],
+    ),
+    all<{ section_id: string; normalized: string }>(
+      `SELECT si.section_id, i.normalized FROM section_instructors si
+       JOIN instructors i ON i.id = si.instructor_id JOIN sections s ON s.id = si.section_id
+       WHERE s.term_id = ?`,
+      [termId],
+    ),
+    all<{ section_id: string; area_code: string }>(
+      `SELECT sa.section_id, sa.area_code FROM section_areas sa
+       JOIN sections s ON s.id = sa.section_id WHERE s.term_id = ?`,
+      [termId],
+    ),
+  ]);
+
+  const dbIds = new Set(rows.map((r) => r.id as string));
+  const incoming = new Set(built.map((b) => b.sectionRow.id));
+  const added = built.filter((b) => !dbIds.has(b.sectionRow.id)).length;
+  const removed = [...dbIds].filter((id) => !incoming.has(id)).length;
+  if (added > 0 || removed > 0) {
+    const r = await ingestSections(upstream, termId);
+    await syncCourseAreas(false);
+    return { term: termId, status: "full", changed: r.sections, added, removed, ms: Date.now() - t0 };
+  }
+
+  const group = <T extends { section_id: string }>(list: T[]) => {
+    const m = new Map<string, T[]>();
+    for (const x of list) (m.get(x.section_id) ?? m.set(x.section_id, []).get(x.section_id)!).push(x);
+    return m;
+  };
+  const schedBy = group(sched);
+  const instBy = group(inst);
+  const areaBy = group(areas);
+  const rowBy = new Map(rows.map((r) => [r.id as string, r]));
+
+  const changed: BuiltSection[] = [];
+  for (const b of built) {
+    const r = rowBy.get(b.sectionRow.id)!;
+    const dbBuilt = {
+      sectionRow: {
+        ...b.sectionRow,
+        title: r.title, description: r.description, credits: r.credits, perm_count: r.perm_count,
+        seats_total: r.seats_total, seats_filled: r.seats_filled, status: r.status,
+        start_date: r.start_date, end_date: r.end_date, potential_error: r.potential_error,
+        half: r.half, school: r.school, code_string: r.code_string,
+      },
+      meetings: (schedBy.get(b.sectionRow.id) ?? []).map((m) => ({
+        days: m.days, start_time: m.start_time, end_time: m.end_time, locations: m.locations,
+      })),
+      areas: (areaBy.get(b.sectionRow.id) ?? []).map((a) => a.area_code),
+    } as unknown as BuiltSection;
+    const dbInst = (instBy.get(b.sectionRow.id) ?? []).map((x) => x.normalized);
+    const upInst = b.instNames.map((n) => normalizeName(n)).filter(Boolean);
+    if (signature(dbBuilt, dbInst) !== signature(b, upInst)) changed.push(b);
+  }
+
+  if (changed.length > 0) {
+    await tx(async () => {
+      const touched = new Set<string>();
+      for (const b of changed) {
+        for (const table of ["section_instructors", "section_areas", "section_schedules"]) {
+          await run(`DELETE FROM ${table} WHERE section_id = ?`, [b.sectionRow.id]);
+        }
+        await writeSection(b, touched);
+      }
+      await recomputeSectionCounts();
+    });
+  }
+  return done(changed.length ? "patched" : "unchanged", changed.length);
 }
 
 /** Download + store one term. */

@@ -14,6 +14,7 @@ import { Stars } from "@/components/Stars";
 import { all, get } from "@/lib/db";
 import { AFFILIATION_LABELS, SCHOOL_BY_CODE, STATUS_LABELS } from "@/lib/constants";
 import { getSection, searchSections } from "@/lib/catalog";
+import { refreshInBackground } from "@/lib/refresh";
 import { enrolledSections } from "@/lib/schedule";
 import { fulfillmentFor, setsForUser } from "@/lib/requirements";
 import { permNeededFor } from "@/lib/perm";
@@ -59,6 +60,7 @@ export default async function SectionPage({
   const sp = await searchParams;
   const s = await getSection(decodeURIComponent(id));
   if (!s) notFound();
+  refreshInBackground(s.term_id);
 
   const user = await currentUser();
   const planned = user ? await enrolledSections(user.id, s.term_id) : [];

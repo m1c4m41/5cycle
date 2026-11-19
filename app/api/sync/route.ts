@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { catalogStats } from "@/lib/ingest";
 import { getAutoSyncStatus, manualSync } from "@/lib/autosync";
 import { loadRequirementFiles as loadReq } from "@/lib/requirements";
+import { cronSync } from "@/lib/refresh";
 import { isAdminToken } from "@/lib/server";
 import { jsonResponse } from "@/lib/util";
 
@@ -33,12 +34,14 @@ function authorized(req: Request): boolean {
   if (isAdminToken(token)) return true;
   // Vercel cron (vercel.json) calls this route hourly; it presents the
   // project's cron secret, which we accept if CYCLE_CRON_SECRET is set.
-  const cron = process.env.CYCLE_CRON_SECRET;
-  if (cron && token.length === cron.length) {
+  // Vercel sends `Authorization: Bearer $CRON_SECRET`; CYCLE_CRON_SECRET is the
+  // older name — accept either.
+  for (const cron of [process.env.CRON_SECRET, process.env.CYCLE_CRON_SECRET]) {
+    if (!cron || token.length !== cron.length) continue;
     try {
-      return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(cron));
+      if (crypto.timingSafeEqual(Buffer.from(token), Buffer.from(cron))) return true;
     } catch {
-      return false;
+      /* fall through */
     }
   }
   return false;
@@ -72,5 +75,11 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   if (!(await authorized(req))) return jsonResponse({ error: "bad admin token" }, { status: 401 });
+  // Vercel cron invokes scheduled paths with GET — that call must do the sync.
+  if ((req.headers.get("user-agent") ?? "").startsWith("vercel-cron")) {
+    const started = Date.now();
+    const result = await cronSync();
+    return jsonResponse({ ok: true, ms: Date.now() - started, ...result });
+  }
   return jsonResponse({ ok: true, stats: await catalogStats(), autoSync: await getAutoSyncStatus() });
 }

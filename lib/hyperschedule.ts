@@ -12,8 +12,10 @@ import path from "node:path";
 import type { SchoolCode } from "./constants";
 
 const BASE = process.env.HYPERSCHEDULE_API || "https://banana.hyperschedule.io";
+// Serverless hosts (Vercel) mount the app read-only; only /tmp is writable.
 const CACHE_DIR =
-  process.env.CYCLE_CACHE_DIR || path.join(process.cwd(), "data", "cache");
+  process.env.CYCLE_CACHE_DIR ||
+  (process.env.VERCEL ? "/tmp/5cycle-cache" : path.join(process.cwd(), "data", "cache"));
 
 /* ---------------------------- upstream types ---------------------------- */
 
@@ -92,8 +94,12 @@ async function fetchJson<T>(
   }
 
   const text = await res.text();
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(cacheFile, text);
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    fs.writeFileSync(cacheFile, text);
+  } catch {
+    /* read-only filesystem: the cache is an optimisation, never a requirement */
+  }
   return JSON.parse(text) as T;
 }
 

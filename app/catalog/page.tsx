@@ -8,6 +8,7 @@ import { fulfillmentFor, setsForUser } from "@/lib/requirements";
 import { SCHOOLS } from "@/lib/constants";
 import { termLabel } from "@/lib/util";
 import { findGapFillers, type GapResult } from "@/lib/gapfill";
+import { refreshInBackground } from "@/lib/refresh";
 import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
@@ -61,6 +62,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const user = await currentUser();
 
   const term = one(sp.term) || (await currentTermId());
+  refreshInBackground(term); // seats / perms / times: re-check the live feed after responding
   const page = Math.max(1, num(sp.page) ?? 1);
   const q = one(sp.q);
   const schools = list(sp.school);

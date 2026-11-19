@@ -41,6 +41,7 @@ import {
 } from "@/lib/requirements";
 import type { ManualCourse, RequirementSet, Section, SetProgress } from "@/lib/types";
 import { currentTermId } from "@/lib/ingest";
+import { refreshInBackground } from "@/lib/refresh";
 import { permNeededFor } from "@/lib/perm";
 import {
   formatCredits,
@@ -110,6 +111,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   ]);
   const synced = fxAll.terms;
   const term = one(sp.term) || curTerm || synced[0]?.id || "";
+  refreshInBackground(term);
   const selfHref = `/planner?term=${term}`;
 
   // Guests browse a live-but-empty plan; every user-owned state degrades to
