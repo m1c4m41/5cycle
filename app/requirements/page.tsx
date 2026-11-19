@@ -458,14 +458,6 @@ function renderSet(p: SetProgress, term: string) {
                 {KIND_LABEL[set.kind] ?? set.kind}
               </span>
               <SchoolBadge code={set.school} small />
-              {set.verified === 0 && (
-                <span
-                  className="chip border-amber-300 bg-amber-50 text-amber-800"
-                  title="This definition has not been checked against a published requirements document"
-                >
-                  unverified draft
-                </span>
-              )}
               {set.degree_years && (
                 <span className="chip border-ink-200 bg-white text-ink-500">
                   {set.degree_years}-year plan
