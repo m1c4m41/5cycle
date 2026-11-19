@@ -14,53 +14,16 @@ import { TermRemember } from "@/components/TermRemember";
 import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
-import { AutoLoadMore } from "@/components/AutoLoadMore";
+import { InfiniteSections } from "@/components/InfiniteSections";
+import { SectionCards } from "@/components/SectionCards";
+import { hrefFor, list, num, one, cr, queryFromSp, type SP } from "@/lib/catalog-params";
 import { AutoHideBar } from "@/components/AutoHideBar";
 import { PlanList } from "@/components/PlanList";
 import { TermSelect } from "@/components/TermSelect";
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 30; // rows added per scroll step
-
-type SP = Record<string, string | string[] | undefined>;
-
-function list(v: string | string[] | undefined): string[] {
-  if (v === undefined) return [];
-  const raw = Array.isArray(v) ? v : [v];
-  return raw
-    .flatMap((x) => x.split(","))
-    .map((x) => x.trim())
-    .filter(Boolean);
-}
-function one(v: string | string[] | undefined): string {
-  return (Array.isArray(v) ? v[0] : v)?.toString().trim() ?? "";
-}
-function num(v: string | string[] | undefined): number | undefined {
-  const n = Number(one(v));
-  return one(v) !== "" && Number.isFinite(n) ? n : undefined;
-}
-/** Trim trailing zeros for credit totals, e.g. 12.50 -> "12.5". */
-function cr(n: number): string {
-  return String(Number(n.toFixed(2)));
-}
-
-/** Rebuild a catalog URL with one key changed — used by sort/pagination links. */
-function hrefFor(sp: SP, overrides: Record<string, string | undefined>) {
-  const q = new URLSearchParams();
-  const merged: SP = { ...sp, ...overrides };
-  for (const [k, v] of Object.entries(merged)) {
-    if (v === undefined || v === "" || (Array.isArray(v) && !v.length)) continue;
-    // `term` must stay a single value: a duplicated term param (term=A&term=B)
-    // used to serialize as "A,B" and silently matched nothing on every
-    // generated Next/Previous link.
-    const val = k === "term" ? (Array.isArray(v) ? v[0] ?? "" : v) : Array.isArray(v) ? v.join(",") : String(v);
-    if (val === "") continue;
-    q.set(k, val);
-  }
-  const s = q.toString();
-  return `/catalog${s ? `?${s}` : ""}`;
-}
+const PAGE_SIZE = 24; // first batch; more load as you scroll
 
 export default async function CatalogPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
@@ -68,7 +31,6 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
   const term = one(sp.term) || (await preferredTerm()) || (await currentTermId());
   refreshInBackground(term); // seats / perms / times: re-check the live feed after responding
-  const page = Math.max(1, num(sp.page) ?? 1);
   const q = one(sp.q);
   const schools = list(sp.school);
   const depts = list(sp.dept);
@@ -102,7 +64,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       permOnly,
       notAtSchool: notAtSchool || undefined,
       sort: sort as "code" | "title" | "credits" | "perm",
-      limit: PAGE_SIZE * page, // continuous scroll: everything up to the current step
+      limit: PAGE_SIZE,
       offset: 0,
     }),
     user ? enrolledSections(user.id, term) : Promise.resolve([] as Section[]),
@@ -155,7 +117,6 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     };
   }
 
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const activeFilters =
     (q ? 1 : 0) +
     schools.length +
@@ -502,30 +463,20 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {rows.map((s) => (
-                <SectionCard
-                  key={s.id}
-                  s={s}
-                  plannedIds={plannedIds}
-                  fit={user ? fitFor(s.id) : undefined}
-                  previewHref={user ? hrefFor(sp, { preview: s.id }) : undefined}
-                  next={hrefFor(sp, {})}
-                  reasons={
-                    userSets.length
-                      ? fulfillmentFor(s, userSets).map((f) => `${f.setName}: ${f.groupName}`)
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
-          )}
-
-          {!fill && page < pages && (
-            <AutoLoadMore
-              href={hrefFor(sp, { page: String(page + 1) })}
-              shown={rows.length}
+            <InfiniteSections
+              // New filters => new list: remount so the appended batches reset.
+              key={`${term}|${JSON.stringify(sp)}`}
+              first={
+                <SectionCards rows={rows} sp={sp} signedIn={!!user} planned={planned} userSets={userSets} />
+              }
+              firstCount={rows.length}
               total={total}
+              sp={Object.fromEntries(
+                Object.entries(sp).flatMap(([k, v]) =>
+                  v === undefined ? [] : [[k, Array.isArray(v) ? v.join(",") : v]],
+                ),
+              )}
+              term={term}
             />
           )}
         </div>
