@@ -60,6 +60,48 @@ export async function instructorReviews(id: string): Promise<ReviewRow[]> {
   return rows.map((r) => ({ ...r }));
 }
 
+export type ReviewWithProfessor = ReviewRow & { professor_id: string; professor_name: string; mine: boolean };
+
+/**
+ * Every review ever written, newest first, across all professors. Reviews are
+ * only ever removed when their author deletes their account (or deletes the
+ * review), never by a catalog sync.
+ */
+export async function allReviews(opts: {
+  userId?: string | null;
+  mineOnly?: boolean;
+  limit: number;
+  offset: number;
+}): Promise<{ rows: ReviewWithProfessor[]; total: number; professors: number }> {
+  const where = opts.mineOnly && opts.userId ? "WHERE r.user_id = ?" : "";
+  const params = opts.mineOnly && opts.userId ? [opts.userId] : [];
+  const [rows, totals] = await Promise.all([
+    all<ReviewWithProfessor>(
+      `SELECT r.id, r.instructor_id, r.section_id, r.stars, r.difficulty, r.workload,
+              r.grade, r.take_again, r.text, r.tags, r.created_at,
+              'A 5C student' AS author, s.course_code,
+              i.id AS professor_id, i.name AS professor_name,
+              CASE WHEN r.user_id = ? THEN 1 ELSE 0 END AS mine
+       FROM reviews r
+       JOIN instructors i ON i.id = r.instructor_id
+       LEFT JOIN sections s ON s.id = r.section_id
+       ${where}
+       ORDER BY r.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [opts.userId ?? "", ...params, opts.limit, opts.offset],
+    ),
+    get<{ n: number; p: number }>(
+      `SELECT COUNT(*) AS n, COUNT(DISTINCT r.instructor_id) AS p FROM reviews r ${where}`,
+      params,
+    ),
+  ]);
+  return {
+    rows: rows.map((r) => ({ ...r, mine: Boolean(Number(r.mine)) })),
+    total: Number(totals?.n ?? 0),
+    professors: Number(totals?.p ?? 0),
+  };
+}
+
 /** Tag chips, most-mentioned first. */
 export async function reviewTagsFor(instructorId: string): Promise<string[]> {
   const rows = await all<{ tags: string }>(

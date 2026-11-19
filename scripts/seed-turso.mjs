@@ -69,6 +69,8 @@ const SEED_ORDER = [
 const WIPE_ORDER = [...SEED_ORDER].reverse();
 
 const keep = process.argv.includes("--keep");
+const USER_DATA_TABLES = ["users", "sessions", "manual_courses", "enrollments", "reviews", "user_term_flags", "requirement_assignments"];
+const destroyUserData = process.argv.includes("--destroy-user-data");
 
 // ---- helpers ---------------------------------------------------------------
 function lit(v) {
@@ -124,6 +126,30 @@ try {
   const schema = fs.readFileSync(path.join(root, "lib", "schema.sql"), "utf8");
   await remote.executeMultiple(schema);
 
+  // Reviews, accounts and saved plans live only on the remote once students use
+  // the site. This script replaces every table with the local copy (and the
+  // catalog's instructor ids differ between copies), so running it against a
+  // live database would erase them — refuse unless explicitly told otherwise.
+  if (!keep && !destroyUserData) {
+    const found = [];
+    for (const t of USER_DATA_TABLES) {
+      try {
+        const n = Number((await remote.execute(`SELECT COUNT(*) AS n FROM ${t}`)).rows[0][0]);
+        if (n > 0) found.push(`${t}: ${n}`);
+      } catch {
+        /* table missing on an empty remote: nothing to lose */
+      }
+    }
+    if (found.length) {
+      console.error(
+        `\nRefusing to seed: the remote already holds student data (${found.join(", ")}).\n` +
+          "Seeding wipes it. The catalog now keeps itself current (see lib/refresh.ts),\n" +
+          "so re-seeding is not needed. If you really mean to destroy that data, re-run\n" +
+          "with --destroy-user-data.",
+      );
+      process.exit(2);
+    }
+  }
   if (!keep) await wipe();
 
   const counts = {};

@@ -102,6 +102,7 @@ export async function submitReviewAction(
   });
 
   revalidatePath("/professors", "layout");
+  revalidatePath("/reviews");
   revalidatePath("/catalog");
   revalidatePath("/section");
   return {
@@ -122,6 +123,7 @@ export async function deleteReviewAction(
   const res = await run("DELETE FROM reviews WHERE id = ? AND user_id = ?", [id, user.id]);
   if (!res.changes) return { ok: false, error: "Review not found (or not yours)." };
   revalidatePath("/professors", "layout");
+  revalidatePath("/reviews");
   revalidatePath("/catalog");
   return { ok: true, notice: "Review deleted." };
 }

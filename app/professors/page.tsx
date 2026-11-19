@@ -175,10 +175,15 @@ export default async function ProfessorsPage({ searchParams }: { searchParams: P
             score we link out rather than estimate one.
           </p>
         </div>
-        <p className="text-sm text-ink-500">
-          <strong className="text-ink-800 tabular-nums">{known.toLocaleString()}</strong> professors
-          in the catalog
-        </p>
+        <div className="text-right text-sm text-ink-500">
+          <p>
+            <strong className="text-ink-800 tabular-nums">{known.toLocaleString()}</strong> professors
+            in the catalog
+          </p>
+          <Link href="/reviews" className="link text-xs">
+            Read every student review →
+          </Link>
+        </div>
       </header>
 
       {/* ------------------------------ filter bar ------------------------------ */}
