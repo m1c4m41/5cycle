@@ -1442,7 +1442,8 @@ export default async function RequirementsPage({
             The five colleges are independent, so how many courses you can count toward two
             programs (two majors, a major and a minor, or a program and a General Education
             requirement) <strong>depends on your home college</strong> — there is no
-            consortium-wide rule. The counting boxes in your checklist follow these limits.
+            consortium-wide rule. The counting boxes in your checklist follow these limits.{" "}
+            <strong>Check with advisors.</strong>
           </p>
           <ul className="space-y-2">
             {SCHOOLS.map((sc) => {

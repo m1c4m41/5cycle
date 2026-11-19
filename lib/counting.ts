@@ -89,12 +89,14 @@ export const OVERLAP_POLICY: Record<string, OverlapPolicy> = {
       "CMC: no course may count toward two majors; only one course may count toward both a major and a GE requirement (foreign language is the exception — not tracked here); a sequence/minor may share a course with a major or a GE requirement, but not both.",
   },
   PZ: {
-    majorMajor: 2,
+    // Field groups set (and may restrict) how many courses two majors share, so
+    // no fixed number is enforced; majors and minors normally share none.
+    majorMajor: null,
     majorMinor: 0,
     minorMinor: null,
     geProgram: null,
     summary:
-      "Pitzer: normally up to 2 courses may overlap between two majors, and a minor normally shares no courses with a major — each field group can set or waive its own limit.",
+      "Pitzer: one course can count toward a major, a Breadth of Knowledge area and an Educational Objective at once — but never two boxes inside the same section (one Breadth, one Educational Objective). Individual majors set their own limits.",
   },
   PO: {
     majorMajor: null,
