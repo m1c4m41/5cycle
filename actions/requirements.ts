@@ -43,6 +43,7 @@ const KIND_LABEL: Record<ManualCourseKind, string> = {
   abroad: "study abroad",
   transfer: "transfer credit",
   custom: "create-your-own",
+  planned: "planned (no section yet)",
 };
 
 /**
@@ -107,7 +108,7 @@ export async function addManualCourseAction(fd: FormData): Promise<void> {
   const credits = formNum(fd, "credits");
   const kindRaw = formStr(fd, "kind");
   const kind: ManualCourseKind =
-    kindRaw === "abroad" || kindRaw === "transfer" ? kindRaw : "custom";
+    kindRaw === "abroad" || kindRaw === "transfer" || kindRaw === "planned" ? kindRaw : "custom";
   const termId = formStr(fd, "termId");
   const termLabelRaw = formStr(fd, "termLabel");
   const note = formStr(fd, "note");

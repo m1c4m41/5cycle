@@ -15,6 +15,7 @@ import {
 import { EnrollButton } from "@/components/EnrollButton";
 import { SchoolBadge, SeatsMeter } from "@/components/SectionCard";
 import { Stars } from "@/components/Stars";
+import { CourseHistory, type HistoryCourse } from "@/components/CourseHistory";
 import { Timetable } from "@/components/Timetable";
 import { TermSelect } from "@/components/TermSelect";
 import { GroupCheckboxes } from "@/components/GroupCheckboxes";
@@ -87,7 +88,7 @@ async function clearForm(fd: FormData) {
 
 function manualGlyph(s: Section): string {
   if (!s.manual) return "";
-  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : "✏️";
+  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : "✏️";
 }
 
 function emptySummary(termId: string): TermSummary {
@@ -119,12 +120,13 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   // Guests browse a live-but-empty plan; every user-owned state degrades to
   // its empty form so the same markup renders for both. All four user reads
   // are independent given (user, term) — one parallel fan-out.
-  const [enrollments, manualCourses, abroadMap, summary, assignments] = await Promise.all([
+  const [enrollments, manualCourses, abroadMap, summary, assignments, allEnrollments] = await Promise.all([
     user ? listEnrollments(user.id, term) : Promise.resolve([] as Enrollment[]),
     user ? manualCoursesFor(user.id) : Promise.resolve([] as ManualCourse[]),
     user ? abroadFlagsFor(user.id) : Promise.resolve(new Map<string, boolean>()),
     user ? summarizeTerm(user.id, term, user.school) : Promise.resolve(emptySummary(term)),
     user ? assignmentsFor(user.id) : Promise.resolve(null),
+    user ? listEnrollments(user.id) : Promise.resolve([] as Enrollment[]),
   ]);
   const sections = enrollments.map((e) => e.section);
   // Manually entered courses (study-abroad classes, transfer credit,
@@ -138,7 +140,38 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   const manualCredits = Number(
     manualSections.reduce((a, s) => a + s.credits_5c, 0).toFixed(2),
   );
+  const liveTerm = await currentTermId(); // the registrar's current term (cached)
   const abroad = user ? abroadMap.get(term) === true : false;
+  // Everything the student has taken / planned, across every term, for the
+  // four-year course schedule.
+  const history: HistoryCourse[] = [
+    ...allEnrollments.map((e) => ({
+      id: e.section.id,
+      code: e.section.code_string,
+      title: e.section.title,
+      credits: e.section.credits_5c,
+      termId: e.section.term_id,
+      termLabel: termLabel(e.section.term_id),
+      manual: false,
+    })),
+    ...manualCourses.map((m) => {
+      const label = /(Fall|Spring|Summer)\s+(\d{4})/i.exec(m.term_label);
+      const fromLabel = label
+        ? `${label[1].toLowerCase() === "fall" ? "FA" : label[1].toLowerCase() === "spring" ? "SP" : "SU"}${label[2]}`
+        : null;
+      const ps = manualPseudoSection(m, user!.school);
+      return {
+        id: m.id,
+        code: ps.code_string,
+        title: m.title,
+        credits: m.credits,
+        termId: m.term_id ?? fromLabel,
+        termLabel: m.term_label,
+        manual: true,
+        glyph: manualGlyph(ps),
+      };
+    }),
+  ];
   const conflicts = findConflicts(sections);
   const conflicting = new Set<string>();
   for (const c of conflicts) {
@@ -499,6 +532,15 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
 
           {/* Enter a course by hand — study abroad, transfer credit, or a
               create-your-own designation with no catalog section. */}
+          {user && (
+            <CourseHistory
+              courses={history}
+              currentTerm={liveTerm}
+              syncedTerms={synced.map((t) => t.id)}
+              next={selfHref}
+            />
+          )}
+
           {user && (
           <form action={addManualCourseAction} className="card card-pad space-y-3">
             <h3 className="text-sm font-bold text-ink-900">

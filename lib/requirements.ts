@@ -1298,6 +1298,7 @@ const MANUAL_DEPT: Record<ManualCourseKind, string> = {
   abroad: "ABROAD",
   transfer: "XFER",
   custom: "CUSTOM",
+  planned: "PLAN",
 };
 
 /** The student's manually-entered courses. */
