@@ -271,8 +271,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
       {!user && (
         <div className="card card-pad border-brand-200 bg-brand-50 text-sm text-brand-900">
           <strong>Just looking?</strong> The catalog and this grid are open to browse. When you
-          add a course you&apos;ll be sent to sign in or create an account — the course you picked
-          comes along and is added to your new plan automatically.
+          add a course you&apos;ll be asked for your campus (no account needed) or to sign in — the
+          course you picked comes along and is added to your plan automatically.
         </div>
       )}
 

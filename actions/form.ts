@@ -18,7 +18,9 @@ import { redirect } from "next/navigation";
 import {
   changePasswordAction,
   clearSamplePlanAction,
+  guestStartAction,
   loginAction,
+  upgradeGuestAction,
   seedSamplePlanAction,
   signupAction,
   updateProfileAction,
@@ -58,9 +60,28 @@ async function ensureSignedIn(): Promise<void> {
 /* ------------------------------- accounts ------------------------------- */
 
 export async function signupForm(fd: FormData): Promise<void> {
+  // "Continue without an account" is the same form with intent=guest.
+  if (fd.get("intent") === "guest") return guestStartForm(fd);
   const res = await signupAction(null, fd);
   if (res && !res.ok) redirect(`/signup?${errQuery(keep(fd), res.error ?? "Something went wrong.")}`);
   // Success path: signupAction already redirects to /planner?welcome=1.
+}
+
+/** "Continue without an account" on the signup page. */
+export async function guestStartForm(fd: FormData): Promise<void> {
+  const res = await guestStartAction(null, fd);
+  if (res && !res.ok) redirect(`/signup?${errQuery(keep(fd), res.error ?? "Something went wrong.")}`);
+}
+
+export async function upgradeGuestForm(fd: FormData): Promise<void> {
+  const res = await upgradeGuestAction(null, fd);
+  if (res?.ok) redirect(`/profile?${okQuery(res.notice ?? "Account created.")}`);
+  const q = new URLSearchParams();
+  const name = fd.get("name");
+  const email = fd.get("email");
+  if (typeof name === "string" && name.trim()) q.set("keep_name", name.trim());
+  if (typeof email === "string" && email.trim()) q.set("keep_email", email.trim());
+  redirect(`/profile?${errQuery(q, res?.error ?? "Could not create the account.")}`);
 }
 
 export async function loginForm(fd: FormData): Promise<void> {

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { currentUser } from "@/lib/session";
+import { currentUser, isGuestUser } from "@/lib/session";
+import { GuestKeepAlive } from "@/components/GuestKeepAlive";
 import { logoutAction } from "@/actions/auth";
 import { schoolShort } from "@/lib/util";
 
@@ -42,19 +43,33 @@ export async function Nav() {
           {user ? (
             <>
               <span className="hidden text-ink-500 sm:inline">
-                {user.name}
+                {isGuestUser(user) ? "No account" : user.name}
                 <span className="ml-1.5 chip border-ink-300 bg-ink-100 text-ink-600">
                   {schoolShort(user.school)}
                 </span>
               </span>
-              <Link href="/profile" className="btn-ghost">
-                Account
-              </Link>
-              <form action={logoutAction} className="inline">
-                <button type="submit" className="btn-ghost">
-                  Sign out
-                </button>
-              </form>
+              {isGuestUser(user) ? (
+                <>
+                  <GuestKeepAlive />
+                  <Link href="/profile#save-account" className="btn-primary" title="Keep your plan on any device">
+                    Save your plan
+                  </Link>
+                  <Link href="/profile" className="btn-ghost">
+                    Profile
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/profile" className="btn-ghost">
+                    Account
+                  </Link>
+                  <form action={logoutAction} className="inline">
+                    <button type="submit" className="btn-ghost">
+                      Sign out
+                    </button>
+                  </form>
+                </>
+              )}
             </>
           ) : (
             <>

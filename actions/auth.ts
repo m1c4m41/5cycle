@@ -14,8 +14,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   checkCredentials,
+  createGuest,
   createUser,
+  currentUser,
   endSession,
+  isGuestUser,
+  startGuestSession,
+  upgradeGuest,
   hashPassword,
   startSession,
   updateUserProfile,
@@ -64,6 +69,31 @@ export async function signupAction(
     };
   }
 
+  // A no-account visitor signing up keeps everything they've saved.
+  const me = await currentUser();
+  if (me && isGuestUser(me)) {
+    const up = await upgradeGuest(me.id, {
+      name: formStr(fd, "name"),
+      email: formStr(fd, "email"),
+      password: formStr(fd, "password"),
+    });
+    if (!up.ok) return { ok: false, error: up.error };
+    await updateUserProfile(me.id, {
+      school: school as SchoolCode,
+      grad_year: formNum(fd, "gradYear"),
+      major_id: formStr(fd, "majorId") || null,
+      major2_id: formStr(fd, "major2Id") || null,
+      minor_id: formStr(fd, "minorId") || null,
+    });
+    await pruneAssignments(
+      me.id,
+      [`ge-${school}`, formStr(fd, "majorId"), formStr(fd, "major2Id"), formStr(fd, "minorId")].filter(Boolean),
+    );
+    const pendingUp = await applyPendingAdd(me.id, fd);
+    revalidateAll();
+    redirect(withNotice(safeNext(formStr(fd, "next"), "/planner"), pendingUp));
+  }
+
   const res = await createUser({
     name: formStr(fd, "name"),
     email: formStr(fd, "email"),
@@ -86,6 +116,66 @@ export async function signupAction(
     else url.searchParams.set("err", pending.error ?? "");
   }
   redirect(url.pathname + url.search);
+}
+
+/* --------------------------- no-account start --------------------------- */
+
+/**
+ * Use the site without an account: pick a campus and program, and the plan is
+ * kept for this browser (a year-long cookie). It can be turned into a real
+ * account later from the profile page without losing anything.
+ */
+export async function guestStartAction(
+  _prev: ActionState,
+  fd: FormData,
+): Promise<ActionState> {
+  assertActionsEnabled();
+  const school = formStr(fd, "school").toUpperCase();
+  if (!SCHOOL_BY_CODE[school]) return { ok: false, error: "Choose your home campus to start." };
+  if (formStr(fd, "ack") !== "1")
+    return {
+      ok: false,
+      error:
+        "Tick “I understand” first: without an account your data stays in this browser, can’t sync to other devices, and can be lost if you clear your browsing history.",
+    };
+  const existing = await currentUser();
+  if (existing) redirect(safeNext(formStr(fd, "next"), "/planner"));
+
+  const id = await createGuest({
+    name: formStr(fd, "name") || undefined,
+    school,
+    gradYear: formNum(fd, "gradYear"),
+    majorId: formStr(fd, "majorId") || null,
+    major2Id: formStr(fd, "major2Id") || null,
+    minorId: formStr(fd, "minorId") || null,
+  });
+  await startGuestSession(id);
+  const pending = await applyPendingAdd(id, fd);
+  revalidateAll();
+  const url = new URL(safeNext(formStr(fd, "next"), "/planner"), "http://internal");
+  if (pending !== null) {
+    if (pending.ok) url.searchParams.set("ok", pending.notice ?? "");
+    else url.searchParams.set("err", pending.error ?? "");
+  }
+  redirect(url.pathname + url.search);
+}
+
+/** Guest → full account, in place. Form fields: name, email, password. */
+export async function upgradeGuestAction(
+  _prev: ActionState,
+  fd: FormData,
+): Promise<ActionState> {
+  assertActionsEnabled();
+  const user = await userOrRedirect();
+  if (!isGuestUser(user)) return { ok: false, error: "This is already a full account." };
+  const res = await upgradeGuest(user.id, {
+    name: formStr(fd, "name"),
+    email: formStr(fd, "email"),
+    password: formStr(fd, "password"),
+  });
+  if (!res.ok) return { ok: false, error: res.error };
+  revalidateAll();
+  return { ok: true, notice: "Account created — your plan is now saved to your email and works on any device." };
 }
 
 /* -------------------------------- login -------------------------------- */

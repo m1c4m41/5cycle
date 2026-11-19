@@ -14,9 +14,21 @@ import type { UserRow } from "./types";
 // pick the hashing helpers up from either place.
 export { hashPassword, verifyPassword };
 
-const COOKIE = "cycle_session";
+export const SESSION_COOKIE = "cycle_session";
+const COOKIE = SESSION_COOKIE;
 const DAY = 86400_000;
 const SESSION_TTL = 30 * DAY;
+/** No-account visitors stay signed in on their browser indefinitely: the server
+ *  session never really expires, and middleware.ts re-ups the cookie on every
+ *  visit (browsers cap one cookie's lifetime at ~400 days, so it must be renewed). */
+const GUEST_TTL = 100 * 365 * DAY;
+export const GUEST_FLAG_COOKIE = "cycle_guest";
+export const GUEST_COOKIE_AGE = 400 * 86400; // seconds — the browser maximum
+
+/** "Guest" profiles are real rows under a placeholder address; they upgrade in place. */
+export const GUEST_DOMAIN = "guest.local";
+export const isGuestUser = (u: { email: string } | null | undefined): boolean =>
+  !!u && u.email.endsWith(`@${GUEST_DOMAIN}`);
 
 function secret(): string {
   const s = process.env.CYCLE_SESSION_SECRET;
@@ -62,7 +74,11 @@ function parseToken(value: string): string | null {
   return token;
 }
 
-export async function startSession(userId: string): Promise<void> {
+export async function startSession(
+  userId: string,
+  ttl: number = SESSION_TTL,
+  cookieAgeSeconds: number = ttl / 1000,
+): Promise<void> {
   const { cookie, stored } = makeToken();
   // Store only the random half. The signature is derived from it, so anything
   // that can read the table still cannot mint a cookie without the HMAC secret
@@ -72,7 +88,7 @@ export async function startSession(userId: string): Promise<void> {
   await run("INSERT INTO sessions(token, user_id, expires_at) VALUES(?,?,?)", [
     stored,
     userId,
-    Date.now() + SESSION_TTL,
+    Date.now() + ttl,
   ]);
   const jar = await cookies();
   jar.set(COOKIE, cookie, {
@@ -80,12 +96,13 @@ export async function startSession(userId: string): Promise<void> {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: SESSION_TTL / 1000,
+    maxAge: cookieAgeSeconds,
   });
 }
 
 export async function endSession(): Promise<void> {
   const jar = await cookies();
+  jar.delete(GUEST_FLAG_COOKIE);
   const raw = jar.get(COOKIE)?.value;
   if (raw) {
     const token = parseToken(raw);
@@ -182,6 +199,63 @@ export async function createUser(input: SignupInput): Promise<{ ok: true; id: st
     ],
   );
   return { ok: true, id };
+}
+
+/** A profile with no email or password, held by this browser's session cookie. */
+export async function createGuest(input: Omit<SignupInput, "email" | "password" | "name"> & { name?: string }): Promise<string> {
+  const id = newId("usr-");
+  await run(
+    `INSERT INTO users(id, email, name, password_hash, school, grad_year, major_id, major2_id, minor_id, created_at)
+     VALUES(?,?,?,?,?,?,?,?,?,?)`,
+    [
+      id,
+      `${id}@${GUEST_DOMAIN}`,
+      input.name?.trim() || "Guest",
+      hashPassword(crypto.randomBytes(24).toString("base64url")), // never usable to sign in
+      input.school,
+      input.gradYear ?? null,
+      input.majorId || null,
+      input.major2Id || null,
+      input.minorId || null,
+      nowIso(),
+    ],
+  );
+  return id;
+}
+
+export async function startGuestSession(userId: string): Promise<void> {
+  await startSession(userId, GUEST_TTL, GUEST_COOKIE_AGE);
+  // A marker the middleware can read (it can't query the database) to know
+  // this browser holds a no-account profile whose cookie should be renewed.
+  const jar = await cookies();
+  jar.set(GUEST_FLAG_COOKIE, "1", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: GUEST_COOKIE_AGE,
+  });
+}
+
+/** Turn a guest profile into a real account, keeping everything saved so far. */
+export async function upgradeGuest(
+  userId: string,
+  input: { name: string; email: string; password: string },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const email = input.email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: "Enter a valid email address." };
+  if (email.endsWith(`@${GUEST_DOMAIN}`)) return { ok: false, error: "Enter a valid email address." };
+  if (input.password.length < 8) return { ok: false, error: "Password must be at least 8 characters." };
+  if (!input.name.trim()) return { ok: false, error: "Name is required." };
+  if (await get("SELECT id FROM users WHERE email = ? AND id <> ?", [email, userId]))
+    return { ok: false, error: "An account with that email already exists. Sign in instead." };
+  await run("UPDATE users SET email = ?, name = ?, password_hash = ? WHERE id = ?", [
+    email,
+    input.name.trim(),
+    hashPassword(input.password),
+    userId,
+  ]);
+  return { ok: true };
 }
 
 export async function checkCredentials(

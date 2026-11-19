@@ -56,7 +56,7 @@ export async function addToPlanAction(
     q.set("next", safeNext(formStr(fd, "next"), "/planner"));
     q.set("add", sectionId);
     if (force) q.set("force", "1");
-    redirect(`/login?${q.toString()}`);
+    redirect(`/signup?${q.toString()}`);
   }
 
   const res = await addToSchedule(user.id, sectionId, { force });

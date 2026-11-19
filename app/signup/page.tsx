@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSection } from "@/lib/catalog";
 import { SCHOOLS, SCHOOL_BY_CODE } from "@/lib/constants";
 import { listSets } from "@/lib/requirements";
-import { currentUser } from "@/lib/session";
+import { currentUser, isGuestUser } from "@/lib/session";
 import { safeNext } from "@/lib/server";
 import { schoolShort, termLabel } from "@/lib/util";
 import { signupForm } from "@/actions/form";
@@ -37,7 +37,9 @@ function byCampus(sets: RequirementSet[], campus: string) {
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
-  if (await currentUser()) redirect("/planner");
+  const me = await currentUser();
+  if (me && !isGuestUser(me)) redirect("/planner");
+  const guest = !!me; // a no-account visitor creating their account keeps their plan
 
   const err = one(sp.err);
   const v = (k: string) => one(sp[`keep_${k}`]);
@@ -62,7 +64,9 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   return (
     <div className="mx-auto max-w-lg">
       <header className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight">Plan your 5C year</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {guest ? "Save your plan with an account" : "Plan your 5C year"}
+        </h1>
         <p className="mt-2 text-sm text-ink-600">
           Tell 5Cycle your home campus and program and it builds a live checklist for your GE, major
           and minor. Then drag real sections onto a weekly timetable that already
@@ -255,10 +259,42 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
           />
         </div>
 
+        {!guest && (
+          <fieldset className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">
+            <legend className="px-1 text-[11px] font-bold uppercase tracking-wide text-amber-800">
+              Before you continue without an account
+            </legend>
+            <ul className="list-disc space-y-0.5 pl-5">
+              <li>Your data is stored locally, in this browser.</li>
+              <li>It cannot synchronize to other devices or browsers.</li>
+              <li>You may lose your data if you clear your browsing history or cookies.</li>
+            </ul>
+            <p className="mt-1.5 text-amber-900">
+              Posting reviews needs an account. You can create one later from Profile and keep
+              everything you&rsquo;ve saved.
+            </p>
+            <label className="mt-2 flex cursor-pointer items-start gap-2 font-medium">
+              <input type="checkbox" name="ack" value="1" className="mt-0.5 h-3.5 w-3.5 accent-brand-600" />
+              <span>I understand — continue without an account</span>
+            </label>
+          </fieldset>
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <button type="submit" className="btn-primary">
             Create account
           </button>
+          {!guest && (
+            <button
+              type="submit"
+              name="intent"
+              value="guest"
+              formNoValidate
+              className="btn-secondary"
+              title="Only your campus is needed — no name, email or password"
+            >
+              Continue without an account
+            </button>
+          )}
           <Link href="/login" className="link text-sm">
             Already have an account?
           </Link>

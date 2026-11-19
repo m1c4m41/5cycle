@@ -4,12 +4,13 @@ import { SCHOOLS, SCHOOL_BY_CODE } from "@/lib/constants";
 import { catalogStats, currentTermId } from "@/lib/ingest";
 import { getSet, listSets, progressForUser } from "@/lib/requirements";
 import { enrolledSections } from "@/lib/schedule";
-import { currentUser } from "@/lib/session";
+import { currentUser, isGuestUser } from "@/lib/session";
 import type { RequirementSet } from "@/lib/types";
 import { schoolName, schoolShort, termLabel } from "@/lib/util";
 import {
   changePasswordForm,
   clearSamplePlanForm,
+  upgradeGuestForm,
   seedSamplePlanForm,
   updateProfileForm,
   wipeAccountForm,
@@ -119,19 +120,49 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </p>
       )}
 
+      {isGuestUser(user) && (
+        <section id="save-account" className="card card-pad flex flex-col gap-3 border-brand-300 bg-brand-50/40">
+          <h2 className="text-sm font-bold text-ink-900">Save your plan with an account</h2>
+          <p className="text-xs leading-relaxed text-ink-600">
+            You&rsquo;re using 5Cycle without an account, so your plan lives in this browser only —
+            clearing cookies or switching devices would lose it. Add an email and password to keep
+            everything you&rsquo;ve saved and open it anywhere.
+          </p>
+          <form action={upgradeGuestForm} method="post" className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label className="label" htmlFor="up-name">Your name</label>
+              <input id="up-name" name="name" defaultValue={v("name", "")} className="input" autoComplete="name" required />
+            </div>
+            <div>
+              <label className="label" htmlFor="up-email">Email</label>
+              <input id="up-email" name="email" type="email" defaultValue={v("email", "")} className="input" autoComplete="email" required />
+            </div>
+            <div>
+              <label className="label" htmlFor="up-pw">Password</label>
+              <input id="up-pw" name="password" type="password" minLength={8} className="input" autoComplete="new-password" required />
+            </div>
+            <div className="sm:col-span-3">
+              <button type="submit" className="btn-primary">Create account &amp; keep my plan</button>
+            </div>
+          </form>
+        </section>
+      )}
+
       <section className="card card-pad flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-bold text-ink-900">Sign-in</h2>
+          <h2 className="text-sm font-bold text-ink-900">{isGuestUser(user) ? "Your profile" : "Sign-in"}</h2>
           <Link href="/requirements" className="link text-xs">
             View full checklist →
           </Link>
         </div>
-        <div>
-          <label className="label" htmlFor="email">
-            Email (contact your registrar to change it)
-          </label>
-          <input id="email" value={user.email} className="input bg-ink-100 text-ink-600" readOnly />
-        </div>
+        {!isGuestUser(user) && (
+          <div>
+            <label className="label" htmlFor="email">
+              Email (contact your registrar to change it)
+            </label>
+            <input id="email" value={user.email} className="input bg-ink-100 text-ink-600" readOnly />
+          </div>
+        )}
         {progress.length > 0 && (
           <ul className="grid gap-1 text-xs text-ink-600">
             {progress.map((p) => (
@@ -367,6 +398,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       </section>
 
       {/* ------------------------------ password ------------------------------ */}
+      {!isGuestUser(user) && (
       <section className="card card-pad flex flex-col gap-4">
         <h2 className="text-sm font-bold text-ink-900">Change password</h2>
         <form action={changePasswordForm} method="post" className="flex flex-col gap-4">
@@ -403,6 +435,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           </button>
         </form>
       </section>
+      )}
 
       {/* ----------------------------- danger zone ---------------------------- */}
       <section className="card card-pad flex flex-col gap-3 border-red-200">

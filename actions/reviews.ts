@@ -5,6 +5,7 @@
  * Our own star ratings live in SQLite. The RateMyProfessors score is a separate
  * mirrored column (see lib/rmp.ts); this file never writes to it.
  */
+import { isGuestUser } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { all, get, newId, nowIso, run, tx } from "@/lib/db";
 import { normalizeName } from "@/lib/util";
@@ -30,6 +31,8 @@ export async function submitReviewAction(
 ): Promise<ActionState> {
   assertActionsEnabled();
   const user = await userOrRedirect();
+  if (isGuestUser(user))
+    return { ok: false, error: "Create an account (Account → Save your plan) to post reviews." };
 
   const instructorId = formStr(fd, "instructorId");
   const stars = formNum(fd, "stars") ?? 0;
