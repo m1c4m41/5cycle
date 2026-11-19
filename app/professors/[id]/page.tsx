@@ -164,6 +164,7 @@ export default async function ProfessorPage({ params }: Params) {
                     difficulty={num(summary.rmp_difficulty)}
                     numRatings={num(summary.rmp_num_ratings)}
                     url={summary.rmp_url}
+                    showOtherColleges
                   />
                   {num(summary.rmp_quality) !== null && summary.rmp_synced_at && (
                     <p

@@ -13,25 +13,48 @@ import path from "node:path";
 import { get, run } from "./db";
 import { normalizeName } from "./util";
 
-/**
- * Best-effort search deep link; always safe to show, even with no data.
- *
- * Searches by NAME ONLY, across every school on RateMyProfessors. A professor's
- * RMP page can sit under any of the five colleges (or more than one) regardless of
- * which campus the registrar lists, so narrowing by home campus — or adding a
- * campus code to the query text — hid pages that exist. The results list shows
- * which school each match belongs to. (The `school` argument is kept for callers
- * but intentionally unused.)
- */
-export function rmpSearchUrl(name: string, _school?: string): string {
-  // "Julie A. Medero" → "Julie Medero": single-letter middle initials and
-  // suffixes rarely appear on RMP and make the search miss.
+/** RateMyProfessors school ids for the five colleges (from each school's RMP page). */
+export const RMP_SCHOOL_ID: Record<string, number> = {
+  CM: 234, // Claremont McKenna College
+  HM: 400, // Harvey Mudd College
+  PZ: 768, // Pitzer College
+  PO: 774, // Pomona College
+  SC: 889, // Scripps College
+};
+
+/** "Julie A. Medero" → "Julie Medero": single-letter middle initials and suffixes
+ *  rarely appear on RMP and make the search miss. */
+function cleanName(name: string): string {
   const cleaned = name
     .replace(/\b[A-Za-z]\.?(?=\s)/g, " ")
     .replace(/,?\s+(Jr|Sr|II|III|IV)\.?$/i, "")
     .replace(/\s+/g, " ")
     .trim();
-  return `https://www.ratemyprofessors.com/search/professors?query=${encodeURIComponent(cleaned || name)}`;
+  return cleaned || name;
+}
+
+/**
+ * RateMyProfessors search deep link; always safe to show, even with no data.
+ *
+ * With a campus code it opens the search already scoped to that college (the
+ * school is preselected on RMP, the professor's name is filled in and can be
+ * edited). A professor's RMP page can sit under any of the 5Cs regardless of the
+ * campus the registrar lists, so the professor page also offers the other four
+ * (see rmpCollegeLinks). With no campus it searches every school by name.
+ */
+export function rmpSearchUrl(name: string, school?: string): string {
+  const q = encodeURIComponent(cleanName(name));
+  const id = school ? RMP_SCHOOL_ID[school] : undefined;
+  return id
+    ? `https://www.ratemyprofessors.com/search/professors/${id}?q=${q}`
+    : `https://www.ratemyprofessors.com/search/professors?query=${q}`;
+}
+
+/** The same name search at each of the 5Cs, home campus first. */
+export function rmpCollegeLinks(name: string, home?: string | null): { code: string; url: string }[] {
+  return Object.keys(RMP_SCHOOL_ID)
+    .sort((a, b) => (a === home ? -1 : b === home ? 1 : 0))
+    .map((code) => ({ code, url: rmpSearchUrl(name, code) }));
 }
 
 export type ManualRmpRow = {

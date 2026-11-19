@@ -15,7 +15,8 @@
  * Note: server component. Do not import it into a "use client" module —
  * lib/rmp.ts pulls in node:fs / node:sqlite.
  */
-import { rmpSearchUrl } from "@/lib/rmp";
+import { rmpCollegeLinks, rmpSearchUrl } from "@/lib/rmp";
+import { schoolShort } from "@/lib/util";
 import { cn } from "@/lib/util";
 
 export type RmpScoreProps = {
@@ -32,6 +33,8 @@ export type RmpScoreProps = {
   /** Campus code to narrow the search link. */
   schoolCode?: string | null;
   className?: string;
+  /** Also list the search at each of the other 5Cs (professor profile page). */
+  showOtherColleges?: boolean;
 };
 
 /** ↗ — marks the number as belonging to another site. */
@@ -64,6 +67,7 @@ export function RmpScore({
   name,
   schoolCode,
   className,
+  showOtherColleges,
 }: RmpScoreProps) {
   const hasScore = typeof quality === "number" && Number.isFinite(quality);
 
@@ -94,11 +98,31 @@ export function RmpScore({
           target="_blank"
           rel="noopener noreferrer nofollow"
           className="inline-flex items-center gap-1 text-xs font-medium text-ink-500 underline decoration-ink-300 underline-offset-2 hover:text-ink-700"
-          title={`Search RateMyProfessors for ${name} across all schools — their page may be listed under any of the 5Cs (opens in a new tab)`}
+          title={`Search RateMyProfessors for ${name}${schoolCode ? ` at ${schoolShort(schoolCode)}` : " across all schools"} (opens in a new tab)`}
         >
           <OutwardIcon />
-          Search RateMyProfessors
+          Search RateMyProfessors{schoolCode ? ` (${schoolShort(schoolCode)})` : ""}
         </a>
+        {showOtherColleges && (
+          <span className="basis-full text-[11px] text-ink-400">
+            Listed under another 5C?{" "}
+            {rmpCollegeLinks(name, schoolCode)
+              .filter((l) => l.code !== schoolCode)
+              .map((l, i) => (
+                <span key={l.code}>
+                  {i > 0 && " · "}
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="underline decoration-ink-300 underline-offset-2 hover:text-ink-700"
+                  >
+                    {schoolShort(l.code)}
+                  </a>
+                </span>
+              ))}
+          </span>
+        )}
       </span>
     );
   }
