@@ -74,6 +74,19 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         </p>
       </header>
 
+      {!guest && (
+        <Link
+          href={`/guest${add || next !== "/planner" ? `?${new URLSearchParams({ ...(next !== "/planner" ? { next } : {}), ...(add ? { add } : {}), ...(add && force ? { force: "1" } : {}) }).toString()}` : ""}`}
+          className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-ink-200 bg-white px-4 py-3 text-sm hover:bg-ink-50"
+        >
+          <span>
+            <span className="font-semibold text-ink-900">Continue as guest</span>
+            <span className="block text-xs text-ink-500">No email or password — just pick your campus.</span>
+          </span>
+          <span aria-hidden className="text-lg text-ink-400">→</span>
+        </Link>
+      )}
+
       {err && (
         <p className="mb-4 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
           {err}
@@ -259,42 +272,10 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
           />
         </div>
 
-        {!guest && (
-          <fieldset className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">
-            <legend className="px-1 text-[11px] font-bold uppercase tracking-wide text-amber-800">
-              Before you continue without an account
-            </legend>
-            <ul className="list-disc space-y-0.5 pl-5">
-              <li>Your data is stored locally, in this browser.</li>
-              <li>It cannot synchronize to other devices or browsers.</li>
-              <li>You may lose your data if you clear your browsing history or cookies.</li>
-            </ul>
-            <p className="mt-1.5 text-amber-900">
-              Posting reviews needs an account. You can create one later from Profile and keep
-              everything you&rsquo;ve saved.
-            </p>
-            <label className="mt-2 flex cursor-pointer items-start gap-2 font-medium">
-              <input type="checkbox" name="ack" value="1" className="mt-0.5 h-3.5 w-3.5 accent-brand-600" />
-              <span>I understand — continue without an account</span>
-            </label>
-          </fieldset>
-        )}
         <div className="flex flex-wrap items-center gap-3">
           <button type="submit" className="btn-primary">
             Create account
           </button>
-          {!guest && (
-            <button
-              type="submit"
-              name="intent"
-              value="guest"
-              formNoValidate
-              className="btn-secondary"
-              title="Only your campus is needed — no name, email or password"
-            >
-              Continue without an account
-            </button>
-          )}
           <Link href="/login" className="link text-sm">
             Already have an account?
           </Link>
