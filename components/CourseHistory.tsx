@@ -67,7 +67,7 @@ function AddHere({ id, synced, next, future, abroad, school, cls }: { school: st
             aria-label={`Credits (${schoolShort(school)})`}
             title={`Credits on the ${schoolShort(school)} scale`}
           />
-          <select name="kind" defaultValue={future ? "planned" : "custom"} className="input min-w-0 flex-1 !px-1 !py-1 text-xs" aria-label="Type">
+          <select name="kind" defaultValue={future ? "planned" : "credit"} className="input min-w-0 flex-1 !px-1 !py-1 text-xs" aria-label="Type">
             <option value="planned">📌 Want to take (no section yet)</option>
             <option value="custom">Course taken</option>
             <option value="transfer">Transfer / AP</option>

@@ -402,7 +402,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
               <label className="label" htmlFor="manual-kind">
                 Type
               </label>
-              <select id="manual-kind" name="kind" defaultValue="custom" className="input w-auto">
+              <select id="manual-kind" name="kind" defaultValue="credit" className="input w-auto">
                 <option value="credit">🎓 Course Credit</option>
                 <option value="transfer">📦 Transfer credit</option>
                 <option value="custom">✏️ Create-your-own</option>
