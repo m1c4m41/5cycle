@@ -67,6 +67,24 @@ export function RmpScore({
 }: RmpScoreProps) {
   const hasScore = typeof quality === "number" && Number.isFinite(quality);
 
+  /* ----------------- a profile link but no score loaded: link straight to it ----------------- */
+  if (!hasScore && url) {
+    return (
+      <span className={cn("inline-flex flex-wrap items-center gap-x-2 gap-y-0.5", className)}>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+          title={`Open ${name}'s RateMyProfessors profile in a new tab`}
+        >
+          <OutwardIcon />
+          View on RateMyProfessors
+        </a>
+      </span>
+    );
+  }
+
   /* ------------------------- no mirrored data: say so ------------------------ */
   if (!hasScore) {
     return (
