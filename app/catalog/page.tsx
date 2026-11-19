@@ -6,7 +6,7 @@ import { currentUser } from "@/lib/session";
 import { enrolledSections, findConflicts } from "@/lib/schedule";
 import { fulfillmentFor, setsForUser } from "@/lib/requirements";
 import { SCHOOLS } from "@/lib/constants";
-import { termLabel } from "@/lib/util";
+import { formatCredits, formatMeeting, termLabel } from "@/lib/util";
 import { findGapFillers, type GapResult } from "@/lib/gapfill";
 import { refreshInBackground } from "@/lib/refresh";
 import { preferredTerm } from "@/lib/term-pref";
@@ -14,6 +14,7 @@ import { TermRemember } from "@/components/TermRemember";
 import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
+import { PlanList } from "@/components/PlanList";
 import { TermSelect } from "@/components/TermSelect";
 
 export const dynamic = "force-dynamic";
@@ -561,6 +562,16 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                     <span className="font-semibold">View on grid</span> on any class to see where
                     it lands — a conflict is flagged before you save it.
                   </p>
+                  <PlanList
+                    items={planned.map((s) => ({
+                      id: s.id,
+                      code: s.code_string,
+                      title: s.title,
+                      credits: formatCredits(s.credits, s.school),
+                      meetings: s.meetings.map((m) => formatMeeting(m)),
+                      instructors: s.instructors.map((i) => i.name).join(", "),
+                    }))}
+                  />
                 </>
               ) : (
                 <p className="text-sm leading-relaxed text-ink-500">
