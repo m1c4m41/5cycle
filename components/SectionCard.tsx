@@ -171,7 +171,7 @@ export function SectionCard({
                   s.description ? "Description" : null,
                   s.areas.length > 0 ? `${s.areas.length} area${s.areas.length === 1 ? "" : "s"}` : null,
                   reasons && reasons.length > 0
-                    ? `${reasons.length} requirement${reasons.length === 1 ? "" : "s"} filled`
+                    ? `Fills ${reasons.length} requirement${reasons.length === 1 ? "" : "s"}`
                     : null,
                 ]
                   .filter(Boolean)
