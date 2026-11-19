@@ -483,8 +483,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 key={e.id}
                 className={`card card-pad space-y-2 ${clash ? "border-amber-400" : ""}`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Link
                         href={`/section/${encodeURIComponent(s.id)}`}
