@@ -344,6 +344,98 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
         />
       )}
 
+      {user && (
+        <form action={addManualCourseAction} className="card card-pad space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="text-lg font-bold">Enter Course Manually</h2>
+            <p className="max-w-3xl text-xs leading-relaxed text-ink-500">
+              For classes that aren&apos;t in the catalog: a summer class, transfer credit, or a
+              create-your-own designation. Studying abroad? Tick “studying abroad” at the top of
+              the planner and pick the term — it gets a 🌍 label in your course schedule — then
+              type that term&apos;s classes here.
+            </p>
+          </div>
+          <input type="hidden" name="next" value={selfHref} />
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-52 flex-1">
+              <label className="label" htmlFor="manual-title">
+                Course title
+              </label>
+              <input
+                id="manual-title"
+                type="text"
+                name="title"
+                required
+                placeholder="e.g. Renaissance Art in Florence"
+                className="input w-full"
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="manual-term">
+                Term
+              </label>
+              <select id="manual-term" name="termId" defaultValue={term} className="input w-auto">
+                {manualTermChoices.map((t) => (
+                  <option key={t} value={t}>
+                    {termLabel(t)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="manual-credits">
+                Credits ({schoolShort(user.school)})
+              </label>
+              <input
+                id="manual-credits"
+                type="number"
+                name="credits"
+                required
+                min="0.25"
+                max="12"
+                step="0.25"
+                defaultValue={user.school === "HM" ? "3" : "1"}
+                className="input w-24"
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="manual-kind">
+                Type
+              </label>
+              <select id="manual-kind" name="kind" defaultValue="custom" className="input w-auto">
+                <option value="summer">☀️ Summer{ay ? ` (${ay.start + 1})` : ""}</option>
+                <option value="transfer">📦 Transfer credit</option>
+                <option value="custom">✏️ Create-your-own</option>
+              </select>
+            </div>
+            <input
+              type="text"
+              name="note"
+              placeholder="advisor note (optional)"
+              className="input w-52 max-w-full text-xs"
+            />
+            <button type="submit" className="btn-primary">
+              Add to my plan
+            </button>
+          </div>
+          <div>
+            <span className="label">
+              Count it toward (optional — check every box it fills, the engine decides the rest)
+            </span>
+            <div className="mt-1">
+              <GroupCheckboxes
+                wide
+                sets={blankCountingSets(sets)}
+                checked={[]}
+                policy={overlapPolicyFor(user?.school)}
+                pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", sections)}
+                strictGe={false}
+              />
+            </div>
+          </div>
+        </form>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Left: the list */}
         <div className="space-y-3 lg:col-span-7">
@@ -555,108 +647,6 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
             </form>
           )}
 
-          {/* Enter a course by hand — study abroad, transfer credit, or a
-              create-your-own designation with no catalog section. */}
-
-          {user && (
-          <form action={addManualCourseAction} className="card card-pad space-y-3">
-            <h3 className="text-sm font-bold text-ink-900">
-              Enter Course Manually
-            </h3>
-            <p className="text-xs leading-relaxed text-ink-500">
-              For classes that aren&apos;t in the catalog: a summer class, transfer credit, or a
-              create-your-own designation. Studying abroad? Tick “studying abroad” at the top of
-              the planner and pick the term — it gets a 🌍 label in your course schedule — then
-              type that term&apos;s classes here.
-            </p>
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="min-w-52 flex-1">
-                <label className="label" htmlFor="manual-title">
-                  Course title
-                </label>
-                <input
-                  id="manual-title"
-                  type="text"
-                  name="title"
-                  required
-                  placeholder="e.g. Renaissance Art in Florence"
-                  className="input w-full"
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="manual-credits">
-                  Credits ({schoolShort(user.school)})
-                </label>
-                <input
-                  id="manual-credits"
-                  type="number"
-                  name="credits"
-                  required
-                  min="0.25"
-                  max="12"
-                  step="0.25"
-                  defaultValue={user.school === "HM" ? "3" : "1"}
-                  className="input w-24"
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="manual-kind">
-                  Type
-                </label>
-                <select
-                  id="manual-kind"
-                  name="kind"
-                  defaultValue="custom"
-                  className="input w-auto"
-                >
-                  <option value="summer">
-                    ☀️ Summer{ay ? ` (${ay.start + 1})` : ""}
-                  </option>
-                  <option value="transfer">📦 Transfer credit</option>
-                  <option value="custom">✏️ Create-your-own</option>
-                </select>
-              </div>
-            </div>
-            <div className="max-w-xs">
-              <label className="label" htmlFor="manual-term">
-                Term
-              </label>
-              <select id="manual-term" name="termId" defaultValue={term} className="input w-full">
-                {manualTermChoices.map((t) => (
-                  <option key={t} value={t}>
-                    {termLabel(t)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <input type="hidden" name="next" value={selfHref} />
-            <div>
-              <span className="label">
-                Count it toward (optional — check every box it fills, the engine decides the rest)
-              </span>
-              <div className="mt-1">
-                <GroupCheckboxes
-                  sets={blankCountingSets(sets)}
-                  checked={[]}
-                  policy={overlapPolicyFor(user?.school)}
-                  pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", sections)}
-                  strictGe={false}
-                />
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="text"
-                name="note"
-                placeholder="advisor note (optional)"
-                className="input w-56 max-w-full text-xs"
-              />
-              <button type="submit" className="btn-primary">
-                Add to my plan
-              </button>
-            </div>
-          </form>
-          )}
         </div>
 
         {/* Right: grid + checklist */}

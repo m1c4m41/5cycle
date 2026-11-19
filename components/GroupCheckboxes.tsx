@@ -24,6 +24,7 @@ export function GroupCheckboxes({
   pairUse = {},
   strictGe = true,
   half = false,
+  wide = false,
 }: {
   sets: CountingSet[];
   /** group ids already checked (the saved assignments). */
@@ -37,6 +38,8 @@ export function GroupCheckboxes({
   strictGe?: boolean;
   /** 0.5-credit course: GE and Breadth boxes stay closed. */
   half?: boolean;
+  /** Lay the programs out side by side (major beside minor) instead of two columns. */
+  wide?: boolean;
 }) {
   const [checked, setChecked] = useState<Set<string>>(() => new Set(initiallyChecked));
   const [warn, setWarn] = useState(false);
@@ -77,7 +80,12 @@ export function GroupCheckboxes({
 
   return (
     <div ref={rootRef} className="space-y-3">
-      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+      <div
+        className={cn(
+          "grid gap-x-6 gap-y-3",
+          wide ? "sm:grid-cols-[repeat(auto-fit,minmax(15rem,1fr))]" : "sm:grid-cols-2",
+        )}
+      >
         {sets.map((set) => (
           <fieldset key={set.id} className="min-w-0">
             <legend className="label">
