@@ -10,7 +10,6 @@
  */
 import Link from "next/link";
 import {
-  addManualCourseAction,
   removeManualCourseAction,
   saveCourseCounting,
 } from "@/actions/requirements";
@@ -23,7 +22,6 @@ import { preferredTerm } from "@/lib/term-pref";
 import { TermRemember } from "@/components/TermRemember";
 import {
   assignmentsFor,
-  blankCountingSets,
   countingSetsFor,
   fulfillmentFor,
   groupLabel,
@@ -1349,97 +1347,10 @@ export default async function RequirementsPage({
             </ul>
           ) : (
             <p className="mt-3 text-sm text-ink-600">
-              Nothing planned or entered yet — add a course by hand below (study abroad, transfer
-              credit, create-your-own), or browse the catalog.
+              Nothing planned or entered yet — add classes from the catalog, or type them into the
+              course schedule on the planner.
             </p>
           )}
-
-          {/* Add a course by hand */}
-          <form action={addManualCourseAction} className="mt-4 border-t border-ink-100 pt-4">
-            <h3 className="text-sm font-bold text-ink-900">Add a course by hand</h3>
-            <p className="mt-0.5 text-xs leading-relaxed text-ink-500">
-              Study-abroad classes, transfer credit, or a “create your own” / advisor-designated
-              course with no catalog section. Pick one of your synced terms.
-            </p>
-            <div className="mt-3 flex flex-wrap items-end gap-2">
-              <div className="min-w-56 flex-1">
-                <label className="label" htmlFor="manual-title">
-                  Course title
-                </label>
-                <input
-                  id="manual-title"
-                  type="text"
-                  name="title"
-                  required
-                  placeholder="e.g. Art History in Florence"
-                  className="input w-full"
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="manual-credits">
-                  Credits (5C scale)
-                </label>
-                <input
-                  id="manual-credits"
-                  type="number"
-                  name="credits"
-                  required
-                  min="0.25"
-                  max="12"
-                  step="0.25"
-                  defaultValue="3"
-                  className="input w-28"
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="manual-kind">
-                  Type
-                </label>
-                <select id="manual-kind" name="kind" defaultValue="abroad" className="input w-auto">
-                  <option value="abroad">🌍 Study abroad</option>
-                  <option value="transfer">📦 Transfer credit</option>
-                  <option value="custom">✏️ Create-your-own / designated</option>
-                </select>
-              </div>
-              <div>
-                <label className="label" htmlFor="manual-term">
-                  Term
-                </label>
-                <select id="manual-term" name="termId" defaultValue={cur} className="input w-auto">
-                  {termChoices.map((t) => (
-                    <option key={t} value={t}>
-                      {termLabel(t)}
-                      {t === cur ? " (current)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <input type="hidden" name="next" value={nextHref} />
-            </div>
-            <div className="mt-3">
-              <span className="label">Count it toward (optional — the engine can decide instead)</span>
-              <div className="mt-1">
-                <GroupCheckboxes
-                  sets={blankCountingSets(sets)}
-                  checked={[]}
-                  policy={overlapPolicyFor(user.school)}
-                  pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", plannedAll)}
-                  strictGe={false}
-                />
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <input
-                type="text"
-                name="note"
-                placeholder="advisor note (optional)"
-                className="input w-56 max-w-full text-xs"
-              />
-              <button type="submit" className="btn-primary">
-                Add course to my plan
-              </button>
-            </div>
-          </form>
         </section>
       )}
 
