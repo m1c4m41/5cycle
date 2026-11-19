@@ -36,9 +36,22 @@ export function AutoHideBar({ children }: { children: ReactNode }) {
     };
   }, [docked]);
 
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancel = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
+  const show = () => {
+    cancel();
+    setOpen(true);
+  };
+  // Short grace period so a slight cursor drift doesn't snap it shut.
   const close = useCallback(() => {
-    if (panel.current?.contains(document.activeElement) && document.activeElement !== document.body) return;
-    setOpen(false);
+    cancel();
+    timer.current = setTimeout(() => {
+      if (panel.current?.contains(document.activeElement) && document.activeElement !== document.body) return;
+      setOpen(false);
+    }, 250);
   }, []);
 
   return (
@@ -46,8 +59,8 @@ export function AutoHideBar({ children }: { children: ReactNode }) {
       {docked && (
         <button
           type="button"
-          onMouseEnter={() => setOpen(true)}
-          onClick={() => setOpen((o) => !o)}
+          onMouseEnter={show}
+          onClick={() => (open ? setOpen(false) : show())}
           className="fixed left-1/2 z-20 -translate-x-1/2 rounded-b-lg border border-t-0 border-ink-200 bg-white px-3 py-0.5 text-[11px] font-semibold text-ink-500 shadow-sm hover:text-ink-800"
           style={{ top }}
           aria-expanded={open}
@@ -55,19 +68,29 @@ export function AutoHideBar({ children }: { children: ReactNode }) {
           ▾ Search &amp; filters
         </button>
       )}
-      {docked && <div className="fixed inset-x-0 z-10 h-2" style={{ top }} onMouseEnter={() => setOpen(true)} />}
+      {docked && <div className="fixed inset-x-0 z-10 h-2" style={{ top }} onMouseEnter={show} />}
       <div
         ref={panel}
+        onMouseEnter={docked ? cancel : undefined}
         onMouseLeave={docked ? close : undefined}
-        onBlur={docked ? () => setTimeout(close, 0) : undefined}
+        onBlur={docked ? close : undefined}
         className={
           docked
-            ? "fixed inset-x-0 z-20 max-h-[calc(100vh-4rem)] overflow-y-auto bg-white/95 shadow-lg backdrop-blur transition-transform duration-200"
+            ? "fixed inset-x-0 z-20 max-h-[calc(100vh-4rem)] overflow-y-auto bg-white/95 shadow-lg backdrop-blur will-change-transform"
             : undefined
         }
         style={
           docked
-            ? { top, transform: open ? "translateY(0)" : "translateY(-110%)", visibility: open ? "visible" : "hidden", transitionProperty: "transform, visibility" }
+            ? {
+                top,
+                transform: open ? "translateY(0)" : "translateY(-100%)",
+                opacity: open ? 1 : 0,
+                visibility: open ? "visible" : "hidden",
+                pointerEvents: open ? "auto" : "none",
+                transition: open
+                  ? "transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 200ms ease-out"
+                  : "transform 380ms cubic-bezier(0.4,0,0.2,1), opacity 380ms ease-in, visibility 0s linear 380ms",
+              }
             : undefined
         }
       >
