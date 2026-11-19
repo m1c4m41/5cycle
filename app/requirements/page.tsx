@@ -31,6 +31,7 @@ import {
   labLxKeys,
   listSets,
   manualCoursesFor,
+  abroadTermsFor,
   manualPseudoSection,
   progressForSet,
   progressForUser,
@@ -209,7 +210,7 @@ function stateGlyph(state: "full" | "half" | "empty") {
 /** Glyph for manually entered courses (abroad / transfer / create-your-own). */
 function manualGlyph(s: Section): string {
   if (!s.manual) return "";
-  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : "✏️";
+  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : s.manual.kind === "summer" ? "☀️" : "✏️";
 }
 
 function courseChip(s: Section, extra: boolean) {
@@ -789,7 +790,7 @@ export default async function RequirementsPage({
 
   // Every DB read this page needs is independent once (user, school) are
   // known — one parallel fan-out (was ~10 serial Turso round-trips).
-  const [cur, pref, loaded, manuals, plannedEnrolled, sets, assignments, lxKeys, termIds] = await Promise.all([
+  const [cur, pref, loaded, manuals, plannedEnrolled, sets, assignments, lxKeys, termIds, abroadTerms] = await Promise.all([
     currentTermId(),
     one(sp.term) ? Promise.resolve("") : preferredTerm(),
     requirementsLoaded(),
@@ -799,6 +800,7 @@ export default async function RequirementsPage({
     user ? assignmentsFor(user.id) : Promise.resolve(null),
     labLxKeys(),
     user ? plannedTerms(user.id) : Promise.resolve([] as string[]),
+    user ? abroadTermsFor(user.id) : Promise.resolve([] as string[]),
   ]);
 
   const term = one(sp.term) || pref || cur;
@@ -875,7 +877,7 @@ export default async function RequirementsPage({
   const halfCredits = Number(
     planned.filter((s) => s.credits_5c < 1).reduce((a, s) => a + s.credits_5c, 0).toFixed(2),
   );
-  const planTerms = Array.from(new Set(plannedAll.map(termOf))).sort(
+  const planTerms = Array.from(new Set([...plannedAll.map(termOf), ...abroadTerms])).sort(
     (a, b) => termKey(b) - termKey(a),
   );
 
@@ -1172,6 +1174,15 @@ export default async function RequirementsPage({
                 <div key={t}>
                   <p className="label">
                     {termLabel(t)} <span className="text-ink-400">· {list.length} course{list.length === 1 ? "" : "s"}</span>
+                    {abroadTerms.includes(t) && (
+                      <Link
+                        href="/planner"
+                        className="chip ml-1.5 border-sky-300 bg-sky-50 normal-case text-sky-800"
+                        title="Marked as a study-abroad term in your planner"
+                      >
+                        🌍 Study abroad
+                      </Link>
+                    )}
                   </p>
                   <ul className="mt-1 flex flex-wrap gap-1">
                     {list.map((s) => (

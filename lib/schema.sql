@@ -230,6 +230,14 @@ CREATE TABLE IF NOT EXISTS user_term_flags (
   PRIMARY KEY (user_id, term_id)
 );
 
+-- Terms a student studies abroad. No FK to terms: students mark summers and
+-- future terms the catalog hasn't published yet.
+CREATE TABLE IF NOT EXISTS study_abroad_terms (
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  term_id     TEXT NOT NULL,               -- FA2026 / SP2027 / SU2027
+  PRIMARY KEY (user_id, term_id)
+);
+
 CREATE TABLE IF NOT EXISTS meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL

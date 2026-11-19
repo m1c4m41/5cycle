@@ -5,7 +5,8 @@
  */
 import Link from "next/link";
 import { addManualCourseAction, removeManualCourseAction } from "@/actions/requirements";
-import { cn, termLabel } from "@/lib/util";
+import { academicYearOf } from "@/lib/academic-year";
+import { cn, schoolShort, termLabel } from "@/lib/util";
 
 export type HistoryCourse = {
   id: string;
@@ -39,7 +40,8 @@ const isPlan = (c: HistoryCourse) => c.manual && c.glyph === "📌";
 const cr = (n: number) => String(Number(n.toFixed(2)));
 
 /** "+ add class" inside a term cell: type a class you took (or plan) in that term. */
-function AddHere({ id, synced, next, future, cls }: { id: string; synced: boolean; next: string; future: boolean; cls?: string }) {
+function AddHere({ id, synced, next, future, abroad, school, cls }: { school: string; id: string; synced: boolean; next: string; future: boolean; abroad?: boolean; cls?: string }) {
+  const sy = academicYearOf(id);
   return (
     <details className={cn("group", cls)}>
       <summary className="cursor-pointer list-none text-ink-400 hover:text-brand-700 [&::-webkit-details-marker]:hidden">
@@ -62,23 +64,19 @@ function AddHere({ id, synced, next, future, cls }: { id: string; synced: boolea
             min="0.25"
             max="12"
             step="0.25"
-            defaultValue="1"
+            defaultValue={school === "HM" ? "3" : "1"}
             className="input w-16 !px-1.5 !py-1 text-xs"
-            aria-label="Credits (5C)"
-            title="5C credits (a normal course is 1)"
+            aria-label={`Credits (${schoolShort(school)})`}
+            title={`Credits on the ${schoolShort(school)} scale`}
           />
           <select name="kind" defaultValue={future ? "planned" : "custom"} className="input min-w-0 flex-1 !px-1 !py-1 text-xs" aria-label="Type">
             <option value="planned">📌 Want to take (no section yet)</option>
             <option value="custom">Course taken</option>
             <option value="transfer">Transfer / AP</option>
-            <option value="abroad">Study abroad</option>
+            <option value="summer">Summer{sy ? ` (${sy.start + 1})` : ""}</option>
           </select>
         </div>
-        {synced ? (
-          <input type="hidden" name="termId" value={id} />
-        ) : (
-          <input type="hidden" name="termLabel" value={termLabel(id)} />
-        )}
+        <input type="hidden" name="termId" value={id} />
         <input type="hidden" name="next" value={next} />
         <button type="submit" className="btn-primary w-full !px-2 !py-1 text-xs">
           Add to {termLabel(id)}
@@ -93,12 +91,18 @@ export function CourseHistory({
   currentTerm,
   syncedTerms,
   next,
+  abroadTerms = [],
+  school,
 }: {
   courses: HistoryCourse[];
   currentTerm: string;
   syncedTerms: string[];
   /** Where the add / remove forms return to. */
   next: string;
+  /** Terms marked study abroad: labelled in the grid. */
+  abroadTerms?: string[];
+  /** Student's home campus: credits are entered on its scale. */
+  school: string;
 }) {
   const placed = courses.filter((c) => c.termId && /^(FA|SP|SU)\d{4}$/.test(c.termId));
   const loose = courses.filter((c) => !placed.includes(c));
@@ -123,7 +127,10 @@ export function CourseHistory({
         <h2 className="text-lg font-bold">Course schedule</h2>
         <p className="text-xs text-ink-500">
           {courses.length} course{courses.length === 1 ? "" : "s"} · {cr(totalCredits)} credits ·{" "}
-          <span className="text-emerald-700">✓ = past term</span>
+          <span className="text-emerald-700">✓ = past term</span> ·{" "}
+          <Link href="/requirements" className="link">
+            See how they count in your checklist →
+          </Link>
         </p>
       </div>
 
@@ -163,8 +170,13 @@ export function CourseHistory({
                         past ? "bg-emerald-50/50" : id === currentTerm ? "bg-brand-50/60" : "",
                       )}
                     >
+                      {abroadTerms.includes(id) && (
+                        <div className="mb-1 inline-flex items-center gap-1 rounded-full border border-sky-300 bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800">
+                          🌍 Study abroad
+                        </div>
+                      )}
                       {here.length === 0 ? (
-                        <AddHere id={id} synced={synced.has(id)} next={next} future={termKey(id) >= cur} />
+                        <AddHere id={id} synced={synced.has(id)} next={next} future={termKey(id) >= cur} abroad={abroadTerms.includes(id)} school={school} />
                       ) : (
                         <ul className="space-y-1">
                           {here.map((c) => (
@@ -202,7 +214,7 @@ export function CourseHistory({
                             )}
                           </li>
                           <li>
-                            <AddHere id={id} synced={synced.has(id)} next={next} future={termKey(id) >= cur} />
+                            <AddHere id={id} synced={synced.has(id)} next={next} future={termKey(id) >= cur} abroad={abroadTerms.includes(id)} school={school} />
                           </li>
                         </ul>
                       )}

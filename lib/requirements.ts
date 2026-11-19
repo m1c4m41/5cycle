@@ -1299,6 +1299,7 @@ const MANUAL_DEPT: Record<ManualCourseKind, string> = {
   transfer: "XFER",
   custom: "CUSTOM",
   planned: "PLAN",
+  summer: "SUMMER",
 };
 
 /** The student's manually-entered courses. */
@@ -1373,8 +1374,9 @@ export async function addManualCourse(
   const credits = Number(input.credits);
   if (!Number.isFinite(credits) || credits <= 0 || credits > 12)
     return { ok: false, error: "Credits must be between 0.25 and 12 (5C-normalized)." };
-  if (input.term_id && !(await get<{ id: string }>("SELECT id FROM terms WHERE id = ?", [input.term_id])))
-    return { ok: false, error: "Unknown term — pick one of the synced terms." };
+  // Any real term id is fine, published yet or not (summers, future terms).
+  if (input.term_id && !/^(FA|SP|SU)\d{4}$/.test(input.term_id))
+    return { ok: false, error: "Unknown term — pick a term from the list." };
   if (!input.term_id && !input.term_label.trim())
     return { ok: false, error: "Pick a term." };
   const id = newId("man-");
@@ -1405,19 +1407,34 @@ export async function removeManualCourse(userId: string, id: string): Promise<bo
 
 /** Which of the student's terms are flagged "studying abroad". */
 export async function abroadFlagsFor(userId: string): Promise<Map<string, boolean>> {
-  const rows = await all<{ term_id: string; is_abroad: number }>(
-    "SELECT term_id, is_abroad FROM user_term_flags WHERE user_id = ?",
-    [userId],
-  );
-  return new Map(rows.map((r) => [r.term_id, r.is_abroad === 1]));
+  const [rows, legacy] = await Promise.all([
+    all<{ term_id: string }>("SELECT term_id FROM study_abroad_terms WHERE user_id = ?", [userId]),
+    all<{ term_id: string; is_abroad: number }>(
+      "SELECT term_id, is_abroad FROM user_term_flags WHERE user_id = ? AND is_abroad = 1",
+      [userId],
+    ),
+  ]);
+  return new Map([...legacy.map((r) => r.term_id), ...rows.map((r) => r.term_id)].map((t) => [t, true]));
+}
+
+/** Study-abroad term ids, chronological. */
+export async function abroadTermsFor(userId: string): Promise<string[]> {
+  const m = await abroadFlagsFor(userId);
+  const key = (id: string) => {
+    const x = /^(FA|SP|SU)(\d{4})$/.exec(id);
+    return x ? Number(x[2]) * 10 + (x[1] === "SP" ? 1 : x[1] === "SU" ? 2 : 3) : 0;
+  };
+  return [...m.keys()].sort((a, b) => key(a) - key(b));
 }
 
 export async function setAbroadFlag(userId: string, termId: string, abroad: boolean): Promise<void> {
-  await run(
-    `INSERT INTO user_term_flags(user_id, term_id, is_abroad) VALUES(?,?,?)
-     ON CONFLICT(user_id, term_id) DO UPDATE SET is_abroad = excluded.is_abroad`,
-    [userId, termId, abroad ? 1 : 0],
-  );
+  if (!/^(FA|SP|SU)\d{4}$/.test(termId)) return;
+  if (abroad) {
+    await run("INSERT OR IGNORE INTO study_abroad_terms(user_id, term_id) VALUES(?,?)", [userId, termId]);
+  } else {
+    await run("DELETE FROM study_abroad_terms WHERE user_id = ? AND term_id = ?", [userId, termId]);
+    await run("DELETE FROM user_term_flags WHERE user_id = ? AND term_id = ?", [userId, termId]);
+  }
 }
 
 /** Display label for a group id, e.g. "CMC General Education — Arts". */

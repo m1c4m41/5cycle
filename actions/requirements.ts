@@ -10,6 +10,7 @@
  * the same treatment. 0.5-credit courses can't tick GE or Breadth boxes — the
  * engine enforces that; their credits still count toward the total.
  */
+import { academicYearOf } from "@/lib/academic-year";
 import { redirect } from "next/navigation";
 import { getSection } from "@/lib/catalog";
 import {
@@ -44,6 +45,7 @@ const KIND_LABEL: Record<ManualCourseKind, string> = {
   transfer: "transfer credit",
   custom: "create-your-own",
   planned: "planned (no section yet)",
+  summer: "summer course",
 };
 
 /**
@@ -108,8 +110,13 @@ export async function addManualCourseAction(fd: FormData): Promise<void> {
   const credits = formNum(fd, "credits");
   const kindRaw = formStr(fd, "kind");
   const kind: ManualCourseKind =
-    kindRaw === "abroad" || kindRaw === "transfer" || kindRaw === "planned" ? kindRaw : "custom";
-  const termId = formStr(fd, "termId");
+    kindRaw === "abroad" || kindRaw === "transfer" || kindRaw === "planned" || kindRaw === "summer" ? kindRaw : "custom";
+  let termId = formStr(fd, "termId");
+  // "Summer" type: the summer of the chosen term's academic year (2026–27 → Summer 2027).
+  if (kind === "summer" && termId) {
+    const sy = academicYearOf(termId);
+    if (sy) termId = sy.termIds[2];
+  }
   const termLabelRaw = formStr(fd, "termLabel");
   const note = formStr(fd, "note");
   const groupIds = fd
@@ -121,7 +128,8 @@ export async function addManualCourseAction(fd: FormData): Promise<void> {
     term_id: termId || null,
     term_label: termLabelRaw,
     title,
-    credits: credits ?? NaN,
+    // Students enter credits on their own campus's scale; HMC is 3 per course.
+    credits: credits === null || credits === undefined ? NaN : user.school === "HM" ? credits / 3 : credits,
     kind,
     note: note || null,
   });
@@ -176,6 +184,7 @@ export async function setAbroadAction(fd: FormData): Promise<void> {
   const next = formStr(fd, "next") || "/planner";
   const termId = formStr(fd, "termId");
   if (!termId) redirect(withNotice(next, "err", "Pick a term first."));
+  if (!/^(FA|SP|SU)\d{4}$/.test(termId)) redirect(withNotice(next, "err", "Pick a valid term."));
   const abroad = fd.has("abroad");
   await setAbroadFlag(user.id, termId, abroad);
   revalidateSchedule();
@@ -184,7 +193,7 @@ export async function setAbroadAction(fd: FormData): Promise<void> {
       next,
       "ok",
       abroad
-        ? `${termLabel(termId)} is marked as a study-abroad term — add the courses manually (they won't be in the catalog).`
+        ? `${termLabel(termId)} is marked as study abroad — add its courses in the course schedule or the by-hand form below.`
         : `${termLabel(termId)} is no longer marked as study abroad.`,
     ),
   );

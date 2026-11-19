@@ -10,11 +10,12 @@ import { redirect } from "next/navigation";
 import {
   addManualCourseAction,
   removeManualCourseAction,
-  setAbroadAction,
 } from "@/actions/requirements";
 import { EnrollButton } from "@/components/EnrollButton";
 import { SchoolBadge, SeatsMeter } from "@/components/SectionCard";
 import { Stars } from "@/components/Stars";
+import { academicYearOf } from "@/lib/academic-year";
+import { AbroadPicker } from "@/components/AbroadPicker";
 import { CourseHistory, type HistoryCourse } from "@/components/CourseHistory";
 import { Timetable } from "@/components/Timetable";
 import { TermSelect } from "@/components/TermSelect";
@@ -86,9 +87,14 @@ async function clearForm(fd: FormData) {
   redirect(next);
 }
 
+const termSortKey = (id: string) => {
+  const m = /^(FA|SP|SU)(\d{4})$/.exec(id);
+  return m ? Number(m[2]) * 10 + (m[1] === "SP" ? 1 : m[1] === "SU" ? 2 : 3) : 0;
+};
+
 function manualGlyph(s: Section): string {
   if (!s.manual) return "";
-  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : "✏️";
+  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : s.manual.kind === "summer" ? "☀️" : "✏️";
 }
 
 function emptySummary(termId: string): TermSummary {
@@ -142,6 +148,22 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   );
   const liveTerm = await currentTermId(); // the registrar's current term (cached)
   const abroad = user ? abroadMap.get(term) === true : false;
+  // Terms for the by-hand form: the selected term, the summer of its academic
+  // year (e.g. Summer 2027 for 2026–27), and any term marked abroad.
+  const ay = academicYearOf(term);
+  const manualTermChoices = Array.from(
+    new Set([term, ...(ay ? [ay.termIds[2]] : []), ...abroadMap.keys()].filter(Boolean)),
+  ).sort((a, b) => termSortKey(a) - termSortKey(b));
+  const abroadTerms = [...abroadMap.keys()].sort((a, b) => termSortKey(a) - termSortKey(b));
+  // Terms a student can mark as abroad: fall / spring / summer, a few years either
+  // side of today, whether or not the catalog has published them yet.
+  const abroadOptions = (() => {
+    const base = Number((/\d{4}/.exec(liveTerm) ?? [String(new Date().getFullYear())])[0]);
+    const out: { id: string; label: string }[] = [];
+    for (let y = base - 2; y <= base + 4; y++)
+      for (const t of ["SP", "SU", "FA"]) out.push({ id: `${t}${y}`, label: termLabel(`${t}${y}`) });
+    return out;
+  })();
   // Everything the student has taken / planned, across every term, for the
   // four-year course schedule.
   const history: HistoryCourse[] = [
@@ -236,20 +258,12 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
             </Link>
           </form>
           {user && (
-            <form action={setAbroadAction} className="flex items-center">
-              <input type="hidden" name="termId" value={term} />
-              <input type="hidden" name="next" value={selfHref} />
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-800 hover:bg-ink-50">
-                <input
-                  type="checkbox"
-                  name="abroad"
-                  value="1"
-                  defaultChecked={abroad}
-                  className="h-4 w-4 accent-brand-600"
-                />
-                🌍 studying abroad this term
-              </label>
-            </form>
+            <AbroadPicker
+              options={abroadOptions}
+              marked={abroadTerms.map((id) => ({ id, label: termLabel(id) }))}
+              defaultTerm={term}
+              next={selfHref}
+            />
           )}
         </div>
       </header>
@@ -322,6 +336,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
       {user && (
         <CourseHistory
           courses={history}
+          abroadTerms={abroadTerms}
+          school={user.school}
           currentTerm={liveTerm}
           syncedTerms={synced.map((t) => t.id)}
           next={selfHref}
@@ -545,13 +561,13 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
           {user && (
           <form action={addManualCourseAction} className="card card-pad space-y-3">
             <h3 className="text-sm font-bold text-ink-900">
-              Enter a course by hand · {termLabel(term)}
+              Enter Course Manually
             </h3>
             <p className="text-xs leading-relaxed text-ink-500">
-              {abroad
-                ? "This term is marked study abroad — the catalog won't have these classes, so type them in below."
-                : "For classes not in the catalog: study abroad, transfer credit, or a create-your-own designation."}{" "}
-              For a summer-abroad program, mark the term abroad first.
+              For classes that aren&apos;t in the catalog: a summer class, transfer credit, or a
+              create-your-own designation. Studying abroad? Tick “studying abroad” at the top of
+              the planner and pick the term — it gets a 🌍 label in your course schedule — then
+              type that term&apos;s classes here.
             </p>
             <div className="flex flex-wrap items-end gap-2">
               <div className="min-w-52 flex-1">
@@ -569,7 +585,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
               </div>
               <div>
                 <label className="label" htmlFor="manual-credits">
-                  Credits (5C)
+                  Credits ({schoolShort(user.school)})
                 </label>
                 <input
                   id="manual-credits"
@@ -579,7 +595,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                   min="0.25"
                   max="12"
                   step="0.25"
-                  defaultValue="3"
+                  defaultValue={user.school === "HM" ? "3" : "1"}
                   className="input w-24"
                 />
               </div>
@@ -590,16 +606,29 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 <select
                   id="manual-kind"
                   name="kind"
-                  defaultValue={abroad ? "abroad" : "custom"}
+                  defaultValue="custom"
                   className="input w-auto"
                 >
-                  <option value="abroad">🌍 Study abroad</option>
+                  <option value="summer">
+                    ☀️ Summer{ay ? ` (${ay.start + 1})` : ""}
+                  </option>
                   <option value="transfer">📦 Transfer credit</option>
                   <option value="custom">✏️ Create-your-own</option>
                 </select>
               </div>
             </div>
-            <input type="hidden" name="termId" value={term} />
+            <div className="max-w-xs">
+              <label className="label" htmlFor="manual-term">
+                Term
+              </label>
+              <select id="manual-term" name="termId" defaultValue={term} className="input w-full">
+                {manualTermChoices.map((t) => (
+                  <option key={t} value={t}>
+                    {termLabel(t)}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input type="hidden" name="next" value={selfHref} />
             <div>
               <span className="label">
