@@ -57,7 +57,7 @@ import { cn, formatCredits, schoolShort, termLabel, truncate } from "@/lib/util"
 /** Where each college publishes its double-counting rules. */
 const POLICY_LINKS: Record<string, string> = {
   SC: "https://catalog.scrippscollege.edu/content.php?catoid=35&navoid=4452",
-  PZ: "https://www.pitzer.edu/academics/",
+  PZ: "https://catalog.pitzer.edu/content.php?catoid=32&navoid=2329",
   CM: "https://catalog.claremontmckenna.edu/content.php?catoid=43&navoid=9175",
   PO: "https://pomona-preview.catalog.prod.coursedog.com/academicpolicies/degreegraduationpolicies/specialmajorsdoublemajorsminors",
 };
