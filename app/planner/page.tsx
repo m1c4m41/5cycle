@@ -17,6 +17,7 @@ import { Stars } from "@/components/Stars";
 import { academicYearOf } from "@/lib/academic-year";
 import { SeatAlertToggle } from "@/components/SeatAlertToggle";
 import { alertSectionIds } from "@/lib/notify";
+import { StatusSelect } from "@/components/StatusSelect";
 import { AbroadPicker } from "@/components/AbroadPicker";
 import { CourseHistory, type HistoryCourse } from "@/components/CourseHistory";
 import { Timetable } from "@/components/Timetable";
@@ -68,18 +69,7 @@ const PLAN_STATUSES: { value: string; label: string }[] = [
   { value: "perm_requested", label: "Perm requested" },
 ];
 
-/**
- * setStatusAction / clearTermAction take (prev, formData); a plain <form> only
- * passes FormData, so wrap them inline. `next` round-trips the current term.
- */
-async function statusForm(fd: FormData) {
-  "use server";
-  const { setStatusAction } = await import("@/actions/planner");
-  const next = fd.get("next")?.toString() || "/planner";
-  await setStatusAction(null, fd);
-  redirect(next);
-}
-
+/** clearTermAction takes (prev, formData); a plain <form> only passes FormData, so wrap it inline. */
 async function clearForm(fd: FormData) {
   "use server";
   const { clearTermAction } = await import("@/actions/planner");
@@ -560,31 +550,12 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 border-t border-ink-100 pt-2">
-                  <form action={statusForm} className="flex items-center gap-2">
-                    <input type="hidden" name="sectionId" value={s.id} />
-                    <input type="hidden" name="next" value={selfHref} />
-                    <label className="label mb-0" htmlFor={`st-${e.id}`}>
-                      Status
-                    </label>
-                    <select
-                      id={`st-${e.id}`}
-                      name="status"
-                      defaultValue={e.status === "waitlist" ? "planned" : e.status}
-                      className="input w-auto py-1 text-xs"
-                    >
-                      {PLAN_STATUSES.map((o) => (
-                        <option
-                          key={o.value}
-                          value={o.value}
-                        >
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                    <button type="submit" className="btn-secondary px-2 py-1 text-xs">
-                      Save
-                    </button>
-                  </form>
+                  <StatusSelect
+                    id={`st-${e.id}`}
+                    sectionId={s.id}
+                    status={e.status === "waitlist" ? "planned" : e.status}
+                    options={PLAN_STATUSES}
+                  />
                   {(() => {
                     const on = e.status === "waitlist" || alertIds.has(s.id);
                     const full = s.seats_total > 0 && s.seats_filled >= s.seats_total;

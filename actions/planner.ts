@@ -115,12 +115,12 @@ export async function setStatusAction(
   const sectionId = formStr(fd, "sectionId");
   const status = formStr(fd, "status");
   if (!STATUSES.has(status)) return { ok: false, error: "Unknown status." };
-  const target = await getSection(sectionId);
-  if (!target) return { ok: false, error: "Unknown section." };
   await setEnrollmentStatus(user.id, sectionId, status);
   // Seat alerts end once you're registered (they stay for Planned and Perm requested).
   if (status === "registered") await setSeatAlert(user.id, sectionId, false);
-  revalidateSchedule();
+  // Status only shows on the planner: refresh just that page (the old
+  // all-pages revalidation made every save slow).
+  revalidatePath("/planner");
   return { ok: true, notice: `Marked as ${status.replace("_", " ")}.` };
 }
 
