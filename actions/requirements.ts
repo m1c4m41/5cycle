@@ -10,7 +10,6 @@
  * the same treatment. 0.5-credit courses can't tick GE or Breadth boxes — the
  * engine enforces that; their credits still count toward the total.
  */
-import { academicYearOf } from "@/lib/academic-year";
 import { redirect } from "next/navigation";
 import { getSection } from "@/lib/catalog";
 import {
@@ -46,6 +45,7 @@ const KIND_LABEL: Record<ManualCourseKind, string> = {
   custom: "create-your-own",
   planned: "planned (no section yet)",
   summer: "summer course",
+  credit: "course credit",
 };
 
 /**
@@ -110,13 +110,8 @@ export async function addManualCourseAction(fd: FormData): Promise<void> {
   const credits = formNum(fd, "credits");
   const kindRaw = formStr(fd, "kind");
   const kind: ManualCourseKind =
-    kindRaw === "abroad" || kindRaw === "transfer" || kindRaw === "planned" || kindRaw === "summer" ? kindRaw : "custom";
+    kindRaw === "abroad" || kindRaw === "transfer" || kindRaw === "planned" || kindRaw === "summer" || kindRaw === "credit" ? kindRaw : "custom";
   let termId = formStr(fd, "termId");
-  // "Summer" type: the summer of the chosen term's academic year (2026–27 → Summer 2027).
-  if (kind === "summer" && termId) {
-    const sy = academicYearOf(termId);
-    if (sy) termId = sy.termIds[2];
-  }
   const termLabelRaw = formStr(fd, "termLabel");
   const note = formStr(fd, "note");
   const groupIds = fd

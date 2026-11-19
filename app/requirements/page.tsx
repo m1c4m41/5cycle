@@ -210,7 +210,7 @@ function stateGlyph(state: "full" | "half" | "empty") {
 /** Glyph for manually entered courses (abroad / transfer / create-your-own). */
 function manualGlyph(s: Section): string {
   if (!s.manual) return "";
-  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : s.manual.kind === "summer" ? "☀️" : "✏️";
+  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : s.manual.kind === "summer" ? "☀️" : s.manual.kind === "credit" ? "🎓" : "✏️";
 }
 
 function courseChip(s: Section, extra: boolean) {

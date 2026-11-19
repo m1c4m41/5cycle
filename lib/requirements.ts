@@ -1300,6 +1300,7 @@ const MANUAL_DEPT: Record<ManualCourseKind, string> = {
   custom: "CUSTOM",
   planned: "PLAN",
   summer: "SUMMER",
+  credit: "CREDIT",
 };
 
 /** The student's manually-entered courses. */

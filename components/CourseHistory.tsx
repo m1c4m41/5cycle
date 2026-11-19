@@ -5,7 +5,6 @@
  */
 import Link from "next/link";
 import { addManualCourseAction, removeManualCourseAction } from "@/actions/requirements";
-import { academicYearOf } from "@/lib/academic-year";
 import { cn, schoolShort, termLabel } from "@/lib/util";
 
 export type HistoryCourse = {
@@ -41,7 +40,6 @@ const cr = (n: number) => String(Number(n.toFixed(2)));
 
 /** "+ add class" inside a term cell: type a class you took (or plan) in that term. */
 function AddHere({ id, synced, next, future, abroad, school, cls }: { school: string; id: string; synced: boolean; next: string; future: boolean; abroad?: boolean; cls?: string }) {
-  const sy = academicYearOf(id);
   return (
     <details className={cn("group", cls)}>
       <summary className="cursor-pointer list-none text-ink-400 hover:text-brand-700 [&::-webkit-details-marker]:hidden">
@@ -73,7 +71,7 @@ function AddHere({ id, synced, next, future, abroad, school, cls }: { school: st
             <option value="planned">📌 Want to take (no section yet)</option>
             <option value="custom">Course taken</option>
             <option value="transfer">Transfer / AP</option>
-            <option value="summer">Summer{sy ? ` (${sy.start + 1})` : ""}</option>
+            <option value="credit">Course Credit</option>
           </select>
         </div>
         <input type="hidden" name="termId" value={id} />

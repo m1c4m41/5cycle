@@ -94,7 +94,7 @@ const termSortKey = (id: string) => {
 
 function manualGlyph(s: Section): string {
   if (!s.manual) return "";
-  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : s.manual.kind === "summer" ? "☀️" : "✏️";
+  return s.manual.kind === "abroad" ? "🌍" : s.manual.kind === "transfer" ? "📦" : s.manual.kind === "planned" ? "📌" : s.manual.kind === "summer" ? "☀️" : s.manual.kind === "credit" ? "🎓" : "✏️";
 }
 
 function emptySummary(termId: string): TermSummary {
@@ -403,7 +403,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 Type
               </label>
               <select id="manual-kind" name="kind" defaultValue="custom" className="input w-auto">
-                <option value="summer">☀️ Summer{ay ? ` (${ay.start + 1})` : ""}</option>
+                <option value="credit">🎓 Course Credit</option>
                 <option value="transfer">📦 Transfer credit</option>
                 <option value="custom">✏️ Create-your-own</option>
               </select>

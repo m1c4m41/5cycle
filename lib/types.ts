@@ -67,7 +67,7 @@ export type Section = SectionRow & {
   manual?: { termLabel: string; kind: ManualCourseKind };
 };
 
-export type ManualCourseKind = "abroad" | "transfer" | "custom" | "planned" | "summer";
+export type ManualCourseKind = "abroad" | "transfer" | "custom" | "planned" | "summer" | "credit";
 
 /** Row from `manual_courses`. */
 export type ManualCourse = {
