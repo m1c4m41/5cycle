@@ -48,7 +48,9 @@ export async function addToPlanAction(
   const sectionId = formStr(fd, "sectionId");
   if (!sectionId) return { ok: false, error: "Missing course." };
 
-  const force = formStr(fd, "force") === "1";
+  // Time conflicts never block an add: the class is added and simply tagged as
+  // overlapping (planner, catalog list and grid).
+  const force = true;
 
   const user = await currentUser();
   if (!user) {
@@ -80,9 +82,6 @@ export async function addToPlanAction(
     notice: res.warning
       ? `${res.enrollment.section.code_string} — ${res.warning}`
       : `${res.enrollment.section.code_string} added to ${res.enrollment.section.term_id}.` +
-        (res.conflicts.length
-          ? ` Heads up: ${res.conflicts.length} time conflict(s) you overrode.`
-          : "") +
         (res.replacedPlan ? ` Replaced your planned “${res.replacedPlan}”.` : ""),
   };
 }

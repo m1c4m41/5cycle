@@ -9,8 +9,7 @@
  */
 import Link from "next/link";
 import { WEEKDAY_LABELS, WEEKDAY_ORDER } from "@/lib/constants";
-import { toGridBlocks, type GridBlock } from "@/lib/schedule";
-import type { Section } from "@/lib/types";
+import { toGridBlocks, type GridBlock, type GridSection } from "@/lib/grid-blocks";
 import { SCHOOL_BY_CODE } from "@/lib/constants";
 import { secondsTo12h } from "@/lib/util";
 
@@ -40,7 +39,7 @@ function accent(code: string) {
   return SCHOOL_BY_CODE[code]?.accent ?? "var(--color-brand-600)";
 }
 
-function Block({ b, axis }: { b: GridBlock; axis: Axis }) {
+function Block({ b, axis, ghost, conflict }: { b: GridBlock; axis: Axis; ghost?: boolean; conflict?: boolean }) {
   const top = offsetIn(axis, b.start);
   const bottom = offsetIn(axis, b.end);
   const height = Math.max(bottom - top, 20);
@@ -50,19 +49,28 @@ function Block({ b, axis }: { b: GridBlock; axis: Axis }) {
   return (
     <Link
       href={`/section/${encodeURIComponent(b.section.id)}`}
-      className="absolute overflow-hidden rounded-md border px-1 py-0.5 text-[10px] leading-tight shadow-sm hover:z-20 hover:shadow"
+      className={
+        ghost
+          ? "absolute z-10 overflow-hidden rounded-md border-2 border-dashed px-1 py-0.5 text-[10px] leading-tight hover:z-20"
+          : "absolute overflow-hidden rounded-md border px-1 py-0.5 text-[10px] leading-tight shadow-sm hover:z-20 hover:shadow"
+      }
       style={{
         top: `${top}px`,
         height: `${height}px`,
         left,
         width,
-        borderColor: color,
-        background: `color-mix(in srgb, ${color} 14%, white)`,
+        borderColor: conflict ? "#d97706" : color,
+        background: ghost
+          ? `repeating-linear-gradient(135deg, color-mix(in srgb, ${color} 22%, transparent) 0 6px, color-mix(in srgb, ${color} 10%, transparent) 6px 12px)`
+          : `color-mix(in srgb, ${color} 14%, white)`,
         color: "var(--color-ink-900)",
+        ...(ghost ? { opacity: 0.92 } : {}),
       }}
       title={`${b.section.code_string} — ${b.section.title} (${secondsTo12h(b.start)}–${secondsTo12h(b.end)})`}
     >
       <div className="truncate font-semibold" style={{ color }}>
+        {ghost && <span aria-hidden>👁 </span>}
+        {conflict && !ghost && <span aria-hidden title="Overlaps another class">⚠ </span>}
         {b.section.department} {String(b.section.course_number).padStart(3, "0")}
         {b.section.suffix}
       </div>
@@ -83,7 +91,19 @@ function Block({ b, axis }: { b: GridBlock; axis: Axis }) {
   );
 }
 
-export function Timetable({ sections, targetHeight = 380 }: { sections: Section[]; targetHeight?: number }) {
+export function Timetable({
+  sections,
+  targetHeight = 380,
+  ghostIds,
+  conflictIds,
+}: {
+  sections: GridSection[];
+  targetHeight?: number;
+  /** Preview-only classes (not in the plan): drawn as shaded boxes. */
+  ghostIds?: Set<string>;
+  /** Classes that overlap another one: tagged ⚠. */
+  conflictIds?: Set<string>;
+}) {
   const blocks = toGridBlocks(sections);
   const days = WEEKDAY_ORDER.filter(
     (d) => (d === "S" || d === "U") ? (blocks[d]?.length ?? 0) > 0 : true,
@@ -152,7 +172,7 @@ export function Timetable({ sections, targetHeight = 380 }: { sections: Section[
                   />
                 ))}
                 {(blocks[d] ?? []).map((b, i) => (
-                  <Block key={`${b.section.id}-${i}`} b={b} axis={axis} />
+                  <Block key={`${b.section.id}-${i}`} b={b} axis={axis} ghost={ghostIds?.has(b.section.id)} conflict={conflictIds?.has(b.section.id)} />
                 ))}
               </div>
             ))}

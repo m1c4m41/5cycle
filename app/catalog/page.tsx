@@ -18,7 +18,9 @@ import { InfiniteSections } from "@/components/InfiniteSections";
 import { SectionCards } from "@/components/SectionCards";
 import { hrefFor, list, num, one, cr, queryFromSp, type SP } from "@/lib/catalog-params";
 import { AutoHideBar } from "@/components/AutoHideBar";
-import { PlanList } from "@/components/PlanList";
+import { LiveGrid } from "@/components/LiveGrid";
+import { CatalogGridProvider } from "@/components/CatalogGridProvider";
+import { toGridSection } from "@/lib/grid-blocks";
 import { TermSelect } from "@/components/TermSelect";
 
 export const dynamic = "force-dynamic";
@@ -343,6 +345,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       </form>
       </AutoHideBar>
 
+      <CatalogGridProvider term={term}>
       <div className="grid items-start gap-5 lg:grid-cols-12">
         {/* Left: search results */}
         <div className="min-w-0 space-y-3 lg:col-span-7">
@@ -487,45 +490,24 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             className="min-w-0 lg:sticky lg:top-4 lg:col-span-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain"
             aria-label="Your weekly grid"
           >
-            <div className="card card-pad space-y-3">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="text-base font-bold tracking-tight">
-                  Your {termLabel(term)} grid
-                </h2>
-                <Link href={`/planner?term=${term}`} className="link text-xs">
-                  Open planner →
-                </Link>
-              </div>
-              {planned.length ? (
-                <>
-                  <Timetable sections={planned} />
-                  <p className="text-xs text-ink-500">
-                    {planned.length} saved course{planned.length === 1 ? "" : "s"} ·{" "}
-                    {cr(planned.reduce((a, s) => a + s.credits_5c, 0))} 5C credits. Use{" "}
-                    <span className="font-semibold">View on grid</span> on any class to see where
-                    it lands — a conflict is flagged before you save it.
-                  </p>
-                  <PlanList
-                    items={planned.map((s) => ({
-                      id: s.id,
-                      code: s.code_string,
-                      title: s.title,
-                      credits: formatCredits(s.credits, s.school),
-                      meetings: s.meetings.map((m) => formatMeeting(m)),
-                      instructors: s.instructors.map((i) => i.name).join(", "),
-                    }))}
-                  />
-                </>
-              ) : (
-                <p className="text-sm leading-relaxed text-ink-500">
-                  Nothing saved for {termLabel(term)} yet. As you add courses they appear here,
-                  side by side with the catalog, so you can build the whole week at a glance.
-                </p>
-              )}
-            </div>
+            <LiveGrid
+              term={term}
+              termName={termLabel(term)}
+              planned={planned.map(toGridSection)}
+              items={planned.map((s) => ({
+                id: s.id,
+                code: s.code_string,
+                title: s.title,
+                credits: formatCredits(s.credits, s.school),
+                meetings: s.meetings.map((m) => formatMeeting(m)),
+                instructors: s.instructors.map((i) => i.name).join(", "),
+              }))}
+              credits={cr(planned.reduce((a, s) => a + s.credits_5c, 0))}
+            />
           </aside>
         )}
       </div>
+      </CatalogGridProvider>
     </div>
   );
 }

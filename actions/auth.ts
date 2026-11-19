@@ -205,7 +205,7 @@ export async function loginAction(
 async function applyPendingAdd(userId: string, fd: FormData): Promise<ActionState> {
   const sectionId = formStr(fd, "add");
   if (!sectionId) return IDLE;
-  const res = await addToSchedule(userId, sectionId, { force: formStr(fd, "force") === "1" });
+  const res = await addToSchedule(userId, sectionId, { force: true });
   return res.ok
     ? { ok: true, notice: `${res.enrollment.section.code_string} added to your plan.` }
     : { ok: false, error: res.error };

@@ -3,6 +3,8 @@ import { fulfillmentFor } from "@/lib/requirements";
 import { hrefFor, type SP } from "@/lib/catalog-params";
 import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
+import { PreviewCard } from "@/components/PreviewCard";
+import { toGridSection } from "@/lib/grid-blocks";
 
 /** A batch of catalog result cards (used by the page and by "load more"). */
 export function SectionCards({
@@ -32,17 +34,17 @@ export function SectionCards({
   return (
     <>
       {rows.map((s) => (
-        <SectionCard
-          key={s.id}
-          s={s}
-          plannedIds={plannedIds}
-          fit={fitFor(s)}
-          previewHref={signedIn ? hrefFor(sp, { preview: s.id }) : undefined}
-          next={next}
-          reasons={
-            userSets.length ? fulfillmentFor(s, userSets).map((f) => `${f.setName}: ${f.groupName}`) : undefined
-          }
-        />
+        <PreviewCard key={s.id} section={toGridSection(s)} inPlan={plannedIds.has(s.id)} enabled={signedIn}>
+          <SectionCard
+            s={s}
+            plannedIds={plannedIds}
+            fit={fitFor(s)}
+            next={next}
+            reasons={
+              userSets.length ? fulfillmentFor(s, userSets).map((f) => `${f.setName}: ${f.groupName}`) : undefined
+            }
+          />
+        </PreviewCard>
       ))}
     </>
   );
