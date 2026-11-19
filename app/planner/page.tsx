@@ -595,7 +595,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
               <span className="text-xs text-ink-500">08:00 – 22:00</span>
             </div>
             {allSections.length ? (
-              <Timetable sections={allSections} />
+              <Timetable sections={allSections} targetHeight={520} />
             ) : (
               <p className="text-sm text-ink-500">
                 {abroad

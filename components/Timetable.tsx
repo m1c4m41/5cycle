@@ -8,43 +8,49 @@
  * hides conflicts is a planner that helps you build an impossible schedule.
  */
 import Link from "next/link";
-import {
-  TIMETABLE_END,
-  TIMETABLE_START,
-  WEEKDAY_LABELS,
-  WEEKDAY_ORDER,
-} from "@/lib/constants";
+import { WEEKDAY_LABELS, WEEKDAY_ORDER } from "@/lib/constants";
 import { toGridBlocks, type GridBlock } from "@/lib/schedule";
 import type { Section } from "@/lib/types";
 import { SCHOOL_BY_CODE } from "@/lib/constants";
 import { secondsTo12h } from "@/lib/util";
 
-/** Pixels per minute of class time. */
-const PX_PER_MIN = 1.15;
-const TOTAL_MIN = (TIMETABLE_END - TIMETABLE_START) / 60;
-const GRID_HEIGHT = Math.round(TOTAL_MIN * PX_PER_MIN);
+type Axis = { start: number; end: number; px: number; height: number };
 
-const clamp = (v: number) => Math.max(TIMETABLE_START, Math.min(TIMETABLE_END, v));
-
-function offset(sec: number) {
-  return ((clamp(sec) - TIMETABLE_START) / 60) * PX_PER_MIN;
+/** Axis fitted to the classes actually on the grid: from the hour before the
+ *  earliest class to the hour after the latest one (no empty 8am–10pm frame),
+ *  scaled so the whole thing fits a fixed height — no scrolling. */
+function fitAxis(starts: number[], ends: number[], targetHeight: number): Axis {
+  if (!starts.length) {
+    const start = 9 * 3600;
+    const end = 17 * 3600;
+    return { start, end, px: targetHeight / ((end - start) / 60), height: targetHeight };
+  }
+  let start = Math.floor(Math.min(...starts) / 3600) * 3600;
+  let end = Math.ceil(Math.max(...ends) / 3600) * 3600;
+  if (end - start < 4 * 3600) end = start + 4 * 3600;
+  const mins = (end - start) / 60;
+  const px = Math.min(1.1, Math.max(0.45, targetHeight / mins));
+  return { start, end, px, height: Math.round(mins * px) };
 }
+
+const offsetIn = (a: Axis, sec: number) =>
+  ((Math.max(a.start, Math.min(a.end, sec)) - a.start) / 60) * a.px;
 
 function accent(code: string) {
   return SCHOOL_BY_CODE[code]?.accent ?? "var(--color-brand-600)";
 }
 
-function Block({ b }: { b: GridBlock }) {
-  const top = offset(b.start);
-  const bottom = offset(b.end);
-  const height = Math.max(bottom - top, 22);
+function Block({ b, axis }: { b: GridBlock; axis: Axis }) {
+  const top = offsetIn(axis, b.start);
+  const bottom = offsetIn(axis, b.end);
+  const height = Math.max(bottom - top, 20);
   const width = `calc(${100 / b.lanes}% - 3px)`;
   const left = `calc(${(b.lane * 100) / b.lanes}% + 1px)`;
   const color = accent(b.section.school);
   return (
     <Link
       href={`/section/${encodeURIComponent(b.section.id)}`}
-      className="absolute overflow-hidden rounded-md border px-1.5 py-1 text-[11px] leading-tight shadow-sm hover:z-20 hover:shadow"
+      className="absolute overflow-hidden rounded-md border px-1 py-0.5 text-[10px] leading-tight shadow-sm hover:z-20 hover:shadow"
       style={{
         top: `${top}px`,
         height: `${height}px`,
@@ -60,13 +66,15 @@ function Block({ b }: { b: GridBlock }) {
         {b.section.department} {String(b.section.course_number).padStart(3, "0")}
         {b.section.suffix}
       </div>
-      <div className="truncate text-ink-600">
-        {secondsTo12h(b.start)}–{secondsTo12h(b.end)}
-      </div>
-      {height > 52 && (
+      {height > 30 && (
+        <div className="truncate text-ink-600">
+          {secondsTo12h(b.start).replace(":00", "")}–{secondsTo12h(b.end).replace(":00", "")}
+        </div>
+      )}
+      {height > 70 && (
         <div className="truncate text-ink-500">{b.section.title}</div>
       )}
-      {height > 70 && b.section.meetings.find((m) => m.days === b.day)?.locations && (
+      {height > 90 && b.section.meetings.find((m) => m.days === b.day)?.locations && (
         <div className="truncate text-ink-400">
           {b.section.meetings.find((m) => m.days === b.day)!.locations}
         </div>
@@ -75,24 +83,35 @@ function Block({ b }: { b: GridBlock }) {
   );
 }
 
-export function Timetable({ sections }: { sections: Section[] }) {
+export function Timetable({ sections, targetHeight = 380 }: { sections: Section[]; targetHeight?: number }) {
   const blocks = toGridBlocks(sections);
   const days = WEEKDAY_ORDER.filter(
     (d) => (d === "S" || d === "U") ? (blocks[d]?.length ?? 0) > 0 : true,
   );
 
-  const hours: number[] = [];
-  for (let s = TIMETABLE_START; s <= TIMETABLE_END; s += 3600) hours.push(s);
+  const all = Object.values(blocks).flat();
+  const axis = fitAxis(
+    all.map((b) => b.start),
+    all.map((b) => b.end),
+    targetHeight,
+  );
+  // Gutter marks only where a class starts (rounded to the minute), thinned so
+  // labels never collide.
+  const marks: number[] = [];
+  for (const t of [...new Set(all.map((b) => b.start))].sort((a, b) => a - b)) {
+    const last = marks[marks.length - 1];
+    if (last === undefined || ((t - last) / 60) * axis.px >= 14) marks.push(t);
+  }
 
   const unscheduled = sections.filter((s) => s.meetings.length === 0);
 
   return (
     <div className="space-y-3">
-      <div className="overflow-x-auto scroll-thin">
-        <div className="min-w-[620px]">
+      <div>
+        <div>
           <div
             className="grid border-b border-ink-200 pb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-500"
-            style={{ gridTemplateColumns: `3.5rem repeat(${days.length}, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: `2.75rem repeat(${days.length}, minmax(0, 1fr))` }}
           >
             <div />
             {days.map((d) => (
@@ -104,17 +123,17 @@ export function Timetable({ sections }: { sections: Section[] }) {
 
           <div
             className="grid"
-            style={{ gridTemplateColumns: `3.5rem repeat(${days.length}, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: `2.75rem repeat(${days.length}, minmax(0, 1fr))` }}
           >
             {/* Hour gutter */}
-            <div className="relative" style={{ height: `${GRID_HEIGHT}px` }}>
-              {hours.map((h, i) => (
+            <div className="relative" style={{ height: `${axis.height}px` }}>
+              {marks.map((h) => (
                 <div
                   key={h}
-                  className="absolute right-1 -translate-y-1/2 text-[10px] tabular-nums text-ink-400"
-                  style={{ top: `${offset(h)}px` }}
+                  className="absolute right-1 -translate-y-1/2 text-[10px] tabular-nums text-ink-500"
+                  style={{ top: `${offsetIn(axis, h)}px` }}
                 >
-                  {i === 0 ? "" : secondsTo12h(h).replace(":00", "")}
+                  {secondsTo12h(h).replace(":00", "")}
                 </div>
               ))}
             </div>
@@ -123,17 +142,17 @@ export function Timetable({ sections }: { sections: Section[] }) {
               <div
                 key={d}
                 className="relative border-l border-ink-200 bg-white"
-                style={{ height: `${GRID_HEIGHT}px` }}
+                style={{ height: `${axis.height}px` }}
               >
-                {hours.map((h) => (
+                {marks.map((h) => (
                   <div
                     key={h}
                     className="absolute inset-x-0 border-t border-ink-100"
-                    style={{ top: `${offset(h)}px` }}
+                    style={{ top: `${offsetIn(axis, h)}px` }}
                   />
                 ))}
                 {(blocks[d] ?? []).map((b, i) => (
-                  <Block key={`${b.section.id}-${i}`} b={b} />
+                  <Block key={`${b.section.id}-${i}`} b={b} axis={axis} />
                 ))}
               </div>
             ))}
