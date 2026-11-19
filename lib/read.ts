@@ -37,7 +37,7 @@ export async function instructorSummary(id: string): Promise<InstructorSummary |
             COUNT(r.id)                    AS review_count,
             ROUND(AVG(r.stars), 2)         AS avg_stars,
             ROUND(AVG(r.difficulty), 2)    AS avg_difficulty,
-            i.rmp_quality, i.rmp_difficulty, i.rmp_num_ratings, i.rmp_url, i.rmp_tags
+            i.rmp_quality, i.rmp_difficulty, i.rmp_num_ratings, i.rmp_url, i.rmp_tags, i.rmp_synced_at
      FROM instructors i LEFT JOIN reviews r ON r.instructor_id = i.id
      WHERE i.id = ? GROUP BY i.id`,
     [id],

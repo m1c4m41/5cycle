@@ -207,4 +207,6 @@ export type InstructorSummary = {
   rmp_num_ratings: number | null;
   rmp_url: string | null;
   rmp_tags: string | null;
+  /** When the RateMyProfessors figures were last loaded (ISO), or null. */
+  rmp_synced_at: string | null;
 };

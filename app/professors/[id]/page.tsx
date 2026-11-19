@@ -165,6 +165,21 @@ export default async function ProfessorPage({ params }: Params) {
                     numRatings={num(summary.rmp_num_ratings)}
                     url={summary.rmp_url}
                   />
+                  {num(summary.rmp_quality) !== null && summary.rmp_synced_at && (
+                    <p
+                      className={
+                        Date.now() - new Date(summary.rmp_synced_at).getTime() > 365 * 86400_000
+                          ? "mt-1 text-[11px] font-medium text-amber-700"
+                          : "mt-1 text-[11px] text-ink-400"
+                      }
+                      title="RateMyProfessors figures are reloaded once a year from a curated list"
+                    >
+                      RMP data updated {new Date(summary.rmp_synced_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
+                      {Date.now() - new Date(summary.rmp_synced_at).getTime() > 365 * 86400_000
+                        ? " — over a year old, may be out of date"
+                        : ""}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

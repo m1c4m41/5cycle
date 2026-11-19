@@ -13,10 +13,25 @@ import path from "node:path";
 import { get, run } from "./db";
 import { normalizeName } from "./util";
 
-/** Best-effort search deep link; always safe to show, even with no data. */
-export function rmpSearchUrl(name: string, school?: string): string {
-  const q = encodeURIComponent(school ? `${name} ${school}` : name);
-  return `https://www.ratemyprofessors.com/search/professors?query=${q}`;
+/**
+ * Best-effort search deep link; always safe to show, even with no data.
+ *
+ * Searches by NAME ONLY, across every school on RateMyProfessors. A professor's
+ * RMP page can sit under any of the five colleges (or more than one) regardless of
+ * which campus the registrar lists, so narrowing by home campus — or adding a
+ * campus code to the query text — hid pages that exist. The results list shows
+ * which school each match belongs to. (The `school` argument is kept for callers
+ * but intentionally unused.)
+ */
+export function rmpSearchUrl(name: string, _school?: string): string {
+  // "Julie A. Medero" → "Julie Medero": single-letter middle initials and
+  // suffixes rarely appear on RMP and make the search miss.
+  const cleaned = name
+    .replace(/\b[A-Za-z]\.?(?=\s)/g, " ")
+    .replace(/,?\s+(Jr|Sr|II|III|IV)\.?$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return `https://www.ratemyprofessors.com/search/professors?query=${encodeURIComponent(cleaned || name)}`;
 }
 
 export type ManualRmpRow = {

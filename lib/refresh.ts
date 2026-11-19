@@ -11,12 +11,17 @@
  * Safe to expose: it takes no user input, only pulls from the public upstream
  * API, and a meta-row claim stops concurrent instances from piling on.
  */
+import fs from "node:fs";
+import path from "node:path";
 import { after } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "./catalog";
 import { all, get, getMeta, nowIso, setMeta } from "./db";
 import { getAllTerms, termChronoKey } from "./hyperschedule";
+import { academicYearOf } from "./academic-year";
+import { importManualRmp } from "./rmp";
 import {
+  currentTermId,
   ingestSections,
   refreshTerm,
   seasonalTermId,
@@ -53,6 +58,27 @@ function bust() {
   }
 }
 
+/**
+ * RateMyProfessors figures are reloaded once per academic year, the first time a
+ * sync runs after the year rolls over (fall). They come only from the curated
+ * data/rmp-manual.json — nothing is fetched from RateMyProfessors. If the file is
+ * absent nothing changes and the check repeats until it appears.
+ */
+export async function reloadRmpIfNewYear(): Promise<void> {
+  try {
+    const ay = academicYearOf(await currentTermId());
+    if (!ay) return;
+    if ((await getMeta("rmp_import_year")) === ay.label) return;
+    const file = path.join(process.cwd(), "data", "rmp-manual.json");
+    if (!fs.existsSync(file)) return;
+    const r = await importManualRmp(file);
+    await setMeta("rmp_import_year", ay.label);
+    console.log(`[rmp] ${ay.label} reload: ${r.matched} professors updated, ${r.missing.length} not found`);
+  } catch (err) {
+    console.warn("[rmp] yearly reload failed:", (err as Error).message);
+  }
+}
+
 /** Refresh one term now if it's live and stale. Never throws. */
 export async function refreshTermIfStale(termId: string): Promise<RefreshReport | null> {
   try {
@@ -62,6 +88,7 @@ export async function refreshTermIfStale(termId: string): Promise<RefreshReport 
     const report = await refreshTerm(termId);
     await setMeta(`checked_${termId}`, nowIso());
     if (report.status === "patched" || report.status === "full") bust();
+    await reloadRmpIfNewYear();
     return report;
   } catch (err) {
     console.warn(`[refresh] ${termId} failed:`, (err as Error).message);
@@ -112,6 +139,7 @@ export async function cronSync(): Promise<{ terms: string[]; reports: RefreshRep
       console.warn(`[cron] ${term} failed:`, (err as Error).message);
     }
   }
+  await reloadRmpIfNewYear();
   if (reports.some((r) => r.status !== "unchanged" && r.status !== "skipped")) bust();
   return { terms: live, reports };
 }

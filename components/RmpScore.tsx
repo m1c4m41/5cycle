@@ -76,10 +76,10 @@ export function RmpScore({
           target="_blank"
           rel="noopener noreferrer nofollow"
           className="inline-flex items-center gap-1 text-xs font-medium text-ink-500 underline decoration-ink-300 underline-offset-2 hover:text-ink-700"
-          title={`Search RateMyProfessors for ${name} (opens RateMyProfessors in a new tab)`}
+          title={`Search RateMyProfessors for ${name} across all schools — their page may be listed under any of the 5Cs (opens in a new tab)`}
         >
           <OutwardIcon />
-          Look up on RateMyProfessors
+          Search RateMyProfessors
         </a>
       </span>
     );
