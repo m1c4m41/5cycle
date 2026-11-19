@@ -14,12 +14,13 @@ import { TermRemember } from "@/components/TermRemember";
 import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
+import { AutoLoadMore } from "@/components/AutoLoadMore";
 import { PlanList } from "@/components/PlanList";
 import { TermSelect } from "@/components/TermSelect";
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 30; // rows added per scroll step
 
 type SP = Record<string, string | string[] | undefined>;
 
@@ -100,8 +101,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       permOnly,
       notAtSchool: notAtSchool || undefined,
       sort: sort as "code" | "title" | "credits" | "perm",
-      limit: PAGE_SIZE,
-      offset: (page - 1) * PAGE_SIZE,
+      limit: PAGE_SIZE * page, // continuous scroll: everything up to the current step
+      offset: 0,
     }),
     user ? enrolledSections(user.id, term) : Promise.resolve([] as Section[]),
     user ? setsForUser(user) : Promise.resolve([] as RequirementSet[]),
@@ -517,24 +518,12 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             </div>
           )}
 
-          {!fill && pages > 1 && (
-            <nav className="flex flex-wrap items-center justify-between gap-2 pt-2" aria-label="Pagination">
-              <span className="text-sm text-ink-500">
-                Page {page} of {pages} · showing {rows.length} of {total.toLocaleString()}
-              </span>
-              <div className="flex gap-1">
-                {page > 1 && (
-                  <Link href={hrefFor(sp, { page: String(page - 1) })} className="btn-secondary">
-                    ← Previous
-                  </Link>
-                )}
-                {page < pages && (
-                  <Link href={hrefFor(sp, { page: String(page + 1) })} className="btn-secondary">
-                    Next →
-                  </Link>
-                )}
-              </div>
-            </nav>
+          {!fill && page < pages && (
+            <AutoLoadMore
+              href={hrefFor(sp, { page: String(page + 1) })}
+              shown={rows.length}
+              total={total}
+            />
           )}
         </div>
 

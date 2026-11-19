@@ -84,8 +84,8 @@ export function SectionCard({
   const href = `/section/${encodeURIComponent(s.id)}`;
   const prereq = extractPrerequisites(s.description);
   return (
-    <article className="card card-pad">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <article className="card px-3 py-2">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <Link href={href} className="font-mono text-sm font-bold text-ink-900 hover:underline">
@@ -124,12 +124,13 @@ export function SectionCard({
             )}
           </div>
 
-          <Link href={href} className="mt-1 block text-base font-semibold text-ink-800 hover:underline">
+          <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0">
+          <Link href={href} className="text-sm font-semibold leading-snug text-ink-800 hover:underline">
             {s.title}
           </Link>
 
           {s.instructors.length > 0 ? (
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-600">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-xs text-ink-600">
               {s.instructors.map((i) => (
                 <span key={i.id} className="inline-flex items-center gap-1">
                   <Link href={`/professors/${encodeURIComponent(i.id)}`} className="hover:underline">
@@ -144,19 +145,20 @@ export function SectionCard({
               ))}
             </div>
           ) : (
-            <div className="mt-1 text-sm text-ink-400">Staff / instructor not posted</div>
+            <div className="text-xs text-ink-400">Staff / instructor not posted</div>
           )}
+          </div>
 
           {prereq && (
-            <p className="mt-1.5 text-sm leading-snug text-ink-700">
+            <p className="mt-0.5 text-xs leading-snug text-ink-700">
               <span className="font-semibold text-amber-800">Prerequisites:</span> {prereq}
             </p>
           )}
 
           {(s.description || s.areas.length > 0 || (reasons && reasons.length > 0)) && (
-            <details className="group mt-2">
-              <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-base font-semibold text-ink-500 hover:text-ink-800 [&::-webkit-details-marker]:hidden">
-                <span className="inline-block text-2xl leading-none transition-transform group-open:rotate-90">▸</span>
+            <details className="group mt-0.5">
+              <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-ink-500 hover:text-ink-800 [&::-webkit-details-marker]:hidden">
+                <span className="inline-block text-xl leading-none transition-transform group-open:rotate-90">▸</span>
                 {[
                   s.description ? "Description" : null,
                   s.areas.length > 0 ? `${s.areas.length} area${s.areas.length === 1 ? "" : "s"}` : null,
@@ -209,7 +211,7 @@ export function SectionCard({
 
         </div>
 
-        <div className="flex w-full flex-col items-start gap-2 sm:w-48 sm:items-end">
+        <div className="flex w-full flex-col items-start gap-0.5 sm:w-48 sm:items-end">
           <span className="text-sm font-semibold text-ink-800">
             {formatCredits(s.credits, s.school)}
           </span>
@@ -233,7 +235,7 @@ export function SectionCard({
         </div>
       </div>
 
-      <div className="mt-3 border-t border-ink-100 pt-3">
+      <div className="mt-1.5 border-t border-ink-100 pt-1.5 [&_.btn]:px-2.5 [&_.btn]:py-1 [&_.btn]:text-xs [&_.btn-primary]:px-2.5 [&_.btn-primary]:py-1 [&_.btn-secondary]:px-2.5 [&_.btn-secondary]:py-1 [&_.btn-ghost]:px-2 [&_.btn-ghost]:py-1">
         <EnrollSlot s={s} planned={plannedIds.has(s.id)} fit={fit} previewHref={previewHref} next={next} fromFill={fromFill} />
       </div>
     </article>
