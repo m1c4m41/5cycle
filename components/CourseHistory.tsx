@@ -128,24 +128,28 @@ export function CourseHistory({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full table-fixed border-collapse text-xs">
+        <table className="w-full table-fixed border-collapse text-xs" style={{ minWidth: `${rows.length * 3 * 9}rem` }}>
           <thead>
-            <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-ink-500">
-              <th className="w-16 px-1 pb-1">Year</th>
-              {SEASONS.map((s) => (
-                <th key={s.key} className="px-1 pb-1">
-                  {s.label}
+            <tr className="text-[11px] font-bold text-ink-700">
+              {rows.map((y) => (
+                <th key={y} colSpan={3} className="border-l-2 border-ink-300 bg-ink-50 px-2 py-1 text-left">
+                  {y}–{String(y + 1).slice(2)}
                 </th>
               ))}
             </tr>
+            <tr className="text-left text-[10px] font-semibold uppercase tracking-wide text-ink-500">
+              {rows.flatMap((y) =>
+                SEASONS.map((s) => (
+                  <th key={`${y}${s.key}`} className={cn("border-t border-ink-200 px-1.5 py-1", s.key === "FA" ? "border-l-2 border-l-ink-300" : "border-l border-l-ink-200")}>
+                    {s.label}
+                  </th>
+                )),
+              )}
+            </tr>
           </thead>
           <tbody>
-            {rows.map((y) => (
-              <tr key={y} className="align-top">
-                <th className="border-t border-ink-200 px-1 py-1.5 text-left font-semibold text-ink-700">
-                  {y}–{String(y + 1).slice(2)}
-                </th>
-                {SEASONS.map((s) => {
+            <tr className="align-top">
+              {rows.flatMap((y) => SEASONS.map((s) => {
                   const id = cellTerm(y, s.key);
                   const here = placed.filter((c) => c.termId === id);
                   const past = termKey(id) < cur;
@@ -154,7 +158,8 @@ export function CourseHistory({
                     <td
                       key={id}
                       className={cn(
-                        "border-l border-t border-ink-200 px-1.5 py-1.5",
+                        "border-t border-ink-200 px-1.5 py-1.5",
+                        s.key === "FA" ? "border-l-2 border-l-ink-300" : "border-l border-l-ink-200",
                         past ? "bg-emerald-50/50" : id === currentTerm ? "bg-brand-50/60" : "",
                       )}
                     >
@@ -203,9 +208,8 @@ export function CourseHistory({
                       )}
                     </td>
                   );
-                })}
-              </tr>
-            ))}
+              }))}
+            </tr>
           </tbody>
         </table>
       </div>

@@ -80,7 +80,8 @@ export async function addToPlanAction(
       : `${res.enrollment.section.code_string} added to ${res.enrollment.section.term_id}.` +
         (res.conflicts.length
           ? ` Heads up: ${res.conflicts.length} time conflict(s) you overrode.`
-          : ""),
+          : "") +
+        (res.replacedPlan ? ` Replaced your planned “${res.replacedPlan}”.` : ""),
   };
 }
 

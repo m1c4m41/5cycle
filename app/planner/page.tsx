@@ -319,6 +319,15 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
         </div>
       )}
 
+      {user && (
+        <CourseHistory
+          courses={history}
+          currentTerm={liveTerm}
+          syncedTerms={synced.map((t) => t.id)}
+          next={selfHref}
+        />
+      )}
+
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Left: the list */}
         <div className="space-y-3 lg:col-span-7">
@@ -532,14 +541,6 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
 
           {/* Enter a course by hand — study abroad, transfer credit, or a
               create-your-own designation with no catalog section. */}
-          {user && (
-            <CourseHistory
-              courses={history}
-              currentTerm={liveTerm}
-              syncedTerms={synced.map((t) => t.id)}
-              next={selfHref}
-            />
-          )}
 
           {user && (
           <form action={addManualCourseAction} className="card card-pad space-y-3">

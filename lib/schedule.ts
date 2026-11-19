@@ -6,6 +6,7 @@ import { all, get, newId, nowIso, run } from "./db";
 import { getSectionsByIds, getSection } from "./catalog";
 import type { Section } from "./types";
 import { overlaps } from "./util";
+import { swapPlannedFor } from "./plan-match";
 
 export type EnrollmentRow = {
   id: string;
@@ -74,7 +75,7 @@ export function findConflicts(list: Section[]): Conflict[] {
 }
 
 export type AddResult =
-  | { ok: true; enrollment: Enrollment; conflicts: Conflict[]; warning?: string }
+  | { ok: true; enrollment: Enrollment; conflicts: Conflict[]; warning?: string; replacedPlan?: string }
   | { ok: false; error: string; conflicts?: Conflict[] };
 
 export async function addToSchedule(
@@ -112,7 +113,8 @@ export async function addToSchedule(
     [id, userId, sectionId, section.term_id, opts.status ?? "planned", opts.note ?? null, nowIso()],
   );
   const row = (await get<EnrollmentRow>("SELECT * FROM enrollments WHERE id = ?", [id]))!;
-  return { ok: true, enrollment: { ...row, section }, conflicts };
+  const replacedPlan = (await swapPlannedFor(userId, section)) ?? undefined;
+  return { ok: true, enrollment: { ...row, section }, conflicts, replacedPlan };
 }
 
 export async function removeFromSchedule(userId: string, sectionId: string): Promise<boolean> {
