@@ -15,6 +15,7 @@ import type { RequirementSet, Section } from "@/lib/types";
 import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
 import { AutoLoadMore } from "@/components/AutoLoadMore";
+import { AutoHideBar } from "@/components/AutoHideBar";
 import { PlanList } from "@/components/PlanList";
 import { TermSelect } from "@/components/TermSelect";
 
@@ -190,6 +191,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       )}
 
       {/* Filters submit as a plain GET form, so this page works with no JS. */}
+      <AutoHideBar>
       <form id="catalog-filters" method="get" action="/catalog" className="card card-pad">
         <div className="grid gap-3 md:grid-cols-12">
           <div className="md:col-span-4">
@@ -378,6 +380,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
           )}
         </div>
       </form>
+      </AutoHideBar>
 
       <div className="grid items-start gap-5 lg:grid-cols-12">
         {/* Left: search results */}
