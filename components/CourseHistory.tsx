@@ -160,6 +160,7 @@ export function CourseHistory({
                               <span className="font-semibold text-ink-800">{c.manual ? c.title : c.code}</span>
                               {!c.manual && <span className="block truncate text-ink-500">{c.title}</span>}
                               <span className="text-ink-400"> {cr(c.credits)} cr</span>
+                              {!past && (
                               <a
                                 href={`${next}${next.includes("?") ? "&" : "?"}count=${encodeURIComponent(c.id)}#whatif`}
                                 className={cn("ml-1 hover:opacity-100", activeId === c.id ? "opacity-100" : "opacity-40")}
@@ -168,6 +169,7 @@ export function CourseHistory({
                               >
                                 🎯
                               </a>
+                              )}
                               {c.manual && (
                                 <form action={removeManualCourseAction} className="ml-1 inline">
                                   <input type="hidden" name="id" value={c.id} />
