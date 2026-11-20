@@ -1,29 +1,52 @@
 "use client";
-/** Light / dark switch. The choice is remembered in this browser; until it is made, the system setting applies. */
+/** Light / dark slider with ☀️ and 🌙 on either side. The choice is remembered in this browser; until it is made, the system setting applies. */
 import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [dark, setDark] = useState(false);
   useEffect(() => {
-    setTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+    setDark(document.documentElement.dataset.theme === "dark");
   }, []);
-  const flip = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
+  const set = (next: boolean) => {
+    document.documentElement.dataset.theme = next ? "dark" : "light";
     try {
-      localStorage.setItem("5c-theme", next);
+      localStorage.setItem("5c-theme", next ? "dark" : "light");
     } catch {}
-    setTheme(next);
+    setDark(next);
   };
   return (
-    <button
-      type="button"
-      onClick={flip}
-      className="btn-ghost px-2 py-1.5"
-      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-    >
-      <span aria-hidden>{theme === "dark" ? "☀️" : "🌙"}</span>
-    </button>
+    <div className="flex items-center gap-1.5" title={dark ? "Dark mode" : "Light mode"}>
+      <button
+        type="button"
+        onClick={() => set(false)}
+        aria-label="Light mode"
+        className={`text-sm leading-none transition-opacity ${dark ? "opacity-40 hover:opacity-80" : "opacity-100"}`}
+      >
+        <span aria-hidden>☀️</span>
+      </button>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={dark}
+        aria-label="Dark mode"
+        onClick={() => set(!dark)}
+        className={`relative h-5 w-9 shrink-0 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
+          dark ? "border-brand-500 bg-brand-600" : "border-ink-300 bg-ink-200"
+        }`}
+      >
+        <span
+          aria-hidden
+          className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${dark ? "left-[1.1rem]" : "left-0.5"}`}
+        />
+      </button>
+      <button
+        type="button"
+        onClick={() => set(true)}
+        aria-label="Dark mode"
+        className={`text-sm leading-none transition-opacity ${dark ? "opacity-100" : "opacity-40 hover:opacity-80"}`}
+      >
+        <span aria-hidden>🌙</span>
+      </button>
+    </div>
   );
 }
