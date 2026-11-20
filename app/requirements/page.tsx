@@ -44,6 +44,7 @@ import {
 import { enrolledSections, plannedTerms } from "@/lib/schedule";
 import { currentUser } from "@/lib/session";
 import { SchoolBadge } from "@/components/SectionCard";
+import { ExperienceLog } from "@/components/ExperienceLog";
 import type {
   GroupProgress,
   Matcher,
@@ -443,7 +444,7 @@ function sourceNode(source: string | null) {
   );
 }
 
-function renderSet(p: SetProgress, term: string) {
+function renderSet(p: SetProgress, term: string, userId?: string) {
   const { set } = p;
   const registrar = set.kind === "track" ? undefined : SCHOOLS.find((s) => s.code === set.school)?.registrarUrl;
   return (
@@ -518,6 +519,7 @@ function renderSet(p: SetProgress, term: string) {
           {p.groups.map((gp) => renderGroup(gp, term, set))}
         </ul>
       )}
+      {set.kind === "track" && userId && <ExperienceLog userId={userId} trackId={set.id} />}
     </SetCard>
   );
 }
@@ -1432,7 +1434,7 @@ export default async function RequirementsPage({
       {trackSets.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-bold tracking-tight text-ink-900">Pre-health track</h2>
-          {trackSets.map((p) => renderSet(p, term))}
+          {trackSets.map((p) => renderSet(p, term, user?.id))}
         </section>
       )}
 

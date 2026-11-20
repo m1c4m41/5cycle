@@ -23,7 +23,10 @@ export function SetCard({
 
   useEffect(() => {
     const openIfTargeted = () => {
-      if (ref.current && window.location.hash === `#${id}`) ref.current.open = true;
+      if (!ref.current) return;
+      // Opened by a #set-… link, or by ?open=set-… (what a form action redirects back with).
+      if (window.location.hash === `#${id}` || new URLSearchParams(window.location.search).get("open") === id)
+        ref.current.open = true;
     };
     openIfTargeted();
     window.addEventListener("hashchange", openIfTargeted);

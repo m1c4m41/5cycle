@@ -274,6 +274,19 @@ CREATE TABLE IF NOT EXISTS email_changes (
   created_at TEXT NOT NULL
 );
 
+-- Clinical / volunteer / shadowing hours a student logs on the checklist.
+CREATE TABLE IF NOT EXISTS experience_hours (
+  id         TEXT PRIMARY KEY,
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind       TEXT NOT NULL,                -- volunteer | shadowing | paid | other
+  job        TEXT NOT NULL,                -- role / activity
+  location   TEXT,
+  doctor     TEXT,                         -- who they shadowed
+  hours      REAL NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_experience_user ON experience_hours(user_id);
+
 -- Forgot-password codes, keyed by the account email.
 CREATE TABLE IF NOT EXISTS password_resets (
   email      TEXT PRIMARY KEY,
