@@ -26,6 +26,7 @@ export function GroupCheckboxes({
   half = false,
   wide = false,
   advisorWarning = true,
+  creditsInput,
 }: {
   sets: CountingSet[];
   /** group ids already checked (the saved assignments). */
@@ -43,11 +44,39 @@ export function GroupCheckboxes({
   wide?: boolean;
   /** Ask for confirmation when a ticked box isn't an official match. Off for planned (pinned) classes. */
   advisorWarning?: boolean;
+  /** A credits field in the same form (by name): typing under one full course closes the GE / Breadth boxes live. */
+  creditsInput?: { name: string; perCourse: number };
 }) {
   const [checked, setChecked] = useState<Set<string>>(() => new Set(initiallyChecked));
   const [warn, setWarn] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const confirmed = useRef(false);
+
+  // Live 0.5-credit check from the form's credits field (manual / planned classes).
+  const [typedHalf, setTypedHalf] = useState(false);
+  useEffect(() => {
+    if (!creditsInput) return;
+    const form = rootRef.current?.closest("form");
+    const el = form?.elements.namedItem(creditsInput.name) as HTMLInputElement | null;
+    if (!el) return;
+    const read = () => {
+      const v = Number(el.value);
+      setTypedHalf(Number.isFinite(v) && v > 0 && v / creditsInput.perCourse < 1);
+    };
+    read();
+    el.addEventListener("input", read);
+    return () => el.removeEventListener("input", read);
+  }, [creditsInput?.name, creditsInput?.perCourse]);
+  const isHalf = half || typedHalf;
+
+  // A class that turns out to be half-credit can't keep GE / Breadth boxes it already had ticked.
+  useEffect(() => {
+    if (!isHalf) return;
+    const closed = new Set(
+      sets.flatMap((st) => st.groups.filter((g) => st.kind === "ge" || g.section === "breadth").map((g) => g.id)),
+    );
+    setChecked((prev) => (Array.from(prev).some((id) => closed.has(id)) ? new Set(Array.from(prev).filter((id) => !closed.has(id))) : prev));
+  }, [isHalf, sets]);
 
   const flagged = nonMatching(sets, checked);
 
@@ -96,7 +125,7 @@ export function GroupCheckboxes({
             </legend>
             <div className="grid grid-cols-1 gap-y-0.5">
               {set.groups.map((g) => {
-                const reason = boxBlockReason({ set, group: g, strictGe, half, checked, policy, pairUse, sets });
+                const reason = boxBlockReason({ set, group: g, strictGe, half: isHalf, checked, policy, pairUse, sets });
                 const off = reason !== null;
                 const needsAdvisor = advisorWarning && !g.matches && !g.auto && !(set.kind === "ge" && strictGe);
                 return (

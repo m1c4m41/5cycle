@@ -235,6 +235,8 @@ export function validateCounting(args: {
   checkedIds: string[];
   policy: OverlapPolicy;
   pairUse: Record<string, number>;
+  /** A 0.5-credit course: GE and Breadth boxes are closed to it. */
+  half?: boolean;
 }): { ok: true } | { ok: false; error: string } {
   const { sets, strictGe, policy, pairUse } = args;
   // Auto-counted boxes need no saving; ignore them if a form sends one.
@@ -252,7 +254,7 @@ export function validateCounting(args: {
       // Evaluate each box against the rest of the selection.
       const rest = new Set(checked);
       rest.delete(group.id);
-      const why = boxBlockReason({ set, group, strictGe, half: false, checked: rest, policy, pairUse, sets });
+      const why = boxBlockReason({ set, group, strictGe, half: !!args.half, checked: rest, policy, pairUse, sets });
       if (why) return { ok: false, error: `“${group.name}”: ${why}` };
     }
   }

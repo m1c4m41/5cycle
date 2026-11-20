@@ -266,7 +266,7 @@ function renderGroup(gp: GroupProgress, term: string, set: RequirementSet) {
   const fullCreditOnly = set.kind === "ge" || isBreadthGroup(g);
 
   const counts: string[] = [];
-  if (g.min_courses) counts.push(`${gp.haveCourses}/${g.min_courses} course${g.min_courses === 1 ? "" : "s"}`);
+  if (g.min_courses) counts.push(`${cr(gp.effectiveCredits)}/${g.min_courses} 5C credit${g.min_courses === 1 ? "" : "s"}`);
   if (g.min_credits) counts.push(`${cr(gp.haveCredits)}/${cr(g.min_credits)} 5C credits`);
 
   const contested = !gp.satisfied && gp.excess.length > 0;
@@ -624,7 +624,7 @@ function renderLabRow(item: LabItem, term: string) {
 
   const counts: string[] = [];
   if (g.min_courses)
-    counts.push(`${gp.haveCourses}/${g.min_courses} course${g.min_courses === 1 ? "" : "s"}`);
+    counts.push(`${cr(gp.effectiveCredits)}/${g.min_courses} 5C credit${g.min_courses === 1 ? "" : "s"}`);
   if (g.min_credits) counts.push(`${cr(gp.haveCredits)}/${cr(g.min_credits)} 5C credits`);
 
   /* Prose sub-requirements: the checklist rule counts the whole group, but

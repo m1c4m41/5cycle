@@ -416,6 +416,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                       pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", sections)}
                       strictGe={false}
                       advisorWarning={false}
+                      creditsInput={{ name: "credits", perCourse: user.school === "HM" ? 3 : 1 }}
                     />
                   </div>
                 </div>
@@ -520,6 +521,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 policy={overlapPolicyFor(user?.school)}
                 pairUse={pairUseFrom(assignments ?? { sections: new Map(), manuals: new Map() }, sets, "", sections)}
                 strictGe={false}
+                creditsInput={{ name: "credits", perCourse: user.school === "HM" ? 3 : 1 }}
               />
             </div>
           </div>

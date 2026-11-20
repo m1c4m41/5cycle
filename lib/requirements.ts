@@ -1076,6 +1076,30 @@ export function progressForSet(
     }
   });
 
+  // Credit-based top-up for course-count groups: requirements are met in 5C
+  // credits (each required course = 1 credit), so half-credit classes — which
+  // each took a slot above — need more than one course to add up. Keep adding
+  // unused matching courses until the credits reach what the group asks for.
+  set.groups.forEach((g, gi) => {
+    if (!g.min_courses) return;
+    const credit = (si: number) => {
+      const w = worthEntry(g, planned[si]);
+      return w ? w.counts : planned[si].credits_5c;
+    };
+    let have = assignedPerGroup[gi].reduce((sum, si) => sum + credit(si), 0);
+    for (const si of freeIdx) {
+      if (have >= g.min_courses - 1e-6) break;
+      if (used.has(si)) continue;
+      if (blocked[gi] && half[si]) continue;
+      if (replacedIdx[gi].has(si)) continue;
+      if (groupMatches(g, planned[si])) {
+        assignedPerGroup[gi].push(si);
+        used.add(si);
+        have += credit(si);
+      }
+    }
+  });
+
   // Double-dip pass: Educational-Objective / Breadth groups may ALSO take a
   // course another group in this set already used. Each course's credits are
   // still counted only once in the set total (see `used` below).
@@ -1103,7 +1127,8 @@ export function progressForSet(
       return n + (w ? w.counts : s.credits_5c);
     }, 0);
 
-    const courseOk = neededCourses ? haveCourses >= neededCourses : true;
+    // Counted in 5C credits: a half-credit class is half a course.
+    const courseOk = neededCourses ? effectiveCredits >= neededCourses - 1e-6 : true;
     const creditOk = neededCredits ? haveCredits >= neededCredits : true;
     const satisfied = g.required === 0 ? true : courseOk && creditOk && (courseOk || creditOk);
 
@@ -1328,6 +1353,7 @@ export async function setCourseAssignments(
           sets: countingSetsFor(sets, course),
           strictGe: courseKind === "section",
           checkedIds: groups.map((g) => g.id),
+          half: course.credits_5c < 1,
           policy: overlapPolicyFor(u.school),
           pairUse: pairUseFrom(
             await assignmentsFor(userId),
