@@ -3,6 +3,7 @@
  *  the rest is fetched as the sentinel nears the viewport and appended. */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { loadMoreProfessors } from "@/actions/professors";
+import { useListRestore } from "@/lib/use-list-restore";
 
 export function InfiniteProfessors({
   firstTrs,
@@ -44,6 +45,26 @@ export function InfiniteProfessors({
       loading.current = false;
     }
   }, [sp, shown, total, batch]);
+
+  useListRestore(shown, async (target) => {
+    loading.current = true;
+    try {
+      const got: { trs: ReactNode; lis: ReactNode }[] = [];
+      let cur = firstCount;
+      while (cur < Math.min(target, total)) {
+        const r = await loadMoreProfessors(sp, cur, Math.min(100, target - cur));
+        if (!r.count) break;
+        got.push({ trs: r.trs, lis: r.lis });
+        cur += r.count;
+      }
+      if (got.length) {
+        setChunks(got);
+        setShown(cur);
+      }
+    } finally {
+      loading.current = false;
+    }
+  });
 
   useEffect(() => {
     const el = sentinel.current;

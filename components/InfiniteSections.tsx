@@ -4,6 +4,7 @@
  *  so everything already shown stays put (no re-fetch, no jump). */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { loadMoreSections } from "@/actions/catalog";
+import { useListRestore } from "@/lib/use-list-restore";
 
 export function InfiniteSections({
   first,
@@ -42,6 +43,27 @@ export function InfiniteSections({
       loading.current = false;
     }
   }, [sp, term, shown, total, batch]);
+
+  // Back from a class page: reload as many rows as were showing, then scroll to the saved spot.
+  useListRestore(shown, async (target) => {
+    loading.current = true;
+    try {
+      const nodes: ReactNode[] = [];
+      let cur = firstCount;
+      while (cur < Math.min(target, total)) {
+        const r = await loadMoreSections(sp, term, cur, Math.min(100, target - cur));
+        if (!r.count) break;
+        nodes.push(r.node);
+        cur += r.count;
+      }
+      if (nodes.length) {
+        setChunks(nodes);
+        setShown(cur);
+      }
+    } finally {
+      loading.current = false;
+    }
+  });
 
   useEffect(() => {
     const el = sentinel.current;

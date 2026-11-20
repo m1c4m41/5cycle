@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
+import { BackMarker } from "@/components/BackMarker";
 import { currentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" data-school={user?.school ? user.school.toLowerCase() : undefined}>
       <body className="min-h-screen">
+        <BackMarker />
         <Nav />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">{children}</main>
         <footer className="mt-12 border-t border-ink-200 bg-white">
