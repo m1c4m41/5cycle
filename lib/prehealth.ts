@@ -140,7 +140,7 @@ export const PREHEALTH_SETS: TrackSet[] = [
     id: "track-premed",
     name: "Pre-Med (MD/DO)",
     notes:
-      `${ADVISOR} Entrance exam: MCAT. Clinical experience: about 100–200+ hours of clinical volunteering and physician shadowing. ` +
+      `${ADVISOR} Entrance exam: MCAT. Clinical experience: at least 100 hours of physician shadowing and 50 hours of clinical experience, with 200 hours in total as the goal. ` +
       "5C availability: about 100% on campus (Pomona, HMC, or the joint science departments).",
     groups: [
       GEN_BIO,

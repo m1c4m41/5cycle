@@ -11,12 +11,21 @@ const KIND_LABEL: Record<string, string> = {
   other: "Other",
 };
 
-/** What each pre-health track usually expects (hours, which kinds count). */
-const TARGETS: Record<string, { label: string; min: number | null; kinds: string[]; text: string }> = {
-  "track-premed": { label: "Pre-Med", min: 100, kinds: ["volunteer", "shadowing"], text: "about 100–200+ hours of clinical volunteering and physician shadowing" },
-  "track-predental": { label: "Pre-Dental", min: 100, kinds: ["shadowing"], text: "about 100+ hours shadowing a general dentist" },
-  "track-prepa": { label: "Pre-PA", min: 1000, kinds: ["paid"], text: "about 1,000–2,000+ hours of paid, hands-on patient care (EMT, CNA, MA…)" },
-  "track-prenursing": { label: "Pre-Nursing", min: null, kinds: [], text: "nurse shadowing and healthcare volunteering recommended (no strict hour minimum)" },
+type Part = { label: string; kinds: string[]; min: number };
+/** What each pre-health track usually expects: one or more minimums, each filled by certain kinds of hours. */
+const TARGETS: Record<string, { label: string; text: string; parts: Part[]; goal?: number }> = {
+  "track-premed": {
+    label: "Pre-Med",
+    text: "at least 100 hours of physician shadowing and 50 hours of clinical experience — aim for 200 hours in total",
+    parts: [
+      { label: "Shadowing", kinds: ["shadowing"], min: 100 },
+      { label: "Clinical", kinds: ["volunteer", "paid"], min: 50 },
+    ],
+    goal: 200,
+  },
+  "track-predental": { label: "Pre-Dental", text: "about 100+ hours shadowing a general dentist", parts: [{ label: "Shadowing", kinds: ["shadowing"], min: 100 }] },
+  "track-prepa": { label: "Pre-PA", text: "about 1,000–2,000+ hours of paid, hands-on patient care (EMT, CNA, MA…)", parts: [{ label: "Paid patient care", kinds: ["paid"], min: 1000 }] },
+  "track-prenursing": { label: "Pre-Nursing", text: "nurse shadowing and healthcare volunteering recommended (no strict hour minimum)", parts: [] },
 };
 
 const fmt = (n: number) => String(Number(n.toFixed(2)));
@@ -28,8 +37,12 @@ export async function ExperienceLog({ userId, trackId }: { userId: string; track
   );
   const total = rows.reduce((a, r) => a + r.hours, 0);
   const target = trackId ? TARGETS[trackId] : undefined;
-  const counted = target ? rows.filter((r) => target.kinds.includes(r.kind)).reduce((a, r) => a + r.hours, 0) : 0;
-  const pct = target?.min ? Math.min(100, Math.round((counted / target.min) * 100)) : 0;
+  const sumKinds = (kinds: string[]) => rows.filter((r) => kinds.includes(r.kind)).reduce((a, r) => a + r.hours, 0);
+  const parts = (target?.parts ?? []).map((p) => ({ ...p, have: sumKinds(p.kinds) }));
+  const minTotal = parts.reduce((a, p) => a + p.min, 0);
+  const metTotal = parts.reduce((a, p) => a + Math.min(p.have, p.min), 0);
+  const pct = minTotal ? Math.round((metTotal / minTotal) * 100) : 0;
+  const goalHours = target?.goal ? parts.reduce((a, p) => a + p.have, 0) : 0;
 
   return (
     <section id="hours" className="mt-4 scroll-mt-20 border-t border-ink-100 pt-4">
@@ -40,17 +53,38 @@ export async function ExperienceLog({ userId, trackId }: { userId: string; track
             <p className="text-sm text-ink-700">
               {target.label} usually expects {target.text}.
             </p>
-            {target.min ? (
+            {parts.length > 0 ? (
               <div className="mt-2">
                 <div className="flex items-baseline justify-between text-xs text-ink-500">
-                  <span>
-                    {fmt(counted)} of {target.min.toLocaleString()} hours ({target.kinds.map((k) => KIND_LABEL[k].toLowerCase()).join(" + ")})
-                  </span>
+                  <span>Minimums met</span>
                   <span className="font-bold tabular-nums text-ink-900">{pct}%</span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-ink-100">
-                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+                {/* One bar split by requirement: each section's width follows its minimum. */}
+                <div className="mt-1 flex gap-1">
+                  {parts.map((p) => {
+                    const done = p.have >= p.min;
+                    return (
+                      <div key={p.label} style={{ flex: p.min }} className="min-w-0">
+                        <div className="h-2 overflow-hidden rounded-full bg-ink-100">
+                          <div
+                            className={done ? "h-full rounded-full bg-emerald-500" : "h-full rounded-full bg-amber-400"}
+                            style={{ width: `${Math.min(100, (p.have / p.min) * 100)}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] leading-tight text-ink-600">
+                          <span className="font-semibold">{p.label}</span> {fmt(p.have)} / {p.min.toLocaleString()} h
+                          {done && <span className="text-emerald-700"> ✓</span>}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
+                {target.goal ? (
+                  <p className="mt-2 text-xs text-ink-600">
+                    <span className="font-semibold">Goal: {target.goal} hours total</span> — {fmt(goalHours)} so far
+                    {goalHours >= target.goal ? " ✓" : ` (${fmt(target.goal - goalHours)} to go)`}.
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>
