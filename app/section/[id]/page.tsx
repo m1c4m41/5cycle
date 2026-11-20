@@ -10,6 +10,8 @@ import { EnrollButton } from "@/components/EnrollButton";
 import { ReviewForm } from "@/components/ReviewForm";
 import { RmpScore } from "@/components/RmpScore";
 import { SchoolBadge, SeatsMeter } from "@/components/SectionCard";
+import { PrereqText } from "@/components/PrereqText";
+import { extractPrerequisites } from "@/lib/prereq";
 import { Stars } from "@/components/Stars";
 import { all, get } from "@/lib/db";
 import { AFFILIATION_LABELS, SCHOOL_BY_CODE, STATUS_LABELS } from "@/lib/constants";
@@ -178,6 +180,12 @@ export default async function SectionPage({
         <div className="space-y-6 lg:col-span-7">
           <section className="card card-pad space-y-3">
             <h2 className="text-lg font-bold">Description</h2>
+            {extractPrerequisites(s.description) && (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-ink-700">
+                <span className="font-semibold text-amber-800">Prerequisites:</span>{" "}
+                <PrereqText text={extractPrerequisites(s.description)!} />
+              </p>
+            )}
             {s.description ? (
               <p className="whitespace-pre-line text-sm leading-relaxed text-ink-700">
                 {s.description}

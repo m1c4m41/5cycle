@@ -13,6 +13,8 @@ import {
 } from "@/actions/requirements";
 import { EnrollButton } from "@/components/EnrollButton";
 import { SchoolBadge, SeatsMeter } from "@/components/SectionCard";
+import { PrereqText } from "@/components/PrereqText";
+import { extractPrerequisites } from "@/lib/prereq";
 import { Stars } from "@/components/Stars";
 import { academicYearOf } from "@/lib/academic-year";
 import { SeatAlertToggle } from "@/components/SeatAlertToggle";
@@ -516,6 +518,12 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                             .join("; ")
                         : "no meeting time in feed"}
                     </p>
+                    {extractPrerequisites(s.description) && (
+                      <p className="mt-1 text-xs leading-snug text-ink-600">
+                        <span className="font-semibold text-amber-800">Prerequisites:</span>{" "}
+                        <PrereqText text={extractPrerequisites(s.description)!} />
+                      </p>
+                    )}
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <SeatsMeter s={s} />
                       <span
