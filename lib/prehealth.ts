@@ -151,8 +151,8 @@ export const PREHEALTH_SETS: TrackSet[] = [
       ENGLISH,
       CALCULUS,
       STATS,
-      INTRO_PSYCH,
-      SOCIOLOGY,
+      optional(INTRO_PSYCH, "Recommended: Introductory Psychology", "Psychology and sociology content is tested on the MCAT."),
+      optional(SOCIOLOGY, "Recommended: Introductory Sociology", "Psychology and sociology content is tested on the MCAT."),
       optional(
         { name: "", minCourses: 1, matchers: [and(or(dept("BIOL"), dept("NEUR")), title("Cell Bio", "Genetics", "Physiology", "Molecular"))] },
         "Recommended: Cell Biology, Genetics or Physiology",
