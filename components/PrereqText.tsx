@@ -7,8 +7,35 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { lookupCourse, type CourseInfo } from "@/actions/course-info";
 
-// "BIOL 041E PO", "CSCI 060", "MATH31", "CHEM 014L KS"
-const CODE = /\b([A-Z]{2,5})\s?0*(\d{1,3})([A-Z]{0,3})\b(?:\s+(PO|PZ|CM|HM|SC|KS|JT|JP|CG)\b)?/g;
+// Departments written out in words ("Physics 51", "Computer Science 5").
+const ALIASES: Record<string, string> = {
+  "computer science": "CSCI", "political science": "POLI", "politics": "POLI", "environmental analysis": "EA",
+  "physics": "PHYS", "astronomy": "ASTR", "astrophysics": "ASTR", "mathematics": "MATH", "math": "MATH",
+  "chemistry": "CHEM", "biology": "BIOL", "economics": "ECON", "psychology": "PSYC", "history": "HIST",
+  "philosophy": "PHIL", "english": "ENGL", "literature": "LIT", "sociology": "SOC", "anthropology": "ANTH",
+  "geology": "GEOL", "neuroscience": "NEUR", "engineering": "ENGR", "government": "GOVT", "music": "MUS",
+  "theatre": "THEA", "theater": "THEA", "dance": "DANC", "french": "FREN", "spanish": "SPAN",
+  "german": "GERM", "chinese": "CHIN", "japanese": "JAPN", "korean": "KORE", "russian": "RUSS",
+  "italian": "ITAL", "latin": "LATN", "greek": "GREK", "education": "EDUC", "religious studies": "RLST",
+  "classics": "CLAS", "geography": "GEOG", "management": "MGT", "writing": "WRIT", "statistics": "MATH",
+  "art history": "ARHI", "studio art": "ART", "art": "ART",
+};
+const ALIAS_RE = Object.keys(ALIASES)
+  .sort((a, b) => b.length - a.length)
+  .map((k) => k.replace(/ /g, "\\s+"))
+  .join("|");
+
+// "BIOL 041E PO", "CSCI 060", "MATH31", "CHEM 014L KS", mixed case ("Art 110"),
+// or the department spelled out ("Physics 51").
+const CODE = new RegExp(
+  `\\b(${ALIAS_RE}|[A-Za-z]{2,5})\\s?0*(\\d{1,3})([A-Z]{0,3})\\b(?:\\s+(PO|PZ|CM|HM|SC|KS|JT|JP|CG)\\b)?`,
+  "gi",
+);
+
+// Ordinary words that can sit in front of a number ("Grade 3", "level 200").
+const NOT_A_DEPT = new Set(
+  "grade year level units unit part term week weeks page class hours hour sec section group tier phase step stage age ages years".split(" "),
+);
 
 const cache = new Map<string, CourseInfo>();
 
@@ -101,9 +128,16 @@ export function PrereqText({ text }: { text: string }) {
   let m: RegExpExecArray | null;
   CODE.lastIndex = 0;
   while ((m = CODE.exec(text))) {
+    const word = m[1].replace(/\s+/g, " ").toLowerCase();
+    const dept = ALIASES[word] ?? m[1].toUpperCase();
+    if (!ALIASES[word] && m[1] !== m[1].toUpperCase() && NOT_A_DEPT.has(word)) continue;
+    // With the i flag the suffix/affiliation could be lowercase words ("Art 110 and"): only keep uppercase ones.
+    const suffix = /^[A-Z]+$/.test(m[3] ?? "") ? m[3] : "";
+    const aff = /^(PO|PZ|CM|HM|SC|KS|JT|JP|CG)$/.test(m[4] ?? "") ? m[4] : "";
+    if ((m[3] ?? "") !== suffix && (m[3] ?? "") !== "") continue;
     if (m.index > last) parts.push(text.slice(last, m.index));
     parts.push(
-      <CourseCode key={m.index} dept={m[1]} num={Number(m[2])} suffix={m[3] ?? ""} aff={m[4] ?? ""} text={m[0]} />,
+      <CourseCode key={m.index} dept={dept} num={Number(m[2])} suffix={suffix} aff={aff} text={m[0]} />,
     );
     last = m.index + m[0].length;
   }
