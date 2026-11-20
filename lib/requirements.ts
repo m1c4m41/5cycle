@@ -411,11 +411,14 @@ function courseWorth(g: RequirementGroup, s: Section): number {
   return worthEntry(g, s)?.counts ?? 1;
 }
 
+/** The optional "Study Abroad" box (Pitzer GE) is left out of the checklist and What if. */
+const isHiddenGroup = (g: { name: string; required: number }) => g.required === 0 && /^study abroad$/i.test(g.name.trim());
+
 async function getGroups(setId: string): Promise<RequirementGroup[]> {
   const rows = await all<GroupRow>(`${GROUPS_SELECT} WHERE g.set_id = ? ORDER BY g.position ASC`, [
     setId,
   ]);
-  return rows.map(parseGroupRow);
+  return rows.filter((r) => !isHiddenGroup(r)).map(parseGroupRow);
 }
 
 /** Loads groups + rules for many sets in a SINGLE query (avoids N+1 over HTTP). */
@@ -428,6 +431,7 @@ async function getGroupsForSets(setIds: string[]): Promise<Map<string, Requireme
     setIds,
   );
   for (const r of rows) {
+    if (isHiddenGroup(r)) continue;
     bySet.get(r.set_id)?.push(parseGroupRow(r));
   }
   return bySet;
