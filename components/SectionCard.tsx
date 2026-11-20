@@ -4,6 +4,7 @@ import { AFFILIATION_LABELS, SCHOOL_BY_CODE, STATUS_LABELS } from "@/lib/constan
 import { cn, formatCredits, formatMeeting, truncate } from "@/lib/util";
 import { Stars } from "./Stars";
 import { extractPrerequisites } from "@/lib/prereq";
+import { PrereqText } from "@/components/PrereqText";
 
 export function SchoolBadge({ code, small }: { code: string; small?: boolean }) {
   const s = SCHOOL_BY_CODE[code];
@@ -159,7 +160,7 @@ export function SectionCard({
 
           {prereq && (
             <p className="mt-0.5 text-xs leading-snug text-ink-700">
-              <span className="font-semibold text-amber-800">Prerequisites:</span> {prereq}
+              <span className="font-semibold text-amber-800">Prerequisites:</span> <PrereqText text={prereq} />
             </p>
           )}
 

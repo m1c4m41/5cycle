@@ -19,6 +19,7 @@ import { SectionCards } from "@/components/SectionCards";
 import { hrefFor, list, num, one, cr, queryFromSp, type SP } from "@/lib/catalog-params";
 import { AutoHideBar } from "@/components/AutoHideBar";
 import { LiveGrid } from "@/components/LiveGrid";
+import { PreviewCard } from "@/components/PreviewCard";
 import { CatalogGridProvider } from "@/components/CatalogGridProvider";
 import { toGridSection } from "@/lib/grid-blocks";
 import { TermSelect } from "@/components/TermSelect";
@@ -415,12 +416,15 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               ) : (
                 <div className="flex flex-col gap-3">
                   {gap.picks.map((pick) => (
-                    <SectionCard
+                    <PreviewCard
                       key={pick.section.id}
+                      section={toGridSection(pick.section)}
+                      inPlan={plannedIds.has(pick.section.id)}
+                    >
+                    <SectionCard
                       s={pick.section}
                       plannedIds={plannedIds}
                       fit={fitFor(pick.section.id)}
-                      previewHref={hrefFor(sp, { preview: pick.section.id })}
                       next={hrefFor(sp, {})}
                       fromFill
                       needTag={{
@@ -434,6 +438,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                       }}
                       reasons={pick.reasons}
                     />
+                    </PreviewCard>
                   ))}
                 </div>
               )}
