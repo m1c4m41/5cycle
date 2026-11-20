@@ -62,13 +62,13 @@ function Block({ b, axis, ghost, conflict }: { b: GridBlock; axis: Axis; ghost?:
         borderColor: conflict ? "#d97706" : color,
         background: ghost
           ? `repeating-linear-gradient(135deg, color-mix(in srgb, ${color} 22%, transparent) 0 6px, color-mix(in srgb, ${color} 10%, transparent) 6px 12px)`
-          : `color-mix(in srgb, ${color} 14%, white)`,
+          : `color-mix(in srgb, ${color} 14%, var(--app-surface))`,
         color: "var(--color-ink-900)",
         ...(ghost ? { opacity: 0.92 } : {}),
       }}
       title={`${b.section.code_string} — ${b.section.title} (${secondsTo12h(b.start)}–${secondsTo12h(b.end)})`}
     >
-      <div className="truncate font-semibold" style={{ color }}>
+      <div className="truncate font-semibold" style={{ color: `color-mix(in srgb, ${color} var(--accent-lift, 100%), white)` }}>
         {ghost && <span aria-hidden>👁 </span>}
         {conflict && !ghost && <span aria-hidden title="Overlaps another class">⚠ </span>}
         {b.section.department} {String(b.section.course_number).padStart(3, "0")}

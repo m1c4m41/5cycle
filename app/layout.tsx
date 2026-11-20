@@ -16,7 +16,16 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();
   return (
-    <html lang="en" data-school={user?.school ? user.school.toLowerCase() : undefined}>
+    <html lang="en" data-school={user?.school ? user.school.toLowerCase() : undefined} suppressHydrationWarning>
+      <head>
+        {/* Apply the saved (or system) theme before first paint so there is no light flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('5c-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t}catch(e){}",
+          }}
+        />
+      </head>
       <body className="min-h-screen">
         <BackMarker />
         <Nav />

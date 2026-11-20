@@ -2,6 +2,7 @@ import Link from "next/link";
 import { currentUser, isGuestUser } from "@/lib/session";
 import { unreadCount, latestUnreadId } from "@/lib/notify";
 import { BellLink } from "@/components/BellLink";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { GuestKeepAlive } from "@/components/GuestKeepAlive";
 import { logoutAction } from "@/actions/auth";
 import { schoolShort } from "@/lib/util";
@@ -43,6 +44,7 @@ export async function Nav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 text-sm">
+          <ThemeToggle />
           {user ? (
             <>
               <BellLink initialUnread={unread} initialLatestId={latestId} />
