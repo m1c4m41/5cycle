@@ -433,7 +433,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
       )}
 
       {user && (
-        <form action={addManualCourseAction} className="card card-pad space-y-3">
+        <div className="grid gap-6 lg:grid-cols-12">
+        <form action={addManualCourseAction} className="card card-pad space-y-3 self-start lg:col-span-7">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 className="text-lg font-bold">Enter Course Manually</h2>
             <p className="max-w-3xl text-xs leading-relaxed text-ink-500">
@@ -522,6 +523,94 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
             </div>
           </div>
         </form>
+          <section id="whatif" className="card card-pad space-y-3 scroll-mt-20 self-start lg:col-span-5">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-lg font-bold">What if</h2>
+              <Link href={`/requirements?term=${term}`} className="link text-sm">
+                Full checklist
+              </Link>
+            </div>
+            {!user ? (
+              <p className="text-sm text-ink-600">
+                Sign in to see how your plan ticks GE, major and minor boxes —{" "}
+                <Link href={`/signup?next=${encodeURIComponent(selfHref)}`} className="link">
+                  create an account
+                </Link>{" "}
+                to get your checklist.
+              </p>
+            ) : sets.length === 0 ? (
+              <p className="text-sm text-ink-600">
+                No requirement set is attached to your profile yet. Pick your major and minor on{" "}
+                <Link href="/profile" className="link">
+                  your account page
+                </Link>
+                .
+              </p>
+            ) : (
+              <WhatIf
+                base={baseProgress}
+                whatIf={progress}
+                hasPlanned={hasPlannedOnly}
+                picker={
+                  countCourse && user ? (
+                    <>
+                    <ScrollOnMount id="whatif" />
+                    <form
+                      action={saveCourseCounting}
+                      className="space-y-3 rounded-lg border border-brand-300 bg-brand-50/40 p-3"
+                    >
+                      <input type="hidden" name="courseId" value={countCourse.id} />
+                      <input type="hidden" name="courseKind" value={countCourse.manual ? "manual" : "section"} />
+                      <input type="hidden" name="next" value={`${selfHref}&count=${encodeURIComponent(countCourse.id)}#whatif`} />
+                      <p className="text-sm font-semibold text-ink-900">
+                        What will {countCourse.manual ? countCourse.title : countCourse.code_string.split(" · ")[0]} count for?
+                      </p>
+                      <p className="text-xs text-ink-600">
+                        Tick every requirement it fills — the bars below update when you save. Leave it
+                        blank to let the checklist decide.
+                      </p>
+                      {(() => {
+                        const list = countCourse.manual
+                          ? (assignments?.manuals.get(countCourse.id) ?? [])
+                          : (assignments?.sections.get(countCourse.id) ?? []);
+                        const ids = list.map((a) => a.groupId);
+                        return (
+                          <GroupCheckboxes
+                            key={ids.join(",")}
+                            sets={countingSetsFor(sets, countCourse)}
+                            checked={ids}
+                            policy={overlapPolicyFor(user.school)}
+                            pairUse={pairUseFrom(
+                              assignments ?? { sections: new Map(), manuals: new Map() },
+                              sets,
+                              countCourse.id,
+                              allCourseSections,
+                            )}
+                            strictGe={!countCourse.manual}
+                            half={countCourse.credits_5c < 1}
+                          />
+                        );
+                      })()}
+                      <div className="flex flex-wrap items-center gap-2 border-t border-ink-100 pt-2">
+                        <button type="submit" className="btn-primary text-xs">
+                          Save &amp; update what-if
+                        </button>
+                        <button type="submit" name="release" value="1" className="btn-ghost text-xs">
+                          ↩ Let the checklist decide
+                        </button>
+                        <Link href={whatIfHref} className="btn-ghost text-xs">
+                          Close
+                        </Link>
+                      </div>
+                    </form>
+                    </>
+                  ) : null
+                }
+              />
+            )}
+          </section>
+
+        </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-12">
@@ -752,93 +841,6 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                   ? "Enter this study-abroad term's courses by hand — they'll appear below the grid."
                   : "The grid fills in as you save courses."}
               </p>
-            )}
-          </section>
-
-          <section id="whatif" className="card card-pad space-y-3 scroll-mt-20">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-lg font-bold">What if</h2>
-              <Link href={`/requirements?term=${term}`} className="link text-sm">
-                Full checklist
-              </Link>
-            </div>
-            {!user ? (
-              <p className="text-sm text-ink-600">
-                Sign in to see how your plan ticks GE, major and minor boxes —{" "}
-                <Link href={`/signup?next=${encodeURIComponent(selfHref)}`} className="link">
-                  create an account
-                </Link>{" "}
-                to get your checklist.
-              </p>
-            ) : sets.length === 0 ? (
-              <p className="text-sm text-ink-600">
-                No requirement set is attached to your profile yet. Pick your major and minor on{" "}
-                <Link href="/profile" className="link">
-                  your account page
-                </Link>
-                .
-              </p>
-            ) : (
-              <WhatIf
-                base={baseProgress}
-                whatIf={progress}
-                hasPlanned={hasPlannedOnly}
-                picker={
-                  countCourse && user ? (
-                    <>
-                    <ScrollOnMount id="whatif" />
-                    <form
-                      action={saveCourseCounting}
-                      className="space-y-3 rounded-lg border border-brand-300 bg-brand-50/40 p-3"
-                    >
-                      <input type="hidden" name="courseId" value={countCourse.id} />
-                      <input type="hidden" name="courseKind" value={countCourse.manual ? "manual" : "section"} />
-                      <input type="hidden" name="next" value={`${selfHref}&count=${encodeURIComponent(countCourse.id)}#whatif`} />
-                      <p className="text-sm font-semibold text-ink-900">
-                        What will {countCourse.manual ? countCourse.title : countCourse.code_string.split(" · ")[0]} count for?
-                      </p>
-                      <p className="text-xs text-ink-600">
-                        Tick every requirement it fills — the bars below update when you save. Leave it
-                        blank to let the checklist decide.
-                      </p>
-                      {(() => {
-                        const list = countCourse.manual
-                          ? (assignments?.manuals.get(countCourse.id) ?? [])
-                          : (assignments?.sections.get(countCourse.id) ?? []);
-                        const ids = list.map((a) => a.groupId);
-                        return (
-                          <GroupCheckboxes
-                            key={ids.join(",")}
-                            sets={countingSetsFor(sets, countCourse)}
-                            checked={ids}
-                            policy={overlapPolicyFor(user.school)}
-                            pairUse={pairUseFrom(
-                              assignments ?? { sections: new Map(), manuals: new Map() },
-                              sets,
-                              countCourse.id,
-                              allCourseSections,
-                            )}
-                            strictGe={!countCourse.manual}
-                            half={countCourse.credits_5c < 1}
-                          />
-                        );
-                      })()}
-                      <div className="flex flex-wrap items-center gap-2 border-t border-ink-100 pt-2">
-                        <button type="submit" className="btn-primary text-xs">
-                          Save &amp; update what-if
-                        </button>
-                        <button type="submit" name="release" value="1" className="btn-ghost text-xs">
-                          ↩ Let the checklist decide
-                        </button>
-                        <Link href={whatIfHref} className="btn-ghost text-xs">
-                          Close
-                        </Link>
-                      </div>
-                    </form>
-                    </>
-                  ) : null
-                }
-              />
             )}
           </section>
 
