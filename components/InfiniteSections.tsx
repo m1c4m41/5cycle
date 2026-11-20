@@ -3,7 +3,7 @@
  *  fetched from a server action as the sentinel nears the viewport and appended,
  *  so everything already shown stays put (no re-fetch, no jump). */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { loadMoreSections } from "@/actions/catalog";
+import { loadMoreGap, loadMoreSections } from "@/actions/catalog";
 import { useListRestore } from "@/lib/use-list-restore";
 
 export function InfiniteSections({
@@ -13,6 +13,7 @@ export function InfiniteSections({
   sp,
   term,
   batch = 40,
+  source = "catalog",
 }: {
   first: ReactNode;
   firstCount: number;
@@ -20,6 +21,8 @@ export function InfiniteSections({
   sp: Record<string, string>;
   term: string;
   batch?: number;
+  /** "gap": the empty-time-slots list (classes that fit your schedule). */
+  source?: "catalog" | "gap";
 }) {
   const [chunks, setChunks] = useState<ReactNode[]>([]);
   const [shown, setShown] = useState(firstCount);
@@ -32,7 +35,7 @@ export function InfiniteSections({
     if (loading.current || shown >= total) return;
     loading.current = true;
     try {
-      const r = await loadMoreSections(sp, term, shown, batch);
+      const r = await (source === "gap" ? loadMoreGap : loadMoreSections)(sp, term, shown, batch);
       setChunks((c) => [...c, r.node]);
       setShown((n) => n + r.count);
       setError(false);
@@ -42,7 +45,7 @@ export function InfiniteSections({
     } finally {
       loading.current = false;
     }
-  }, [sp, term, shown, total, batch]);
+  }, [sp, term, shown, total, batch, source]);
 
   // Back from a class page: reload as many rows as were showing, then scroll to the saved spot.
   useListRestore(shown, async (target) => {
@@ -51,7 +54,7 @@ export function InfiniteSections({
       const nodes: ReactNode[] = [];
       let cur = firstCount;
       while (cur < Math.min(target, total)) {
-        const r = await loadMoreSections(sp, term, cur, Math.min(100, target - cur));
+        const r = await (source === "gap" ? loadMoreGap : loadMoreSections)(sp, term, cur, Math.min(100, target - cur));
         if (!r.count) break;
         nodes.push(r.node);
         cur += r.count;

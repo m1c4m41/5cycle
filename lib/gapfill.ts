@@ -35,7 +35,10 @@ export type GapPick = {
 };
 
 export type GapResult = {
+  /** This page of the ranked list (see offset / limit). */
   picks: GapPick[];
+  /** Every class that fits, across all pages. */
+  total: number;
   /** Requirement boxes still open, for the explanatory banner. */
   openGroups: number;
   /** Classes already on the grid this term. */
@@ -67,6 +70,8 @@ export async function findGapFillers(
   /** Sections the student added from this very list: they stay listed (with a
    *  remove button) instead of vanishing once they're in the plan. */
   keepIds: string[] = [],
+  /** Where this page starts in the ranked list (continuous scroll). */
+  offset = 0,
 ): Promise<GapResult> {
   const [termPlanned, allPlanned, manuals, assignments] = await Promise.all([
     enrolledSections(user.id, term),
@@ -171,18 +176,17 @@ export async function findGapFillers(
 
   const bySort = (a: Cand, b: Cand) =>
     b.score - a.score || a.row.course_code.localeCompare(b.row.course_code);
-  const all_ = [...best.values()];
-  const ranked = [
-    ...all_.filter((c) => !keep.has(c.row.id)).sort(bySort).slice(0, limit),
-    ...all_.filter((c) => keep.has(c.row.id)),
-  ].sort(bySort);
+  // The whole ranked list: requirement-fillers first (major, minor / pre-health, GE),
+  // then everything else that fits, senior-thesis style classes last.
+  const ranked = [...best.values()].sort(bySort);
+  const page = ranked.slice(Math.max(0, offset), Math.max(0, offset) + limit);
 
   // Hydrate just the winners and re-check with full text (descriptions matter
   // for title-keyword rules) before showing them.
-  const hydrated = await getSectionsByIds(ranked.map((c) => c.row.id));
+  const hydrated = await getSectionsByIds(page.map((c) => c.row.id));
   const byId = new Map(hydrated.map((s) => [s.id, s]));
   const picks: GapPick[] = [];
-  for (const c of ranked) {
+  for (const c of page) {
     const section = byId.get(c.row.id);
     if (!section) continue;
     const hits = c.hits.filter(({ group }) => groupMatches(group, section));
@@ -200,5 +204,5 @@ export async function findGapFillers(
         .map(({ set, group }) => `${label(set.kind)} · ${set.name}: ${group.name}`),
     });
   }
-  return { picks, openGroups: unmet.length, plannedCount: termPlanned.length };
+  return { picks, total: ranked.length, openGroups: unmet.length, plannedCount: termPlanned.length };
 }

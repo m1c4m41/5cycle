@@ -16,6 +16,7 @@ import { SectionCard, type FitInfo } from "@/components/SectionCard";
 import { Timetable } from "@/components/Timetable";
 import { InfiniteSections } from "@/components/InfiniteSections";
 import { SectionCards } from "@/components/SectionCards";
+import { GapCards } from "@/components/GapCards";
 import { hrefFor, list, num, one, cr, queryFromSp, type SP } from "@/lib/catalog-params";
 import { AutoHideBar } from "@/components/AutoHideBar";
 import { LiveGrid } from "@/components/LiveGrid";
@@ -74,7 +75,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     user ? setsForUser(user) : Promise.resolve([] as RequirementSet[]),
     fill && user
       ? cookies().then((jar) =>
-          findGapFillers(user, term, 24, (jar.get("gapkeep")?.value ?? "").split(",").filter(Boolean)),
+          findGapFillers(user, term, PAGE_SIZE, (jar.get("gapkeep")?.value ?? "").split(",").filter(Boolean)),
         )
       : Promise.resolve(null as GapResult | null),
   ]);
@@ -397,51 +398,31 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                     : "Your grid is empty, so every time works"}
                   . Classes that fill a requirement on your checklist come first —{" "}
                   <strong>major and minor</strong> requirements, then <strong>general education</strong> —
-                  followed by everything else that fits, even requirements you&apos;ve already finished.
-                  One section per course; open classes rank a little higher.
+                  followed by everything else that fits, even requirements you&apos;ve already finished. Senior
+                  thesis and research classes are at the very bottom. One section per course; open classes rank a little higher.
                 </p>
               </section>
               {gap.picks.length === 0 ? (
                 <div className="card card-pad text-center">
-                  <p className="font-semibold">
-                    Nothing this term fits your empty slots.
-                  </p>
+                  <p className="font-semibold">Nothing this term fits your empty slots.</p>
                   <p className="mt-1 text-sm text-ink-600">
                     Try another term, or open the planner to free up a time slot.
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-3">
-                  {gap.picks.map((pick) => (
-                    <PreviewCard
-                      key={pick.section.id}
-                      section={toGridSection(pick.section)}
-                      inPlan={plannedIds.has(pick.section.id)}
-                    >
-                    <SectionCard
-                      s={pick.section}
-                      plannedIds={plannedIds}
-                      fit={fitFor(pick.section.id)}
-                      next={hrefFor(sp, {})}
-                      fromFill
-                      needTag={
-                        pick.tier === "none"
-                          ? undefined
-                          : {
-                              tier: pick.tier,
-                              label:
-                                pick.tier === "ge"
-                                  ? "Fills a GE you need"
-                                  : pick.tier === "major"
-                                    ? "Fills a major requirement"
-                                    : "Fills a minor requirement",
-                            }
-                      }
-                      reasons={pick.reasons}
-                    />
-                    </PreviewCard>
-                  ))}
-                </div>
+                <InfiniteSections
+                  key={`gap|${term}`}
+                  source="gap"
+                  first={<GapCards picks={gap.picks} sp={sp} planned={planned} />}
+                  firstCount={gap.picks.length}
+                  total={gap.total}
+                  sp={Object.fromEntries(
+                    Object.entries(sp).flatMap(([k, v]) =>
+                      v === undefined ? [] : [[k, Array.isArray(v) ? v.join(",") : v]],
+                    ),
+                  )}
+                  term={term}
+                />
               )}
             </>
           ) : total === 0 ? (
