@@ -235,16 +235,16 @@ body {
 }
 /* CMC: maroon fading to a red burgundy glow. */
 :root[data-theme="dark"][data-school="cm"] { --glow: #d1323f; --deep: #8c1128; --t1: 20%; --t2: 40%; --t3: 60%; }
-/* HMC: black-slate page (#1e2328 → #2a2e34 → #3b3f46) with a yellow glow (#f5b301 → #fed053). */
+/* HMC: near-black page that lifts only slightly toward slate at the bottom, under a yellow glow (#f5b301 → #fed053). */
 :root[data-theme="dark"][data-school="hm"] {
   --glow: #f5b301;
   --glow-core: #fed053;
   --deep: #2a2e34;
-  --bg1: #1e2328;
-  --bg2: #2a2e34;
-  --bg3: #3b3f46;
-  --app-bg: #1e2328;
-  --app-surface: color-mix(in srgb, #2a2e34 88%, transparent);
+  --bg1: #050607;
+  --bg2: #0f1114;
+  --bg3: #1d2126;
+  --app-bg: #0a0b0d;
+  --app-surface: color-mix(in srgb, #14171b 88%, transparent);
 }
 :root[data-theme="dark"] body {
   background-image:
