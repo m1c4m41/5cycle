@@ -38,7 +38,7 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
     const chunk = sectionIds.slice(i, i + 200);
     const ph = chunk.map(() => "?").join(",");
     const waiters = await all<Waiter>(
-      `SELECT e.user_id, u.email, u.school, s.code_string, s.title, s.id AS section_id,
+      `SELECT e.user_id, u.email, u.school, s.code_string, s.title, s.id AS section_id
        FROM enrollments e
        JOIN users u ON u.id = e.user_id
        JOIN sections s ON s.id = e.section_id
@@ -76,15 +76,20 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
 async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM;
-  if (!key || !from) return false;
+  if (!key || !from) {
+    console.warn("seat-alert email skipped: RESEND_API_KEY / MAIL_FROM not set");
+    return false;
+  }
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from, to: [to], subject, text }),
     });
+    if (!res.ok) console.error("seat-alert email failed:", res.status, await res.text().catch(() => ""));
     return res.ok;
-  } catch {
+  } catch (e) {
+    console.error("seat-alert email failed:", e);
     return false;
   }
 }
