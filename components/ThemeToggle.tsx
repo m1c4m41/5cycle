@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
+  const [ready, setReady] = useState(false); // no sliding animation for the initial state
   useEffect(() => {
     setDark(document.documentElement.dataset.theme === "dark");
+    const t = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(t);
   }, []);
   const set = (next: boolean) => {
     document.documentElement.dataset.theme = next ? "dark" : "light";
@@ -30,13 +33,13 @@ export function ThemeToggle() {
         aria-checked={dark}
         aria-label="Dark mode"
         onClick={() => set(!dark)}
-        className={`relative h-5 w-9 shrink-0 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
+        className={`relative h-5 w-9 shrink-0 rounded-full border ${ready ? "transition-colors" : ""} focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
           dark ? "border-brand-500 bg-brand-600" : "border-ink-300 bg-ink-200"
         }`}
       >
         <span
           aria-hidden
-          className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${dark ? "left-[1.1rem]" : "left-0.5"}`}
+          className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow ${ready ? "transition-all" : ""} ${dark ? "left-[1.1rem]" : "left-0.5"}`}
         />
       </button>
       <button

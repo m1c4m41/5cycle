@@ -221,9 +221,41 @@ body {
   --color-green-900: oklch(96.2% 0.044 156.743);
   --color-green-950: oklch(98.2% 0.018 155.826);
 }
+/* A campus-colored glow rising from the bottom of the window over a near-black
+   page: Pitzer orange, Pomona blue, Scripps green, CMC red, HMC gold, and a soft
+   blue for guests. Cards are slightly see-through so the glow shows around and
+   behind them. */
+:root[data-theme="dark"] { --t1: 9%; --t2: 26%; --t3: 50%; --glow: #6d8cff; --deep: var(--glow); --app-bg: #0a0b10; --app-surface: color-mix(in srgb, #14161d 90%, transparent); }
+:root[data-theme="dark"][data-school="pz"] { --glow: #ff8a00; --deep: var(--glow); }
+:root[data-theme="dark"][data-school="po"] { --glow: #3d8bff; --deep: var(--glow); }
+:root[data-theme="dark"][data-school="sc"] { --glow: #8aa883; --deep: #1f7a46; --t1: 24%; --t2: 42%; --t3: 64%; } /* forest-green page over a sage glow */ /* dark sage glow over deep forest green */
 :root[data-theme="dark"][data-school] {
-  --app-bg: color-mix(in srgb, var(--school) 16%, #0b0e13);
-  --app-surface: color-mix(in srgb, var(--school) 7%, #151921);
+  --app-bg: color-mix(in srgb, var(--deep) 8%, #09090d);
+  --app-surface: color-mix(in srgb, color-mix(in srgb, var(--deep) 7%, #120f12) 86%, transparent);
+}
+/* CMC: maroon fading to a red burgundy glow. */
+:root[data-theme="dark"][data-school="cm"] { --glow: #d1323f; --deep: #8c1128; --t1: 20%; --t2: 40%; --t3: 60%; }
+/* HMC: black-slate page (#1e2328 → #2a2e34 → #3b3f46) with a yellow glow (#f5b301 → #fed053). */
+:root[data-theme="dark"][data-school="hm"] {
+  --glow: #f5b301;
+  --glow-core: #fed053;
+  --deep: #2a2e34;
+  --bg1: #1e2328;
+  --bg2: #2a2e34;
+  --bg3: #3b3f46;
+  --app-bg: #1e2328;
+  --app-surface: color-mix(in srgb, #2a2e34 88%, transparent);
+}
+:root[data-theme="dark"] body {
+  background-image:
+    radial-gradient(ellipse 85% 48% at 50% 112%, var(--glow-core, var(--glow)) 0%, color-mix(in srgb, var(--glow) 60%, transparent) 40%, transparent 100%),
+    linear-gradient(to bottom, var(--bg1, color-mix(in srgb, var(--deep) var(--t1), #070508)) 0%, var(--bg2, color-mix(in srgb, var(--deep) var(--t2), #0a0506)) 62%, var(--bg3, color-mix(in srgb, var(--deep) var(--t3), #0a0506)) 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] header.sticky {
+  backdrop-filter: blur(12px);
 }
 :root[data-theme="dark"] .text-white { color: #fff; }
 :root[data-theme="dark"] .text-black { color: #fff; }
