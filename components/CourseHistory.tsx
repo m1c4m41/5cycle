@@ -39,16 +39,35 @@ const yearStartOf = (id: string): number => {
 const isPlan = (c: HistoryCourse) => c.manual && c.glyph === "📌";
 const cr = (n: number) => String(Number(n.toFixed(2)));
 
-/** "+ plan a class" inside a term cell: opens the Planned classes form above the table for that term. */
-function AddHere({ id, next, cls }: { id: string; next: string; cls?: string }) {
+/** Inside a term cell. Future / current terms: "+ plan a class". A past term can't be planned: add the class from the catalog or enter it manually. */
+function AddHere({ id, next, past, synced }: { id: string; next: string; past: boolean; synced: boolean }) {
+  const sep = next.includes("?") ? "&" : "?";
+  if (!past) {
+    return (
+      <a
+        href={`${next}${sep}add=${id}#plan-add`}
+        className="block text-ink-400 hover:text-brand-700"
+        title={`Plan a class for ${termLabel(id)}`}
+      >
+        + plan a class
+      </a>
+    );
+  }
   return (
-    <a
-      href={`${next}${next.includes("?") ? "&" : "?"}add=${id}#plan-add`}
-      className={cn("block text-ink-400 hover:text-brand-700", cls)}
-      title={`Plan a class for ${termLabel(id)}`}
-    >
-      + plan a class
-    </a>
+    <div className="space-y-0.5 text-ink-400">
+      {synced && (
+        <Link href={`/catalog?term=${id}`} className="block hover:text-brand-700" title={`Add a class from the ${termLabel(id)} catalog`}>
+          + add in catalog
+        </Link>
+      )}
+      <a
+        href={`${next}${sep}manual=${id}#manual-add`}
+        className="block hover:text-brand-700"
+        title={`Enter a ${termLabel(id)} class by hand`}
+      >
+        + add manually
+      </a>
+    </div>
   );
 }
 
@@ -150,7 +169,7 @@ export function CourseHistory({
                         </div>
                       )}
                       {here.length === 0 ? (
-                        <AddHere id={id} next={next} />
+                        <AddHere id={id} next={next} past={past} synced={synced.has(id)} />
                       ) : (
                         <ul className="space-y-1">
                           {here.map((c) => (
@@ -198,7 +217,7 @@ export function CourseHistory({
                             )}
                           </li>
                           <li>
-                            <AddHere id={id} next={next} />
+                            <AddHere id={id} next={next} past={past} synced={synced.has(id)} />
                           </li>
                         </ul>
                       )}

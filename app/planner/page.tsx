@@ -150,8 +150,10 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   // Terms for the by-hand form: the selected term, the summer of its academic
   // year (e.g. Summer 2027 for 2026–27), and any term marked abroad.
   const ay = academicYearOf(term);
+  // A past term's "+ add manually" link arrives here with ?manual=<term>.
+  const manualTerm = /^(FA|SP|SU)\d{4}$/.test(one(sp.manual)) ? one(sp.manual) : "";
   const manualTermChoices = Array.from(
-    new Set([term, ...(ay ? [ay.termIds[2]] : []), ...abroadMap.keys()].filter(Boolean)),
+    new Set([...(manualTerm ? [manualTerm] : []), term, ...(ay ? [ay.termIds[2]] : []), ...abroadMap.keys()].filter(Boolean)),
   ).sort((a, b) => termSortKey(a) - termSortKey(b));
   const abroadTerms = [...abroadMap.keys()].sort((a, b) => termSortKey(a) - termSortKey(b));
   // Terms a student can mark as abroad: fall / spring / summer, a few years either
@@ -233,7 +235,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   const countCourse = user && countId ? allCourseSections.find((c) => c.id === countId) : undefined;
   const whatIfHref = `${selfHref}#whatif`;
   // A term cell's "+ plan a class" opens the Planned classes form for that term.
-  const addTerm = /^(FA|SP|SU)\d{4}$/.test(one(sp.add)) ? one(sp.add) : "";
+  const addTerm =
+    /^(FA|SP|SU)\d{4}$/.test(one(sp.add)) && termSortKey(one(sp.add)) >= termSortKey(liveTerm) ? one(sp.add) : ""; // past terms can't be planned
 
   const notices = {
     ok: one(sp.ok),
@@ -436,7 +439,8 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
 
       {user && (
         <div className="grid gap-6 lg:grid-cols-12">
-        <form action={addManualCourseAction} className="card card-pad space-y-3 self-start lg:col-span-7">
+        <form id="manual-add" action={addManualCourseAction} className="card card-pad space-y-3 self-start scroll-mt-20 lg:col-span-7">
+          {manualTerm && <ScrollOnMount id="manual-add" />}
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 className="text-lg font-bold">Enter Course Manually</h2>
             <p className="max-w-3xl text-xs leading-relaxed text-ink-500">
@@ -465,7 +469,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
               <label className="label" htmlFor="manual-term">
                 Term
               </label>
-              <select id="manual-term" name="termId" defaultValue={term} className="input w-auto">
+              <select id="manual-term" name="termId" defaultValue={manualTerm || term} className="input w-auto">
                 {manualTermChoices.map((t) => (
                   <option key={t} value={t}>
                     {termLabel(t)}
