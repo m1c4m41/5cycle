@@ -25,6 +25,7 @@ export function GroupCheckboxes({
   strictGe = true,
   half = false,
   wide = false,
+  advisorWarning = true,
 }: {
   sets: CountingSet[];
   /** group ids already checked (the saved assignments). */
@@ -40,6 +41,8 @@ export function GroupCheckboxes({
   half?: boolean;
   /** Lay the programs out side by side (major beside minor) instead of two columns. */
   wide?: boolean;
+  /** Ask for confirmation when a ticked box isn't an official match. Off for planned (pinned) classes. */
+  advisorWarning?: boolean;
 }) {
   const [checked, setChecked] = useState<Set<string>>(() => new Set(initiallyChecked));
   const [warn, setWarn] = useState(false);
@@ -59,14 +62,14 @@ export function GroupCheckboxes({
         confirmed.current = false;
         return;
       }
-      if (nonMatching(sets, checked).length > 0) {
+      if (advisorWarning && nonMatching(sets, checked).length > 0) {
         e.preventDefault();
         setWarn(true);
       }
     };
     form.addEventListener("submit", onSubmit);
     return () => form.removeEventListener("submit", onSubmit);
-  }, [sets, checked]);
+  }, [sets, checked, advisorWarning]);
 
   const toggle = (id: string, on: boolean) => {
     setWarn(false);
@@ -95,7 +98,7 @@ export function GroupCheckboxes({
               {set.groups.map((g) => {
                 const reason = boxBlockReason({ set, group: g, strictGe, half, checked, policy, pairUse, sets });
                 const off = reason !== null;
-                const needsAdvisor = !g.matches && !g.auto && !(set.kind === "ge" && strictGe);
+                const needsAdvisor = advisorWarning && !g.matches && !g.auto && !(set.kind === "ge" && strictGe);
                 return (
                   <label
                     key={g.id}
@@ -139,7 +142,7 @@ export function GroupCheckboxes({
         ))}
       </div>
 
-      {warn && flagged.length > 0 && (
+      {advisorWarning && warn && flagged.length > 0 && (
         <div
           role="alert"
           className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900"

@@ -199,7 +199,8 @@ export function boxBlockReason(args: {
   }
   // Scripps: at most N requirements per course; a program-shared course can't also be GE.
   const tickedSets = sets.filter((s) => s.groups.some((g) => checked.has(g.id)) || s.id === set.id);
-  if (policy.maxRequirements) {
+  // Pre-health tracks are exempt from the campus caps below: a course just can't fill two boxes inside the same track.
+  if (policy.maxRequirements && set.kind !== "track") {
     const count = sets.reduce(
       (n, s) => n + (s.kind === "track" ? 0 : s.groups.filter((g) => checked.has(g.id)).length),
       0,
@@ -208,7 +209,7 @@ export function boxBlockReason(args: {
       return `A course may fill at most ${policy.maxRequirements} requirements here.`;
     }
   }
-  if (policy.sharedExcludesGe) {
+  if (policy.sharedExcludesGe && set.kind !== "track") {
     const programs = tickedSets.filter((s) => s.kind !== "ge" && s.kind !== "track").length;
     const geTicked = tickedSets.some((s) => s.kind === "ge");
     if (programs >= 2 && geTicked) {

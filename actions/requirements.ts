@@ -66,9 +66,11 @@ export async function saveCourseCounting(fd: FormData): Promise<void> {
     .map((v) => v.toString().trim())
     .filter(Boolean);
 
+  const manualRow = courseKind === "manual" ? await getManualCourse(courseId, user.id) : undefined;
+  const isPinned = manualRow?.kind === "planned"; // a pinned plan needs no advisor reminder
   const label =
     courseKind === "manual"
-      ? (await getManualCourse(courseId, user.id))?.title ?? "That course"
+      ? manualRow?.title ?? "That course"
       : (await getSection(courseId))?.code_string ?? "That course";
 
   if (!courseId) redirect(withNotice(next, "err", "Pick the course to count first."));
@@ -90,7 +92,9 @@ export async function saveCourseCounting(fd: FormData): Promise<void> {
     withNotice(
       next,
       "ok",
-      `${label} now counts toward ${labels}${note ? ` (note: ${note})` : ""}. If it isn’t an official match for a major/minor box, make sure your advisor approves the exception.`,
+      `${label} now counts toward ${labels}${note ? ` (note: ${note})` : ""}.${
+        isPinned ? "" : " If it isn’t an official match for a major/minor box, make sure your advisor approves the exception."
+      }`,
     ),
   );
 }
