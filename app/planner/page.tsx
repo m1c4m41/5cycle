@@ -550,6 +550,22 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                 .
               </p>
             ) : (
+              <>
+              {one(sp.wi) === "1" && (notices.ok || notices.err) && (
+                <>
+                  <ScrollOnMount id="whatif" />
+                  <p
+                    role="status"
+                    className={`rounded-lg border px-3 py-2 text-xs ${
+                      notices.err
+                        ? "border-red-300 bg-red-50 text-red-800"
+                        : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                    }`}
+                  >
+                    {notices.err || notices.ok}
+                  </p>
+                </>
+              )}
               <WhatIf
                 base={baseProgress}
                 whatIf={progress}
@@ -564,7 +580,9 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                     >
                       <input type="hidden" name="courseId" value={countCourse.id} />
                       <input type="hidden" name="courseKind" value={countCourse.manual ? "manual" : "section"} />
-                      <input type="hidden" name="next" value={`${selfHref}&count=${encodeURIComponent(countCourse.id)}#whatif`} />
+                      {/* Saving closes the picker (back to the What if card); a refused save keeps it open. */}
+                      <input type="hidden" name="next" value={`${selfHref}&wi=1#whatif`} />
+                      <input type="hidden" name="errNext" value={`${selfHref}&count=${encodeURIComponent(countCourse.id)}&wi=1#whatif`} />
                       <p className="text-sm font-semibold text-ink-900">
                         What will {countCourse.manual ? countCourse.title : countCourse.code_string.split(" · ")[0]} count for?
                       </p>
@@ -629,6 +647,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                   ) : null
                 }
               />
+              </>
             )}
           </section>
 
