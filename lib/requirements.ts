@@ -1098,6 +1098,10 @@ export function progressForSet(
     const haveCourses = matched.reduce((n, s) => n + courseWorth(g, s), 0);
     const neededCourses = g.min_courses ?? 0;
     const neededCredits = g.min_credits ?? null;
+    const effectiveCredits = matched.reduce((n, s) => {
+      const w = worthEntry(g, s);
+      return n + (w ? w.counts : s.credits_5c);
+    }, 0);
 
     const courseOk = neededCourses ? haveCourses >= neededCourses : true;
     const creditOk = neededCredits ? haveCredits >= neededCredits : true;
@@ -1119,6 +1123,7 @@ export function progressForSet(
       neededCredits,
       haveCourses,
       haveCredits: Number(haveCredits.toFixed(2)),
+      effectiveCredits: Number(effectiveCredits.toFixed(2)),
       satisfied,
       partial: !satisfied && haveCourses > 0,
       excess,

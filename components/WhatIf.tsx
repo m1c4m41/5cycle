@@ -11,14 +11,23 @@ const KIND_LABEL: Record<string, string> = { ge: "GE", major: "Major", minor: "M
 
 type RowState = "done" | "gain" | "partial" | "open";
 
-/** Optional ("recommended") boxes report satisfied even when empty; only count them once actually filled. */
-const met = (g: GroupProgress | undefined) =>
-  !!g && g.satisfied && !(g.group.required === 0 && g.neededCourses > 0 && g.haveCourses < g.neededCourses);
+const EPS = 1e-9;
+const fmt = (n: number) => String(Number(n.toFixed(2)));
+/** What a box asks for, in 5C credits (a course counts as 1 credit unless the box states credits). */
+const needCr = (g: GroupProgress) => g.neededCredits ?? (g.neededCourses > 0 ? g.neededCourses : 0);
+/** Filled by credits, not by headcount: a half-credit class only fills half a course. Optional boxes count once actually filled. */
+const metCr = (g: GroupProgress | undefined) => {
+  if (!g) return false;
+  const need = needCr(g);
+  if (g.group.required === 0) return need > 0 && g.effectiveCredits >= need - EPS && g.satisfied;
+  return g.satisfied && (need === 0 || g.effectiveCredits >= need - EPS);
+};
+const requiredMet = (groups: GroupProgress[]) => groups.filter((g) => g.group.required !== 0 && metCr(g)).length;
 
 function stateOf(base: GroupProgress | undefined, wi: GroupProgress): RowState {
-  if (met(base)) return "done";
-  if (met(wi)) return "gain";
-  if (wi.haveCourses > 0 || wi.haveCredits > 0) return "partial";
+  if (metCr(base)) return "done";
+  if (metCr(wi)) return "gain";
+  if (wi.effectiveCredits > 0) return "partial";
   return "open";
 }
 
@@ -44,13 +53,21 @@ export function WhatIf({
         <span className="mx-1 ml-3 inline-block h-2 w-4 rounded-sm bg-brand-300 align-middle" /> adds if you take your
         pinned 📌 classes. Use 🎯 next to a class in your Course schedule to choose what it counts for.
       </p>
+      <p className="text-xs leading-relaxed text-ink-500">
+        Counted in 5C credits, not class headcount: a half-credit class fills half a course, and an HMC 3-credit class
+        counts as 1.
+      </p>
       {picker}
       <ul className="space-y-3">
         {whatIf.map((p) => {
           const b = baseById.get(p.set.id);
-          const basePct = b?.percent ?? 0;
-          const wiPct = Math.max(p.percent, basePct);
-          const gained = p.satisfiedGroups - (b?.satisfiedGroups ?? 0);
+          // Counted in credits, so a half-credit class only fills half a course.
+          const baseSat = b ? requiredMet(b.groups) : 0;
+          const wiSat = requiredMet(p.groups);
+          const pctOf = (n: number) => (p.totalGroups ? Math.round((n / p.totalGroups) * 100) : 100);
+          const basePct = pctOf(baseSat);
+          const wiPct = Math.max(pctOf(wiSat), basePct);
+          const gained = wiSat - baseSat;
           const baseGroups = new Map((b?.groups ?? []).map((g) => [g.group.id, g]));
           return (
             <li key={p.set.id}>
@@ -59,8 +76,8 @@ export function WhatIf({
                   {p.set.name} <span className="text-xs uppercase text-ink-400">{KIND_LABEL[p.set.kind] ?? p.set.kind}</span>
                 </span>
                 <span className="shrink-0 text-right text-xs tabular-nums text-ink-600">
-                  {b?.satisfiedGroups ?? 0}/{p.totalGroups}
-                  {gained > 0 && <span className="font-semibold text-brand-700"> → {p.satisfiedGroups}/{p.totalGroups}</span>}
+                  {baseSat}/{p.totalGroups}
+                  {gained > 0 && <span className="font-semibold text-brand-700"> → {wiSat}/{p.totalGroups}</span>}
                   {" · "}
                   {basePct}%{wiPct > basePct && <span className="font-semibold text-brand-700"> → {wiPct}%</span>}
                 </span>
@@ -87,7 +104,8 @@ export function WhatIf({
                     const st = stateOf(bg, gp);
                     const baseIds = new Set((bg?.matched ?? []).map((s) => s.id));
                     const adds = gp.matched.filter((s) => !baseIds.has(s.id));
-                    const need = gp.neededCourses > 0 ? gp.neededCourses : null;
+                    const need = needCr(gp) > 0 ? needCr(gp) : null;
+                    const baseCr = bg?.effectiveCredits ?? 0;
                     return (
                       <li key={gp.group.id} className="flex items-start gap-2 text-xs leading-snug">
                         <span
@@ -109,8 +127,8 @@ export function WhatIf({
                           </span>
                           {need !== null && (
                             <span className="ml-1 tabular-nums text-ink-400">
-                              {bg ? bg.haveCourses : 0}
-                              {adds.length > 0 && st !== "done" ? ` → ${gp.haveCourses}` : ""}/{need}
+                              {fmt(baseCr)}
+                              {adds.length > 0 && st !== "done" ? ` → ${fmt(gp.effectiveCredits)}` : ""}/{fmt(need)} cr
                             </span>
                           )}
                           {adds.length > 0 && st !== "done" && (

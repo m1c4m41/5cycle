@@ -149,6 +149,8 @@ export type GroupProgress = {
   neededCredits: number | null;
   haveCourses: number;
   haveCredits: number;
+  /** 5C credits toward the requirement, counting a two-for-one course as the several courses it replaces. */
+  effectiveCredits: number;
   satisfied: boolean;
   partial: boolean;
   /** Courses that count here but are 'overloaded' beyond what's needed. */
