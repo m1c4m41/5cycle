@@ -41,7 +41,8 @@ import {
   type Assignment,
   type LabItem,
 } from "@/lib/requirements";
-import { enrolledSections, plannedTerms } from "@/lib/schedule";
+import { listEnrollments, plannedTerms, type Enrollment } from "@/lib/schedule";
+import { isPinnedPlan } from "@/lib/plan-status";
 import { currentUser } from "@/lib/session";
 import { SchoolBadge } from "@/components/SectionCard";
 import { ExperienceLog } from "@/components/ExperienceLog";
@@ -790,7 +791,7 @@ export default async function RequirementsPage({
     one(sp.term) ? Promise.resolve("") : preferredTerm(),
     requirementsLoaded(),
     user ? manualCoursesFor(user.id) : Promise.resolve([] as ManualCourse[]),
-    user ? enrolledSections(user.id) : Promise.resolve([] as Section[]),
+    user ? listEnrollments(user.id) : Promise.resolve([] as Enrollment[]),
     user ? setsForUser(user) : listSets({ school }),
     user ? assignmentsFor(user.id) : Promise.resolve(null),
     labLxKeys(),
@@ -803,8 +804,13 @@ export default async function RequirementsPage({
 
   // Manually entered courses (study abroad, transfer, create-your-own) become
   // pseudo-sections and count alongside catalog sections.
-  const manualSections = user ? manuals.map((m) => manualPseudoSection(m, user.school)) : [];
-  const plannedAll = user ? [ ...plannedEnrolled, ...manualSections] : [];
+  // Pinned 📌 "want to take" classes (no section yet) don't count here — they show in the
+  // planner's "What if". A catalog class added in their place does count.
+  const manualSections = user
+    ? manuals.filter((m) => !isPinnedPlan(m.kind)).map((m) => manualPseudoSection(m, user.school))
+    : [];
+  const takenEnrolled = plannedEnrolled.map((e) => e.section);
+  const plannedAll = user ? [...takenEnrolled, ...manualSections] : [];
   const planned = user && scope === "term" ? plannedAll.filter((s) => s.term_id === term) : plannedAll;
   // For signed-in users the matcher honours checked boxes: courses are pinned
   // into the groups they were checked for. One course may be checked in
@@ -949,7 +955,7 @@ export default async function RequirementsPage({
           </div>
           <p className="mt-1 text-xs text-ink-500">
             {scope === "all"
-              ? `Multi-year audit: all ${plannedAll.length} planned course${plannedAll.length === 1 ? "" : "s"} count${plannedAll.length === 1 ? "s" : ""} toward every box.`
+              ? `Multi-year audit: ${plannedAll.length} class${plannedAll.length === 1 ? "" : "es"} count${plannedAll.length === 1 ? "s" : ""} toward every box. Pinned 📌 classes (no section yet) show in “What if” on the planner until you add a real section.`
               : `Only ${termLabel(term)} counts toward the boxes below.`}
           </p>
         </div>

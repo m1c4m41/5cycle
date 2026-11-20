@@ -3,9 +3,10 @@
  * academic year, Fall / Spring / Summer columns, every class the student has
  * saved or entered — past terms marked as taken.
  */
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { addManualCourseAction, removeManualCourseAction } from "@/actions/requirements";
-import { cn, schoolShort, termLabel } from "@/lib/util";
+import { removeManualCourseAction } from "@/actions/requirements";
+import { cn, termLabel } from "@/lib/util";
 
 export type HistoryCourse = {
   id: string;
@@ -38,49 +39,16 @@ const yearStartOf = (id: string): number => {
 const isPlan = (c: HistoryCourse) => c.manual && c.glyph === "📌";
 const cr = (n: number) => String(Number(n.toFixed(2)));
 
-/** "+ add class" inside a term cell: type a class you took (or plan) in that term. */
-function AddHere({ id, synced, next, future, abroad, school, cls }: { school: string; id: string; synced: boolean; next: string; future: boolean; abroad?: boolean; cls?: string }) {
+/** "+ plan a class" inside a term cell: opens the Planned classes form above the table for that term. */
+function AddHere({ id, next, cls }: { id: string; next: string; cls?: string }) {
   return (
-    <details className={cn("group", cls)}>
-      <summary className="cursor-pointer list-none text-ink-400 hover:text-brand-700 [&::-webkit-details-marker]:hidden">
-        + add class
-      </summary>
-      <form action={addManualCourseAction} className="mt-1 space-y-1 rounded-md border border-ink-200 bg-white p-1.5 shadow-sm">
-        <input
-          type="text"
-          name="title"
-          required
-          placeholder="Course, e.g. Biochemistry"
-          className="input w-full !px-1.5 !py-1 text-xs"
-          aria-label={`Course title for ${termLabel(id)}`}
-        />
-        <div className="flex gap-1">
-          <input
-            type="number"
-            name="credits"
-            required
-            min="0.25"
-            max="12"
-            step="0.25"
-            defaultValue={school === "HM" ? "3" : "1"}
-            className="input w-16 !px-1.5 !py-1 text-xs"
-            aria-label={`Credits (${schoolShort(school)})`}
-            title={`Credits on the ${schoolShort(school)} scale`}
-          />
-          <select name="kind" defaultValue={future ? "planned" : "credit"} className="input min-w-0 flex-1 !px-1 !py-1 text-xs" aria-label="Type">
-            <option value="planned">📌 Want to take (no section yet)</option>
-            <option value="custom">Course taken</option>
-            <option value="transfer">Transfer / AP</option>
-            <option value="credit">Course Credit</option>
-          </select>
-        </div>
-        <input type="hidden" name="termId" value={id} />
-        <input type="hidden" name="next" value={next} />
-        <button type="submit" className="btn-primary w-full !px-2 !py-1 text-xs">
-          Add to {termLabel(id)}
-        </button>
-      </form>
-    </details>
+    <a
+      href={`${next}${next.includes("?") ? "&" : "?"}add=${id}#plan-add`}
+      className={cn("block text-ink-400 hover:text-brand-700", cls)}
+      title={`Plan a class for ${termLabel(id)}`}
+    >
+      + plan a class
+    </a>
   );
 }
 
@@ -91,6 +59,8 @@ export function CourseHistory({
   next,
   abroadTerms = [],
   school,
+  activeId,
+  addPanel,
 }: {
   courses: HistoryCourse[];
   currentTerm: string;
@@ -101,6 +71,10 @@ export function CourseHistory({
   abroadTerms?: string[];
   /** Student's home campus: credits are entered on its scale. */
   school: string;
+  /** The class whose counting boxes are open in the What-if card. */
+  activeId?: string;
+  /** The "Planned classes" form, shown above the table when a cell's + plan a class is clicked. */
+  addPanel?: ReactNode;
 }) {
   const placed = courses.filter((c) => c.termId && /^(FA|SP|SU)\d{4}$/.test(c.termId));
   const loose = courses.filter((c) => !placed.includes(c));
@@ -131,6 +105,8 @@ export function CourseHistory({
           </Link>
         </p>
       </div>
+
+      {addPanel}
 
       <div className="overflow-x-auto">
         <table className="w-full table-fixed border-collapse text-xs" style={{ minWidth: `${rows.length * 3 * 9}rem` }}>
@@ -174,7 +150,7 @@ export function CourseHistory({
                         </div>
                       )}
                       {here.length === 0 ? (
-                        <AddHere id={id} synced={synced.has(id)} next={next} future={termKey(id) >= cur} abroad={abroadTerms.includes(id)} school={school} />
+                        <AddHere id={id} next={next} />
                       ) : (
                         <ul className="space-y-1">
                           {here.map((c) => (
@@ -184,6 +160,14 @@ export function CourseHistory({
                               <span className="font-semibold text-ink-800">{c.manual ? c.title : c.code}</span>
                               {!c.manual && <span className="block truncate text-ink-500">{c.title}</span>}
                               <span className="text-ink-400"> {cr(c.credits)} cr</span>
+                              <a
+                                href={`${next}${next.includes("?") ? "&" : "?"}count=${encodeURIComponent(c.id)}#whatif`}
+                                className={cn("ml-1 hover:opacity-100", activeId === c.id ? "opacity-100" : "opacity-40")}
+                                title="Choose what this class counts for (updates What if)"
+                                aria-label={`Choose what ${c.title} counts for`}
+                              >
+                                🎯
+                              </a>
                               {c.manual && (
                                 <form action={removeManualCourseAction} className="ml-1 inline">
                                   <input type="hidden" name="id" value={c.id} />
@@ -212,7 +196,7 @@ export function CourseHistory({
                             )}
                           </li>
                           <li>
-                            <AddHere id={id} synced={synced.has(id)} next={next} future={termKey(id) >= cur} abroad={abroadTerms.includes(id)} school={school} />
+                            <AddHere id={id} next={next} />
                           </li>
                         </ul>
                       )}
