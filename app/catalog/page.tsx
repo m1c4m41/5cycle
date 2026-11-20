@@ -394,23 +394,20 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                 <p className="text-sm leading-relaxed text-ink-600">
                   {gap.plannedCount > 0
                     ? `Each class below meets only in empty slots next to your ${gap.plannedCount} saved class${gap.plannedCount === 1 ? "" : "es"}`
-                    : "Your grid is empty, so every time works"}{" "}
-                  and advances a requirement you still need — <strong>major and minor</strong>{" "}
-                  requirements first, then <strong>general education</strong>. One section per
-                  course; open classes rank a little higher.
+                    : "Your grid is empty, so every time works"}
+                  . Classes that fill a requirement on your checklist come first —{" "}
+                  <strong>major and minor</strong> requirements, then <strong>general education</strong> —
+                  followed by everything else that fits, even requirements you&apos;ve already finished.
+                  One section per course; open classes rank a little higher.
                 </p>
               </section>
               {gap.picks.length === 0 ? (
                 <div className="card card-pad text-center">
                   <p className="font-semibold">
-                    {gap.openGroups === 0
-                      ? "No open requirements left to fill."
-                      : "Nothing this term fits your empty slots and an open requirement."}
+                    Nothing this term fits your empty slots.
                   </p>
                   <p className="mt-1 text-sm text-ink-600">
-                    {gap.openGroups === 0
-                      ? "Every checklist box that has a fixed requirement is already satisfied."
-                      : "Try another term, or open the planner to free up a time slot."}
+                    Try another term, or open the planner to free up a time slot.
                   </p>
                 </div>
               ) : (
@@ -427,15 +424,19 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                       fit={fitFor(pick.section.id)}
                       next={hrefFor(sp, {})}
                       fromFill
-                      needTag={{
-                        tier: pick.tier,
-                        label:
-                          pick.tier === "ge"
-                            ? "Fills a GE you need"
-                            : pick.tier === "major"
-                              ? "Fills a major requirement"
-                              : "Fills a minor requirement",
-                      }}
+                      needTag={
+                        pick.tier === "none"
+                          ? undefined
+                          : {
+                              tier: pick.tier,
+                              label:
+                                pick.tier === "ge"
+                                  ? "Fills a GE you need"
+                                  : pick.tier === "major"
+                                    ? "Fills a major requirement"
+                                    : "Fills a minor requirement",
+                            }
+                      }
                       reasons={pick.reasons}
                     />
                     </PreviewCard>

@@ -1,7 +1,8 @@
 /**
- * "Fill my gaps": classes for a term that (a) fit the empty slots on the
- * student's weekly grid and (b) advance a requirement they still need —
- * major/minor requirements first, then GE.
+ * "Fill my gaps": every class for a term that fits the empty slots on the
+ * student's weekly grid. The ones that advance a requirement they still need
+ * come first (major, then minor / pre-health, then GE); the rest follow.
+ * Requirement progress follows the Checklist — 📌 pinned plans (What if only) don't count.
  *
  * Works from three cheap term-wide reads (sections without descriptions, area
  * codes, meeting times) so the whole term can be scanned without hydrating
@@ -18,10 +19,12 @@ import {
   manualPseudoSection,
   progressForUser,
 } from "./requirements";
+import { isPinnedPlan } from "./plan-status";
 import { overlaps } from "./util";
 import type { Meeting, RequirementGroup, RequirementSet, Section, SectionRow } from "./types";
 
-export type NeedTier = "major" | "minor" | "ge";
+/** "none": fits the schedule but fills no open requirement (listed after the ones that do). */
+export type NeedTier = "major" | "minor" | "ge" | "none";
 
 export type GapPick = {
   section: Section;
@@ -41,7 +44,7 @@ export type GapResult = {
 
 type UnmetGroup = { set: RequirementSet; group: RequirementGroup };
 
-const TIER_WEIGHT: Record<NeedTier, number> = { major: 100, minor: 90, ge: 50 };
+const TIER_WEIGHT: Record<NeedTier, number> = { major: 100, minor: 90, ge: 50, none: 0 };
 
 function meetingsClash(a: Meeting[], b: Meeting[]): boolean {
   for (const ma of a)
@@ -71,9 +74,10 @@ export async function findGapFillers(
     manualCoursesFor(user.id),
     assignmentsFor(user.id),
   ]);
+  // Same inputs as the Checklist: catalog classes + hand-entered credit, not 📌 pinned plans.
   const plannedAll: Section[] = [
     ...allPlanned,
-    ...manuals.map((m) => manualPseudoSection(m, user.school as never)),
+    ...manuals.filter((m) => !isPinnedPlan(m.kind)).map((m) => manualPseudoSection(m, user.school as never)),
   ];
 
   // Which boxes are still open, across GE + major(s) + minor.
@@ -87,9 +91,6 @@ export async function findGapFillers(
       if (!gp.satisfied) unmet.push({ set: p.set, group: gp.group });
     }
   const keep = new Set(keepIds.filter((id) => termPlanned.some((s) => s.id === id)));
-  if (unmet.length === 0 && keep.size === 0)
-    return { picks: [], openGroups: 0, plannedCount: termPlanned.length };
-
   // Term-wide light reads.
   const [rows, areaRows, meetRows] = await Promise.all([
     all<SectionRow>(
@@ -147,13 +148,15 @@ export async function findGapFillers(
       if (credits5c < 1 && (set.kind === "ge" || isBreadthGroup(group))) return false;
       return groupMatches(group, light);
     });
-    if (hits.length === 0) continue;
-
-    const tier: NeedTier = hits.some((h) => h.set.kind === "major")
-      ? "major"
-      : hits.some((h) => h.set.kind === "minor" || h.set.kind === "track")
-        ? "minor"
-        : "ge";
+    // No open requirement? It still fits the schedule, so it is still suggested (ranked last).
+    const tier: NeedTier =
+      hits.length === 0
+        ? "none"
+        : hits.some((h) => h.set.kind === "major")
+          ? "major"
+          : hits.some((h) => h.set.kind === "minor" || h.set.kind === "track")
+            ? "minor"
+            : "ge";
     const open = row.status === "O" || row.status === "R";
     // Thesis / senior-project sections go last: students pick those on their own.
     const score =
@@ -183,7 +186,11 @@ export async function findGapFillers(
     const section = byId.get(c.row.id);
     if (!section) continue;
     const hits = c.hits.filter(({ group }) => groupMatches(group, section));
-    if (hits.length === 0) continue;
+    if (hits.length === 0) {
+      // Full text (descriptions) didn't confirm a requirement match — it still fits the grid.
+      picks.push({ section, tier: "none", reasons: [] });
+      continue;
+    }
     const label = (k: string) => (k === "ge" ? "GE" : k === "major" ? "Major" : "Minor");
     picks.push({
       section,
