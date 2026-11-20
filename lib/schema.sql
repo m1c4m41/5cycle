@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS users (
   major_id      TEXT,
   major2_id     TEXT,                      -- double major (tracked like major_id)
   minor_id      TEXT,
+  track_id      TEXT,                      -- pre-health track (requirement set kind 'track')
   advisor       TEXT,
   email_verified_at TEXT,                  -- set once they enter the emailed code
   notify_email  INTEGER NOT NULL DEFAULT 0, -- 1 = email me when a seat opens

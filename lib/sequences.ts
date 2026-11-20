@@ -51,6 +51,10 @@ export const SEQUENCE_OVERRIDES: Record<string, Override> = {
   "minor-SC-ARCN::foundation-art-history-and-general-chemistry": { minCourses: 3, worth: CHEM_029 },
   "minor-SC-BIOL::general-chemistry": { minCourses: 2, worth: CHEM_BOTH },
   "minor-SC-CHEM::introductory-chemistry": { minCourses: 2, worth: CHEM_029 },
+  // Pre-health tracks (accelerated General Chemistry stands in for the two-semester year)
+  "track-premed::general-chemistry-1-year": { worth: { ...CHEM_BOTH, ...PO_050 } },
+  "track-predental::general-chemistry-1-year": { worth: { ...CHEM_BOTH, ...PO_050 } },
+  "track-prepa::general-chemistry-1-year": { worth: { ...CHEM_BOTH, ...PO_050 } },
   // Pomona
   "major-PO-CHEM::chemistry-two-semesters-of-general-chemistry-chem010a-po-chem010b-po-or-chem020a-po-chem020b-po-or-chem050-po":
     { worth: PO_050 },

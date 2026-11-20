@@ -135,7 +135,7 @@ async function loadCurrentUser(): Promise<UserRow | null> {
   if (!id) return null;
   return (
     (await get<UserRow>(
-      `SELECT id, email, name, school, grad_year, major_id, major2_id, minor_id, advisor
+      `SELECT id, email, name, school, grad_year, major_id, major2_id, minor_id, track_id, advisor
        FROM users WHERE id = ?`,
       [id],
     )) ?? null
@@ -171,6 +171,7 @@ export type SignupInput = {
   majorId?: string | null;
   major2Id?: string | null;
   minorId?: string | null;
+  trackId?: string | null;
 };
 
 export async function createUser(input: SignupInput): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
@@ -183,8 +184,8 @@ export async function createUser(input: SignupInput): Promise<{ ok: true; id: st
 
   const id = newId("usr-");
   await run(
-    `INSERT INTO users(id, email, name, password_hash, school, grad_year, major_id, major2_id, minor_id, created_at)
-     VALUES(?,?,?,?,?,?,?,?,?,?)`,
+    `INSERT INTO users(id, email, name, password_hash, school, grad_year, major_id, major2_id, minor_id, track_id, created_at)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
     [
       id,
       email,
@@ -195,6 +196,7 @@ export async function createUser(input: SignupInput): Promise<{ ok: true; id: st
       input.majorId || null,
       input.major2Id || null,
       input.minorId || null,
+      input.trackId || null,
       nowIso(),
     ],
   );
@@ -205,8 +207,8 @@ export async function createUser(input: SignupInput): Promise<{ ok: true; id: st
 export async function createGuest(input: Omit<SignupInput, "email" | "password" | "name"> & { name?: string }): Promise<string> {
   const id = newId("usr-");
   await run(
-    `INSERT INTO users(id, email, name, password_hash, school, grad_year, major_id, major2_id, minor_id, created_at)
-     VALUES(?,?,?,?,?,?,?,?,?,?)`,
+    `INSERT INTO users(id, email, name, password_hash, school, grad_year, major_id, major2_id, minor_id, track_id, created_at)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
     [
       id,
       `${id}@${GUEST_DOMAIN}`,
@@ -217,6 +219,7 @@ export async function createGuest(input: Omit<SignupInput, "email" | "password" 
       input.majorId || null,
       input.major2Id || null,
       input.minorId || null,
+      input.trackId || null,
       nowIso(),
     ],
   );
@@ -274,7 +277,7 @@ export async function checkCredentials(
 export async function updateUserProfile(
   userId: string,
   patch: Partial<
-    Pick<UserRow, "name" | "school" | "grad_year" | "major_id" | "major2_id" | "minor_id" | "advisor">
+    Pick<UserRow, "name" | "school" | "grad_year" | "major_id" | "major2_id" | "minor_id" | "track_id" | "advisor">
   >,
 ) {
   const cols: string[] = [];

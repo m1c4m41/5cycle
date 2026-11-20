@@ -72,6 +72,7 @@ const KIND_LABEL: Record<string, string> = {
   ge: "Campus general education",
   major: "Major",
   minor: "Minor",
+  track: "Pre-health track",
 };
 
 type SP = Record<string, string | string[] | undefined>;
@@ -444,7 +445,7 @@ function sourceNode(source: string | null) {
 
 function renderSet(p: SetProgress, term: string) {
   const { set } = p;
-  const registrar = SCHOOLS.find((s) => s.code === set.school)?.registrarUrl;
+  const registrar = set.kind === "track" ? undefined : SCHOOLS.find((s) => s.code === set.school)?.registrarUrl;
   return (
     <SetCard
       key={set.id}
@@ -457,7 +458,7 @@ function renderSet(p: SetProgress, term: string) {
               <span className="chip border-brand-300 bg-white text-brand-700">
                 {KIND_LABEL[set.kind] ?? set.kind}
               </span>
-              <SchoolBadge code={set.school} small />
+              {set.kind !== "track" && <SchoolBadge code={set.school} small />}
               {set.degree_years && (
                 <span className="chip border-ink-200 bg-white text-ink-500">
                   {set.degree_years}-year plan
@@ -465,7 +466,7 @@ function renderSet(p: SetProgress, term: string) {
               )}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-              {sourceNode(set.source)}
+              {set.kind !== "track" && sourceNode(set.source)}
               {registrar && (
                 <Link
                   href={registrar}
@@ -840,6 +841,7 @@ export default async function RequirementsPage({
   const geSets = byKind("ge");
   const majorSets = byKind("major");
   const minorSets = byKind("minor");
+  const trackSets = byKind("track");
 
   /**
    * Lab tracker. Signed-in students see lab-related boxes from every set they
@@ -1083,7 +1085,7 @@ export default async function RequirementsPage({
                   <span className="chip border-brand-300 bg-white text-brand-700">
                     {KIND_LABEL[set.kind] ?? set.kind}
                   </span>
-                  <SchoolBadge code={set.school} small />
+                  {set.kind !== "track" && <SchoolBadge code={set.school} small />}
                   {boxes.length > 0 && (
                     <span className="ml-auto text-xs tabular-nums text-ink-600">
                       {met}/{boxes.length} lab box{boxes.length === 1 ? "" : "es"} met
@@ -1425,6 +1427,14 @@ export default async function RequirementsPage({
           </p>
         )}
       </section>
+
+      {/* Pre-health track */}
+      {trackSets.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-bold tracking-tight text-ink-900">Pre-health track</h2>
+          {trackSets.map((p) => renderSet(p, term))}
+        </section>
+      )}
 
       {/* Double-counting policy note — driven by the same table the counting boxes use */}
       <section className="space-y-3" aria-label="5C Double Counting Policy">

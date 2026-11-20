@@ -103,6 +103,8 @@ export type Matcher =
   | { type: "any"; schools?: SchoolCode[] }
   /** Free text title match, for 'a course addressing X' style rules */
   | { type: "titleKeyword"; keywords: string[] }
+  /** Match against the course TITLE only (descriptions mention other subjects). */
+  | { type: "title"; keywords: string[] }
   /** Boolean combinators so a rule can say "CSCI 100+ but not CSCI 190" */
   | { type: "and"; children: Matcher[] }
   | { type: "or"; children: Matcher[] }
@@ -129,7 +131,7 @@ export type RequirementGroup = {
 export type RequirementSet = {
   id: string;
   school: SchoolCode;
-  kind: "ge" | "major" | "minor";
+  kind: "ge" | "major" | "minor" | "track";
   name: string;
   notes: string | null;
   source: string | null;
@@ -175,6 +177,8 @@ export type UserRow = {
   /** Double major — requirement set tracked alongside the first major. */
   major2_id: string | null;
   minor_id: string | null;
+  /** Pre-health track (a requirement set of kind 'track'). */
+  track_id: string | null;
   advisor: string | null;
 };
 

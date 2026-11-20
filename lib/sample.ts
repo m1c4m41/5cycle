@@ -22,7 +22,7 @@ export type PlanChoice = {
  * outstanding requirement, without clashing with one another.
  */
 export async function buildSamplePlan(
-  user: Pick<UserRow, "school" | "major_id" | "major2_id" | "minor_id">,
+  user: Pick<UserRow, "school" | "major_id" | "major2_id" | "minor_id"> & { track_id?: string | null },
   termId: string,
   maxCourses = 5,
 ): Promise<PlanChoice[]> {
@@ -31,7 +31,8 @@ export async function buildSamplePlan(
       s.id === `ge-${user.school}` ||
       s.id === user.major_id ||
       s.id === user.major2_id ||
-      s.id === user.minor_id,
+      s.id === user.minor_id ||
+      s.id === user.track_id,
   );
   const pool = (await sectionsForTerm(termId, true)).filter(
     (s) => s.credits_5c > 0 && s.meetings.length > 0 && !s.potential_error,

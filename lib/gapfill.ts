@@ -58,7 +58,7 @@ function isOpenEnded(g: RequirementGroup): boolean {
 }
 
 export async function findGapFillers(
-  user: { id: string; school: string; major_id: string | null; major2_id?: string | null; minor_id: string | null },
+  user: { id: string; school: string; major_id: string | null; major2_id?: string | null; minor_id: string | null; track_id?: string | null },
   term: string,
   limit = 24,
   /** Sections the student added from this very list: they stay listed (with a
@@ -151,7 +151,7 @@ export async function findGapFillers(
 
     const tier: NeedTier = hits.some((h) => h.set.kind === "major")
       ? "major"
-      : hits.some((h) => h.set.kind === "minor")
+      : hits.some((h) => h.set.kind === "minor" || h.set.kind === "track")
         ? "minor"
         : "ge";
     const open = row.status === "O" || row.status === "R";

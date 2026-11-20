@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { boxBlockReason, nonMatching, type CountingSet, type OverlapPolicy } from "@/lib/counting";
 import { cn } from "@/lib/util";
 
-const KIND_LABEL: Record<string, string> = { ge: "GE", major: "Major", minor: "Minor" };
+const KIND_LABEL: Record<string, string> = { ge: "GE", major: "Major", minor: "Minor", track: "Pre-health" };
 
 export function GroupCheckboxes({
   sets,

@@ -6,6 +6,7 @@ import { getSet, listSets, progressForUser } from "@/lib/requirements";
 import { enrolledSections } from "@/lib/schedule";
 import { currentUser, isGuestUser } from "@/lib/session";
 import { get } from "@/lib/db";
+import { TrackSelect } from "@/components/TrackSelect";
 import type { RequirementSet } from "@/lib/types";
 import { schoolName, schoolShort, termLabel } from "@/lib/util";
 import {
@@ -58,12 +59,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
   const majors = await listSets({ kind: "major" });
   const minors = await listSets({ kind: "minor" });
+  const tracks = await listSets({ kind: "track" });
   const campus = SCHOOL_BY_CODE[user.school] ? user.school : "";
   const majorGroups = byCampus(majors, campus);
   const minorGroups = byCampus(minors, campus);
   const majorName = user.major_id ? (await getSet(user.major_id))?.name : undefined;
   const major2Name = user.major2_id ? (await getSet(user.major2_id))?.name : undefined;
   const minorName = user.minor_id ? (await getSet(user.minor_id))?.name : undefined;
+  const trackName = user.track_id ? (await getSet(user.track_id))?.name : undefined;
 
   const term = await currentTermId();
   const stats = await catalogStats();
@@ -123,6 +126,9 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <span className="chip border-ink-300 bg-ink-100 text-ink-600">{minorName}</span>
           ) : (
             <span className="chip border-ink-200 bg-white text-ink-500">No minor</span>
+          )}
+          {trackName && (
+            <span className="chip border-emerald-300 bg-emerald-50 text-emerald-800">{trackName}</span>
           )}
         </div>
       </header>
@@ -334,6 +340,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
               .
             </p>
           </div>
+
+          <TrackSelect tracks={tracks} defaultValue={v("trackId", user.track_id ?? "")} />
 
           <div>
             <label className="label" htmlFor="advisor">

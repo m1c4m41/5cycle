@@ -1,3 +1,4 @@
+import { TRACK_IDS } from "@/lib/prehealth";
 import { createUser, startSession } from "@/lib/session";
 import { requirementsLoaded, loadRequirementFiles } from "@/lib/requirements";
 import { jsonResponse } from "@/lib/util";
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
     gradYear: body.gradYear ? Number(body.gradYear) : null,
     majorId: body.majorId ? String(body.majorId) : null,
     minorId: body.minorId ? String(body.minorId) : null,
+    trackId: body.trackId && TRACK_IDS.includes(String(body.trackId)) ? String(body.trackId) : null,
   });
 
   if (!res.ok) return jsonResponse({ error: res.error }, { status: 400 });

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSection } from "@/lib/catalog";
 import { SCHOOLS } from "@/lib/constants";
 import { listSets } from "@/lib/requirements";
+import { TrackSelect } from "@/components/TrackSelect";
 import { currentUser } from "@/lib/session";
 import { safeNext } from "@/lib/server";
 import { schoolShort, termLabel } from "@/lib/util";
@@ -43,7 +44,7 @@ export default async function GuestPage({ searchParams }: { searchParams: Promis
 
   const campuses = SCHOOLS.filter((s) => s.code !== "CG");
   const school = campuses.some((c) => c.code === v("school")) ? v("school") : "";
-  const [majors, minors] = await Promise.all([listSets({ kind: "major" }), listSets({ kind: "minor" })]);
+  const [majors, minors, tracks] = await Promise.all([listSets({ kind: "major" }), listSets({ kind: "minor" }), listSets({ kind: "track" })]);
   const majorGroups = byCampus(majors, school);
   const minorGroups = byCampus(minors, school);
 
@@ -123,6 +124,7 @@ export default async function GuestPage({ searchParams }: { searchParams: Promis
             </select>
           </div>
         </div>
+        <TrackSelect tracks={tracks} defaultValue={v("trackId")} optionalLabel />
         <p className="-mt-2 text-xs text-ink-500">You can change all of this later on your profile.</p>
 
         <fieldset className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">

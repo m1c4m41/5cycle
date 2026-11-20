@@ -8,6 +8,7 @@ import { safeNext } from "@/lib/server";
 import { schoolShort, termLabel } from "@/lib/util";
 import { signupForm } from "@/actions/form";
 import type { RequirementSet } from "@/lib/types";
+import { TrackSelect } from "@/components/TrackSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
 
   const majors = await listSets({ kind: "major" });
   const minors = await listSets({ kind: "minor" });
+  const tracks = await listSets({ kind: "track" });
   const majorGroups = byCampus(majors, school);
   const minorGroups = byCampus(minors, school);
   const homeMajors = school ? majors.filter((m) => m.school === school).length : 0;
@@ -258,6 +260,8 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
             {school ? ` · ${homeMinors} at ${schoolShort(school)}` : ""}.
           </p>
         </div>
+
+        <TrackSelect tracks={tracks} defaultValue={v("trackId")} optionalLabel />
 
         <div>
           <label className="label" htmlFor="advisor">

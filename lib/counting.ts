@@ -34,7 +34,7 @@ export type CountingGroup = {
 export type CountingSet = {
   id: string;
   name: string;
-  kind: "ge" | "major" | "minor";
+  kind: "ge" | "major" | "minor" | "track";
   groups: CountingGroup[];
 };
 
@@ -129,6 +129,9 @@ export const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${
 
 /** The cap for sharing a course between two sets (null = no fixed cap). */
 function pairLimit(policy: OverlapPolicy, a: CountingSet, b: CountingSet): number | null {
+  // A pre-health track lists prerequisites for professional school, not a
+  // degree program: its courses may also count toward a major, minor or GE.
+  if (a.kind === "track" || b.kind === "track") return null;
   if (a.kind === "ge" && b.kind === "ge") return null;
   if (a.kind === "ge" || b.kind === "ge") return policy.geProgram;
   if (a.kind === "major" && b.kind === "major") return policy.majorMajor;
@@ -197,13 +200,16 @@ export function boxBlockReason(args: {
   // Scripps: at most N requirements per course; a program-shared course can't also be GE.
   const tickedSets = sets.filter((s) => s.groups.some((g) => checked.has(g.id)) || s.id === set.id);
   if (policy.maxRequirements) {
-    const count = sets.reduce((n, s) => n + s.groups.filter((g) => checked.has(g.id)).length, 0);
+    const count = sets.reduce(
+      (n, s) => n + (s.kind === "track" ? 0 : s.groups.filter((g) => checked.has(g.id)).length),
+      0,
+    );
     if (count >= policy.maxRequirements) {
       return `A course may fill at most ${policy.maxRequirements} requirements here.`;
     }
   }
   if (policy.sharedExcludesGe) {
-    const programs = tickedSets.filter((s) => s.kind !== "ge").length;
+    const programs = tickedSets.filter((s) => s.kind !== "ge" && s.kind !== "track").length;
     const geTicked = tickedSets.some((s) => s.kind === "ge");
     if (programs >= 2 && geTicked) {
       return "A course shared between two programs can’t also count toward a General Requirement.";

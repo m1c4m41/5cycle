@@ -155,7 +155,7 @@ function boot(): Promise<void> {
 }
 
 /** Bump when the guarded ALTER/rebuild steps in runSchemaMigrations change. */
-const MIGRATION_REV = "2";
+const MIGRATION_REV = "3";
 const BOOT_DDL_TIMEOUT_MS = Number(process.env.CYCLE_BOOT_DDL_TIMEOUT_MS) || 15_000;
 
 /**
@@ -190,6 +190,9 @@ async function runSchemaMigrations(d: Client): Promise<void> {
   }
   if (!userCols.rows.some((r) => String(r[1]) === "email_verified_at")) {
     await d.execute("ALTER TABLE users ADD COLUMN email_verified_at TEXT");
+  }
+  if (!userCols.rows.some((r) => String(r[1]) === "track_id")) {
+    await d.execute("ALTER TABLE users ADD COLUMN track_id TEXT");
   }
   if (!userCols.rows.some((r) => String(r[1]) === "notify_email")) {
     await d.execute("ALTER TABLE users ADD COLUMN notify_email INTEGER NOT NULL DEFAULT 0");

@@ -19,6 +19,7 @@
  *  - a 0.5-credit course does NOT satisfy a GE or Breadth box (a full credit
  *    is needed), but its credits still count toward the graduation total.
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
@@ -36,6 +37,7 @@ import type {
 } from "./types";
 import { schoolShort, termLabel as termLabelOf } from "./util";
 import { applySequenceOverrides } from "./sequences";
+import { PREHEALTH_SETS } from "./prehealth";
 import {
   boxSection,
   pairKey,
@@ -105,6 +107,10 @@ export function matchSection(m: Matcher, s: Section): boolean {
     }
     case "any":
       return m.schools?.length ? m.schools.includes(s.school) : true;
+    case "title": {
+      const t = s.title.toLowerCase();
+      return m.keywords.some((k) => t.includes(k.toLowerCase()));
+    }
     case "titleKeyword": {
       const hay = `${s.title} ${s.description}`.toLowerCase();
       return m.keywords.some((k) => hay.includes(k.toLowerCase()));
@@ -154,7 +160,7 @@ type GroupSpec = {
 type SetSpec = {
   id: string;
   school: string;
-  kind: "ge" | "major" | "minor";
+  kind: "ge" | "major" | "minor" | "track";
   name: string;
   degreeYears?: number;
   totalCredits?: number;
@@ -302,6 +308,60 @@ function slug(s: string): string {
     .replace(/^-|-$/g, "");
 }
 
+
+/**
+ * Built-in sets (the pre-health tracks) live in code. Upsert them once per
+ * server process, before any read that might need them.
+ */
+let builtinReady: Promise<void> | null = null;
+export function ensureBuiltinSets(): Promise<void> {
+  builtinReady ??= (async () => {
+    // Skip all writes when the definitions in code match what's stored.
+    const version = crypto.createHash("sha1").update(JSON.stringify(PREHEALTH_SETS)).digest("hex");
+    const stored = await get<{ value: string }>("SELECT value FROM meta WHERE key = 'builtin_sets_version'");
+    if (stored?.value === version) return;
+    for (const t of PREHEALTH_SETS) {
+      await run(
+        `INSERT INTO requirement_sets(id, school, kind, name, notes, source, verified)
+         VALUES(?,?,?,?,?,?,0)
+         ON CONFLICT(id) DO UPDATE SET school=excluded.school, kind=excluded.kind, name=excluded.name,
+           notes=excluded.notes, source=excluded.source`,
+        [t.id, "CG", "track", t.name, t.notes, "lib/prehealth.ts"],
+      );
+      await tx(async () => {
+        // Upsert (never delete-and-recreate) so students' pinned boxes survive an edit.
+        const keep: string[] = [];
+        for (const [i, g] of t.groups.entries()) {
+          const gid = `${t.id}::${slug(g.name) || i}`;
+          keep.push(gid);
+          await run(
+            `INSERT INTO requirement_groups(id, set_id, name, position, min_courses, min_credits, required, level, notes)
+             VALUES(?,?,?,?,?,?,?,?,?)
+             ON CONFLICT(id) DO UPDATE SET name=excluded.name, position=excluded.position,
+               min_courses=excluded.min_courses, required=excluded.required, notes=excluded.notes`,
+            [gid, t.id, g.name, i, g.minCourses ?? 1, null, g.required === false ? 0 : 1, "any", g.notes ?? null],
+          );
+          await run("DELETE FROM requirement_rules WHERE group_id = ?", [gid]);
+          for (const m of g.matchers) {
+            await run("INSERT INTO requirement_rules(group_id, match) VALUES(?,?)", [gid, JSON.stringify(m)]);
+          }
+        }
+        const ph = keep.map(() => "?").join(",");
+        await run(`DELETE FROM requirement_groups WHERE set_id = ? AND id NOT IN (${ph})`, [t.id, ...keep]);
+      });
+    }
+    await run(
+      `INSERT INTO meta(key, value) VALUES('builtin_sets_version', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      [version],
+    );
+  })().catch((e) => {
+    builtinReady = null;
+    throw e;
+  });
+  return builtinReady;
+}
+
 export async function requirementsLoaded(): Promise<boolean> {
   return Number((await get<{ n: number }>("SELECT COUNT(*) n FROM requirement_sets"))?.n ?? 0) > 0;
 }
@@ -311,6 +371,7 @@ export async function requirementsLoaded(): Promise<boolean> {
 /* ========================================================================= */
 
 export async function getSet(setId: string): Promise<RequirementSet | undefined> {
+  await ensureBuiltinSets();
   const set = await get<Omit<RequirementSet, "groups">>("SELECT * FROM requirement_sets WHERE id = ?", [
     setId,
   ]);
@@ -373,6 +434,7 @@ async function getGroupsForSets(setIds: string[]): Promise<Map<string, Requireme
 }
 
 export async function listSets(filter: { school?: string; kind?: string } = {}): Promise<RequirementSet[]> {
+  await ensureBuiltinSets();
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (filter.school) {
@@ -402,13 +464,16 @@ export type UserPrograms = {
   /** Double major — tracked with the same engine as the first major. */
   major2_id?: string | null;
   minor_id: string | null;
+  /** Pre-health track set id. */
+  track_id?: string | null;
 };
 
 // cache() keys on argument identity, so memoize on the primitive program ids
 // (not the user object): any caller with the same programs shares one read.
 const setsForPrograms = cache(
-  async (school: string, major: string, major2: string, minor: string): Promise<RequirementSet[]> => {
-    const ids = [`ge-${school}`, major, major2, minor].filter(Boolean);
+  async (school: string, major: string, major2: string, minor: string, track: string): Promise<RequirementSet[]> => {
+    await ensureBuiltinSets();
+    const ids = [`ge-${school}`, major, major2, minor, track].filter(Boolean);
     const ph = ids.map(() => "?").join(",");
     const rows = await all<Omit<RequirementSet, "groups">>(
       `SELECT * FROM requirement_sets WHERE id IN (${ph})`,
@@ -420,7 +485,7 @@ const setsForPrograms = cache(
 );
 
 export function setsForUser(u: UserPrograms): Promise<RequirementSet[]> {
-  return setsForPrograms(u.school, u.major_id ?? "", u.major2_id ?? "", u.minor_id ?? "");
+  return setsForPrograms(u.school, u.major_id ?? "", u.major2_id ?? "", u.minor_id ?? "", u.track_id ?? "");
 }
 
 /** Which requirement slots could this single course advance, for this student? */
@@ -1244,7 +1309,7 @@ export async function setCourseAssignments(
   // Breadth box per section, one shared course per program pair.
   if (groups.length > 0) {
     const u = await get<UserPrograms & { id: string }>(
-      "SELECT id, school, major_id, major2_id, minor_id FROM users WHERE id = ?",
+      "SELECT id, school, major_id, major2_id, minor_id, track_id FROM users WHERE id = ?",
       [userId],
     );
     if (u) {

@@ -35,6 +35,7 @@ import { applySamplePlan, buildSamplePlan } from "@/lib/sample";
 import { addToSchedule } from "@/lib/schedule";
 import { currentTermId } from "@/lib/ingest";
 import { SCHOOL_BY_CODE, type SchoolCode } from "@/lib/constants";
+import { TRACK_IDS } from "@/lib/prehealth";
 import {
   assertActionsEnabled,
   formNum,
@@ -45,6 +46,12 @@ import {
   userOrRedirect,
   type ActionState,
 } from "@/lib/server";
+
+/** The pre-health track chosen on a form, or null. Only real track ids are kept. */
+function trackIdFrom(fd: FormData): string | null {
+  const t = formStr(fd, "trackId");
+  return TRACK_IDS.includes(t) ? t : null;
+}
 
 function revalidateAll() {
   revalidatePath("/", "layout");
@@ -86,10 +93,11 @@ export async function signupAction(
       major_id: formStr(fd, "majorId") || null,
       major2_id: formStr(fd, "major2Id") || null,
       minor_id: formStr(fd, "minorId") || null,
+      track_id: trackIdFrom(fd),
     });
     await pruneAssignments(
       me.id,
-      [`ge-${school}`, formStr(fd, "majorId"), formStr(fd, "major2Id"), formStr(fd, "minorId")].filter(Boolean),
+      [`ge-${school}`, formStr(fd, "majorId"), formStr(fd, "major2Id"), formStr(fd, "minorId"), trackIdFrom(fd)].filter(Boolean) as string[],
     );
     await run("UPDATE users SET notify_email = ? WHERE id = ?", [fd.get("notifyEmail") ? 1 : 0, me.id]);
     const pendingUp = await applyPendingAdd(me.id, fd);
@@ -106,6 +114,7 @@ export async function signupAction(
     majorId: formStr(fd, "majorId") || null,
     major2Id: formStr(fd, "major2Id") || null,
     minorId: formStr(fd, "minorId") || null,
+    trackId: trackIdFrom(fd),
   });
   if (!res.ok) return { ok: false, error: res.error };
 
@@ -152,6 +161,7 @@ export async function guestStartAction(
     majorId: formStr(fd, "majorId") || null,
     major2Id: formStr(fd, "major2Id") || null,
     minorId: formStr(fd, "minorId") || null,
+    trackId: trackIdFrom(fd),
   });
   await startGuestSession(id);
   const pending = await applyPendingAdd(id, fd);
@@ -270,13 +280,14 @@ export async function updateProfileAction(
     major_id: majorId,
     major2_id: major2Id,
     minor_id: minorId,
+    track_id: trackIdFrom(fd),
     advisor: formStr(fd, "advisor") || null,
   });
 
   // Manual assignments pointing at sets the profile no longer tracks are stale.
   await pruneAssignments(
     user.id,
-    [`ge-${school}`, majorId, major2Id, minorId].filter(Boolean) as string[],
+    [`ge-${school}`, majorId, major2Id, minorId, trackIdFrom(fd)].filter(Boolean) as string[],
   );
 
   revalidateAll();
