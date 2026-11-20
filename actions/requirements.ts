@@ -11,6 +11,7 @@
  * engine enforces that; their credits still count toward the total.
  */
 import { redirect } from "next/navigation";
+import { run } from "@/lib/db";
 import { getSection } from "@/lib/catalog";
 import {
   addManualCourse,
@@ -76,8 +77,23 @@ export async function saveCourseCounting(fd: FormData): Promise<void> {
   if (!courseId) redirect(withNotice(next, "err", "Pick the course to count first."));
   if (fd.has("release")) groupIds = [];
 
+  // A hand-entered / planned class can have its credits changed here (campus scale, HMC ÷ 3).
+  let oldCredits: number | null = null;
+  const newCredits = formNum(fd, "credits");
+  if (courseKind === "manual" && manualRow && newCredits !== null) {
+    if (!(newCredits > 0) || newCredits > 12) redirect(withNotice(next, "err", "Credits must be more than 0 and at most 12."));
+    const norm = user.school === "HM" ? newCredits / 3 : newCredits;
+    if (Math.abs(norm - manualRow.credits) > 1e-9) {
+      oldCredits = manualRow.credits;
+      await run("UPDATE manual_courses SET credits = ? WHERE id = ? AND user_id = ?", [norm, courseId, user.id]);
+    }
+  }
+
   const res = await setCourseAssignments(user.id, courseId, courseKind, groupIds, note || null);
-  if (!res.ok) redirect(withNotice(next, "err", res.error));
+  if (!res.ok) {
+    if (oldCredits !== null) await run("UPDATE manual_courses SET credits = ? WHERE id = ? AND user_id = ?", [oldCredits, courseId, user.id]);
+    redirect(withNotice(next, "err", res.error));
+  }
   revalidateSchedule();
 
   if (groupIds.length === 0) {

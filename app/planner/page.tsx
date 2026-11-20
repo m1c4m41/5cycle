@@ -572,6 +572,23 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                         Tick every requirement it fills — the bars below update when you save. Leave it
                         blank to let the checklist decide.
                       </p>
+                      {countCourse.manual && (
+                        <div>
+                          <label className="label" htmlFor="what-credits">
+                            Credits ({schoolShort(user.school)})
+                          </label>
+                          <input
+                            id="what-credits"
+                            name="credits"
+                            type="number"
+                            min="0.25"
+                            max="12"
+                            step="0.25"
+                            defaultValue={Number((countCourse.credits * (user.school === "HM" ? 3 : 1)).toFixed(2))}
+                            className="input w-24"
+                          />
+                        </div>
+                      )}
                       {(() => {
                         const list = countCourse.manual
                           ? (assignments?.manuals.get(countCourse.id) ?? [])
@@ -592,6 +609,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
                             strictGe={!countCourse.manual}
                             half={countCourse.credits_5c < 1}
                             advisorWarning={countCourse.manual?.kind !== "planned"}
+                            creditsInput={countCourse.manual ? { name: "credits", perCourse: user.school === "HM" ? 3 : 1 } : undefined}
                           />
                         );
                       })()}

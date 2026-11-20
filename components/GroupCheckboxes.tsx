@@ -67,7 +67,8 @@ export function GroupCheckboxes({
     el.addEventListener("input", read);
     return () => el.removeEventListener("input", read);
   }, [creditsInput?.name, creditsInput?.perCourse]);
-  const isHalf = half || typedHalf;
+  // With a live credits field, what is typed there wins over the starting value.
+  const isHalf = creditsInput ? typedHalf : half;
 
   // A class that turns out to be half-credit can't keep GE / Breadth boxes it already had ticked.
   useEffect(() => {
