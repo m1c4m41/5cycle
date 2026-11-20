@@ -104,6 +104,8 @@ CREATE TABLE IF NOT EXISTS users (
   major2_id     TEXT,                      -- double major (tracked like major_id)
   minor_id      TEXT,
   advisor       TEXT,
+  email_verified_at TEXT,                  -- set once they enter the emailed code
+  notify_email  INTEGER NOT NULL DEFAULT 0, -- 1 = email me when a seat opens
   created_at    TEXT NOT NULL
 );
 
@@ -258,6 +260,26 @@ CREATE TABLE IF NOT EXISTS study_abroad_terms (
   user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   term_id     TEXT NOT NULL,               -- FA2026 / SP2027 / SU2027
   PRIMARY KEY (user_id, term_id)
+);
+
+-- A pending email change: the new address only replaces the old one once the
+-- student types the code we emailed to it.
+CREATE TABLE IF NOT EXISTS email_changes (
+  user_id    TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  new_email  TEXT NOT NULL,
+  code_hash  TEXT NOT NULL,
+  attempts   INTEGER NOT NULL DEFAULT 0,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+-- Forgot-password codes, keyed by the account email.
+CREATE TABLE IF NOT EXISTS password_resets (
+  email      TEXT PRIMARY KEY,
+  code_hash  TEXT NOT NULL,
+  attempts   INTEGER NOT NULL DEFAULT 0,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS meta (

@@ -16,6 +16,7 @@ function one(v: string | string[] | undefined): string {
 export default async function LoginPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const err = one(sp.err);
+  const ok = one(sp.ok);
   const email = one(sp.keep_email);
 
   // Only same-site paths are honoured as a post-login destination.
@@ -50,6 +51,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       {err && (
         <p className="mb-4 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
           {err}
+        </p>
+      )}
+
+      {ok && (
+        <p className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          {ok}
         </p>
       )}
 
@@ -104,6 +111,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </button>
           <Link href={signupHref} className="link text-sm">
             Create an account
+          </Link>
+          <Link href="/forgot-password" className="link text-sm">
+            Forgot password?
           </Link>
         </div>
       </form>

@@ -272,6 +272,16 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
           />
         </div>
 
+        <label className="flex items-start gap-2 text-sm text-ink-700">
+          <input type="checkbox" name="notifyEmail" className="mt-0.5" />
+          <span>
+            Email me when a seat opens in a class I&rsquo;m watching.
+            <span className="block text-xs text-ink-500">
+              We&rsquo;ll ask you to verify your email with a code first. You can turn this off any time on your profile.
+            </span>
+          </span>
+        </label>
+
         <div className="flex flex-wrap items-center gap-3">
           <button type="submit" className="btn-primary">
             Create account

@@ -16,7 +16,12 @@
  */
 import { redirect } from "next/navigation";
 import {
+  cancelEmailChangeAction,
   changePasswordAction,
+  requestEmailChangeAction,
+  resendVerificationAction,
+  setNotifyEmailAction,
+  verifyEmailChangeAction,
   clearSamplePlanAction,
   guestStartAction,
   loginAction,
@@ -144,4 +149,53 @@ export async function wipeAccountForm(fd: FormData): Promise<void> {
   const res = await wipeAccountAction(null, fd);
   if (res && !res.ok) redirect(`/profile?${errOnly(res.error ?? "Account was not deleted.")}`);
   // Success path: wipeAccountAction ends the session and redirects to "/".
+}
+
+/* ------------------------------ change email ------------------------------ */
+
+export async function requestEmailChangeForm(fd: FormData) {
+  await ensureSignedIn();
+  const res = await requestEmailChangeAction(null, fd);
+  if (res?.ok) redirect(`/profile?${okQuery(res.notice ?? "Code sent.")}#change-email`);
+  const q = new URLSearchParams();
+  const em = fd.get("email");
+  if (typeof em === "string" && em.trim()) q.set("keep_newemail", em.trim());
+  redirect(`/profile?${errQuery(q, res?.error ?? "Couldn't send the code.")}#change-email`);
+}
+
+export async function verifyEmailChangeForm(fd: FormData) {
+  await ensureSignedIn();
+  const res = await verifyEmailChangeAction(null, fd);
+  if (res?.ok) redirect(`/profile?${okQuery(res.notice ?? "Email changed.")}`);
+  redirect(`/profile?${errOnly(res?.error ?? "Email was not changed.")}#change-email`);
+}
+
+export async function cancelEmailChangeForm() {
+  await ensureSignedIn();
+  await cancelEmailChangeAction();
+  redirect("/profile#change-email");
+}
+
+/** Code entry on /verify-email (right after signup). */
+export async function verifySignupEmailForm(fd: FormData) {
+  await ensureSignedIn();
+  const next = String(fd.get("next") ?? "/planner");
+  const dest = next.startsWith("/") && !next.startsWith("//") ? next : "/planner";
+  const res = await verifyEmailChangeAction(null, fd);
+  if (res?.ok) redirect(dest);
+  redirect(`/verify-email?next=${encodeURIComponent(dest)}&err=${encodeURIComponent(res?.error ?? "Couldn't verify.")}`);
+}
+
+export async function resendSignupCodeForm(fd: FormData) {
+  await ensureSignedIn();
+  const next = String(fd.get("next") ?? "/planner");
+  const dest = next.startsWith("/") && !next.startsWith("//") ? next : "/planner";
+  const res = await resendVerificationAction();
+  redirect(`/verify-email?next=${encodeURIComponent(dest)}&${res.ok ? "ok=" + encodeURIComponent("New code sent.") : errOnly(res.error ?? "Couldn't send.")}`);
+}
+
+export async function setNotifyEmailForm(fd: FormData) {
+  await ensureSignedIn();
+  await setNotifyEmailAction(fd);
+  redirect(`/profile?${okQuery("Email alert setting saved.")}#change-email`);
 }

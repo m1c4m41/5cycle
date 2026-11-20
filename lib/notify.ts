@@ -25,6 +25,8 @@ export function seatOpened(before: SeatSnapshot, after: SeatSnapshot): boolean {
 type Waiter = {
   user_id: string;
   email: string;
+  notify_email: number;
+  email_verified_at: string | null;
   school: string;
   code_string: string;
   title: string;
@@ -38,7 +40,7 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
     const chunk = sectionIds.slice(i, i + 200);
     const ph = chunk.map(() => "?").join(",");
     const waiters = await all<Waiter>(
-      `SELECT e.user_id, u.email, u.school, s.code_string, s.title, s.id AS section_id
+      `SELECT e.user_id, u.email, u.notify_email, u.email_verified_at, u.school, s.code_string, s.title, s.id AS section_id
        FROM enrollments e
        JOIN users u ON u.id = e.user_id
        JOIN sections s ON s.id = e.section_id
@@ -64,7 +66,7 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
       sent++;
       // The tick stays on: alerts keep coming each time the class fills and reopens,
       // until the student changes the status (Registered / Perm requested) or unticks it.
-      if (!isGuestEmail(w.email) && (await sendEmail(w.email, title, body))) {
+      if (!isGuestEmail(w.email) && w.notify_email && w.email_verified_at && (await sendEmail(w.email, title, body))) {
         await run("UPDATE notifications SET emailed_at = ? WHERE id = ?", [nowIso(), id]);
       }
     }
@@ -73,7 +75,9 @@ export async function notifyOpenings(sectionIds: string[]): Promise<number> {
 }
 
 /** Email through Resend when RESEND_API_KEY (and MAIL_FROM) are set; otherwise a no-op. */
-async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
+export const mailConfigured = () => !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM);
+
+export async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM;
   if (!key || !from) {

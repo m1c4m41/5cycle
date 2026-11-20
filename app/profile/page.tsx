@@ -5,10 +5,15 @@ import { catalogStats, currentTermId } from "@/lib/ingest";
 import { getSet, listSets, progressForUser } from "@/lib/requirements";
 import { enrolledSections } from "@/lib/schedule";
 import { currentUser, isGuestUser } from "@/lib/session";
+import { get } from "@/lib/db";
 import type { RequirementSet } from "@/lib/types";
 import { schoolName, schoolShort, termLabel } from "@/lib/util";
 import {
+  cancelEmailChangeForm,
   changePasswordForm,
+  setNotifyEmailForm,
+  requestEmailChangeForm,
+  verifyEmailChangeForm,
   clearSamplePlanForm,
   upgradeGuestForm,
   seedSamplePlanForm,
@@ -65,6 +70,19 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const terms = stats.terms.length
     ? stats.terms
     : [{ id: term, label: term ? termLabel(term) : "no terms synced", is_current: 1, synced_at: null }];
+
+  const pendingEmail = isGuestUser(user)
+    ? undefined
+    : await get<{ new_email: string; expires_at: string }>(
+        "SELECT new_email, expires_at FROM email_changes WHERE user_id = ?",
+        [user.id],
+      ).then((r) => (r && Date.parse(r.expires_at) > Date.now() ? r : undefined));
+  const emailRow = isGuestUser(user)
+    ? undefined
+    : await get<{ v: string | null; n: number }>(
+        "SELECT email_verified_at v, notify_email n FROM users WHERE id = ?",
+        [user.id],
+      );
 
   const planned = await enrolledSections(user.id);
   const progress = await progressForUser(user, planned);
@@ -141,6 +159,10 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
               <label className="label" htmlFor="up-pw">Password</label>
               <input id="up-pw" name="password" type="password" minLength={8} className="input" autoComplete="new-password" required />
             </div>
+            <label className="flex items-start gap-2 text-xs text-ink-700 sm:col-span-3">
+              <input type="checkbox" name="notifyEmail" className="mt-0.5" />
+              <span>Email me when a seat opens in a class I&rsquo;m watching (you&rsquo;ll verify your email with a code first).</span>
+            </label>
             <div className="sm:col-span-3">
               <button type="submit" className="btn-primary">Create account &amp; keep my plan</button>
             </div>
@@ -158,7 +180,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         {!isGuestUser(user) && (
           <div>
             <label className="label" htmlFor="email">
-              Email (contact your registrar to change it)
+              Email (<a href="#change-email" className="underline">change it below</a>)
             </label>
             <input id="email" value={user.email} className="input bg-ink-100 text-ink-600" readOnly />
           </div>
@@ -396,6 +418,70 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           </button>
         </form>
       </section>
+
+      {/* ------------------------------- email -------------------------------- */}
+      {!isGuestUser(user) && (
+        <section id="change-email" className="card card-pad flex flex-col gap-3">
+          <h2 className="text-sm font-bold text-ink-900">Email</h2>
+          <p className="text-sm text-ink-600">
+            Signed in as <span className="font-semibold text-ink-900">{user.email}</span>{" "}
+            {emailRow?.v ? (
+              <span className="chip border-emerald-300 bg-emerald-50 text-emerald-800">Verified</span>
+            ) : (
+              <span className="chip border-amber-300 bg-amber-50 text-amber-800">Not verified</span>
+            )}
+          </p>
+          <form action={setNotifyEmailForm} method="post" className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-ink-700">
+              <input type="checkbox" name="notifyEmail" defaultChecked={!!emailRow?.n} />
+              Email me when a seat opens in a class I&rsquo;m watching
+            </label>
+            <button type="submit" className="btn-secondary">Save</button>
+          </form>
+          {!emailRow?.v && !pendingEmail && (
+            <p className="text-xs text-amber-800">
+              Seat-opening emails are only sent to a verified address. Enter your current email below
+              with your password to get a code.
+            </p>
+          )}
+          {pendingEmail ? (
+            <form action={verifyEmailChangeForm} method="post" className="flex flex-col gap-3">
+              <p className="text-xs text-ink-600">
+                Enter the 6-digit code we sent to{" "}
+                <span className="font-semibold text-ink-900">{pendingEmail.new_email}</span>. It expires
+                in 10 minutes.
+              </p>
+              <div className="flex flex-wrap items-end gap-2">
+                <div>
+                  <label className="label" htmlFor="code">Verification code</label>
+                  <input id="code" name="code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
+                    autoComplete="one-time-code" className="input w-40 tracking-[0.3em]" required />
+                </div>
+                <button type="submit" className="btn-primary">Verify &amp; change email</button>
+                <button type="submit" formAction={cancelEmailChangeForm} formNoValidate className="btn-secondary">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form action={requestEmailChangeForm} method="post" className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="label" htmlFor="new-email">New email</label>
+                <input id="new-email" name="email" type="email" defaultValue={v("newemail", "")}
+                  className="input" autoComplete="email" required />
+              </div>
+              <div>
+                <label className="label" htmlFor="email-pw">Password</label>
+                <input id="email-pw" name="password" type="password" className="input"
+                  autoComplete="current-password" required />
+              </div>
+              <div className="sm:col-span-2">
+                <button type="submit" className="btn-primary">Send verification code</button>
+              </div>
+            </form>
+          )}
+        </section>
+      )}
 
       {/* ------------------------------ password ------------------------------ */}
       {!isGuestUser(user) && (

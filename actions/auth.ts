@@ -26,7 +26,9 @@ import {
   updateUserProfile,
   verifyPassword,
 } from "@/lib/session";
-import { get, run, tx } from "@/lib/db";
+import crypto from "node:crypto";
+import { get, nowIso, run, tx } from "@/lib/db";
+import { mailConfigured, sendEmail } from "@/lib/notify";
 import { listSets, pruneAssignments } from "@/lib/requirements";
 import { inferSchoolFromEmail } from "@/lib/util";
 import { applySamplePlan, buildSamplePlan } from "@/lib/sample";
@@ -89,9 +91,10 @@ export async function signupAction(
       me.id,
       [`ge-${school}`, formStr(fd, "majorId"), formStr(fd, "major2Id"), formStr(fd, "minorId")].filter(Boolean),
     );
+    await run("UPDATE users SET notify_email = ? WHERE id = ?", [fd.get("notifyEmail") ? 1 : 0, me.id]);
     const pendingUp = await applyPendingAdd(me.id, fd);
     revalidateAll();
-    redirect(withNotice(safeNext(formStr(fd, "next"), "/planner"), pendingUp));
+    return verifyThenGo(me.id, formStr(fd, "email").toLowerCase(), withNotice(safeNext(formStr(fd, "next"), "/planner"), pendingUp));
   }
 
   const res = await createUser({
@@ -107,6 +110,7 @@ export async function signupAction(
   if (!res.ok) return { ok: false, error: res.error };
 
   await startSession(res.id);
+  await run("UPDATE users SET notify_email = ? WHERE id = ?", [fd.get("notifyEmail") ? 1 : 0, res.id]);
   const pending = await applyPendingAdd(res.id, fd);
   revalidateAll();
   const url = new URL(safeNext(formStr(fd, "next"), "/planner"), "http://internal");
@@ -115,7 +119,7 @@ export async function signupAction(
     if (pending.ok) url.searchParams.set("ok", pending.notice ?? "");
     else url.searchParams.set("err", pending.error ?? "");
   }
-  redirect(url.pathname + url.search);
+  return verifyThenGo(res.id, formStr(fd, "email").toLowerCase(), url.pathname + url.search);
 }
 
 /* --------------------------- no-account start --------------------------- */
@@ -174,8 +178,15 @@ export async function upgradeGuestAction(
     password: formStr(fd, "password"),
   });
   if (!res.ok) return { ok: false, error: res.error };
+  await run("UPDATE users SET notify_email = ? WHERE id = ?", [fd.get("notifyEmail") ? 1 : 0, user.id]);
+  const sent = await issueEmailCode(user.id, formStr(fd, "email").toLowerCase());
   revalidateAll();
-  return { ok: true, notice: "Account created — your plan is now saved to your email and works on any device." };
+  return {
+    ok: true,
+    notice:
+      "Account created — your plan is now saved to your email and works on any device." +
+      (sent.ok ? " We emailed you a code: enter it under Email below to verify." : ""),
+  };
 }
 
 /* -------------------------------- login -------------------------------- */
@@ -363,4 +374,123 @@ export async function wipeAccountAction(
   await endSession();
   revalidateAll();
   redirect("/");
+}
+
+/* --------------------------- change email (verified) --------------------------- */
+
+const CODE_TTL_MS = 10 * 60 * 1000;
+const RESEND_WAIT_MS = 60 * 1000;
+const MAX_ATTEMPTS = 5;
+const hashCode = (code: string) => crypto.createHash("sha256").update(code).digest("hex");
+
+
+/** Email a fresh 6-digit code to `email` for this user and remember its hash. */
+async function issueEmailCode(userId: string, email: string): Promise<{ ok: boolean; error?: string }> {
+  if (!mailConfigured())
+    return { ok: false, error: "Email sending isn't set up on this site yet, so a code can't be sent." };
+  const prev = await get<{ created_at: string }>("SELECT created_at FROM email_changes WHERE user_id = ?", [userId]);
+  if (prev && Date.now() - Date.parse(prev.created_at) < RESEND_WAIT_MS)
+    return { ok: false, error: "A code was just sent. Wait a minute before asking for another." };
+  const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+  const sent = await sendEmail(
+    email,
+    "Your 5Cycle verification code",
+    `Your 5Cycle verification code is ${code}.\n\nIt expires in 10 minutes. If you didn't ask for this, ignore this message.`,
+  );
+  if (!sent) return { ok: false, error: "Couldn't send the email. Check the address and try again." };
+  await run(
+    `INSERT INTO email_changes(user_id, new_email, code_hash, attempts, expires_at, created_at)
+     VALUES(?,?,?,0,?,?)
+     ON CONFLICT(user_id) DO UPDATE SET new_email=excluded.new_email, code_hash=excluded.code_hash,
+       attempts=0, expires_at=excluded.expires_at, created_at=excluded.created_at`,
+    [userId, email, hashCode(code), new Date(Date.now() + CODE_TTL_MS).toISOString(), nowIso()],
+  );
+  return { ok: true };
+}
+
+/** After an account exists: send the verification code and go to the code page. */
+async function verifyThenGo(userId: string, email: string, dest: string): Promise<never> {
+  const r = await issueEmailCode(userId, email);
+  if (r.ok) redirect(`/verify-email?next=${encodeURIComponent(dest)}`);
+  redirect(dest);
+}
+
+/** Step 1: check the password, then email a 6-digit code to the NEW address. */
+export async function requestEmailChangeAction(
+  _prev: ActionState,
+  fd: FormData,
+): Promise<ActionState> {
+  assertActionsEnabled();
+  const user = await userOrRedirect();
+  if (isGuestUser(user)) return { ok: false, error: "Create an account first." };
+  const email = formStr(fd, "email").toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Enter a valid email address." };
+  const verified = await get<{ v: string | null }>("SELECT email_verified_at v FROM users WHERE id = ?", [user.id]);
+  if (email === user.email.toLowerCase() && verified?.v) return { ok: false, error: "That is already your verified email." };
+  const row = await get<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = ?", [user.id]);
+  if (!row || !verifyPassword(formStr(fd, "password"), row.password_hash))
+    return { ok: false, error: "Password is wrong." };
+  if (await get("SELECT 1 FROM users WHERE lower(email) = ? AND id <> ?", [email, user.id]))
+    return { ok: false, error: "That email is already used by another account." };
+  const issued = await issueEmailCode(user.id, email);
+  if (!issued.ok) return issued;
+  return { ok: true, notice: `We sent a 6-digit code to ${email}.` };
+}
+
+/** Step 2: the student types the code; only then does the email change. */
+export async function verifyEmailChangeAction(
+  _prev: ActionState,
+  fd: FormData,
+): Promise<ActionState> {
+  assertActionsEnabled();
+  const user = await userOrRedirect();
+  const code = formStr(fd, "code").replace(/\D/g, "");
+  const pend = await get<{ new_email: string; code_hash: string; attempts: number; expires_at: string }>(
+    "SELECT new_email, code_hash, attempts, expires_at FROM email_changes WHERE user_id = ?",
+    [user.id],
+  );
+  if (!pend) return { ok: false, error: "No email change is pending." };
+  if (Date.parse(pend.expires_at) < Date.now()) {
+    await run("DELETE FROM email_changes WHERE user_id = ?", [user.id]);
+    return { ok: false, error: "That code expired. Request a new one." };
+  }
+  if (pend.attempts >= MAX_ATTEMPTS) {
+    await run("DELETE FROM email_changes WHERE user_id = ?", [user.id]);
+    return { ok: false, error: "Too many wrong tries. Request a new code." };
+  }
+  if (hashCode(code) !== pend.code_hash) {
+    await run("UPDATE email_changes SET attempts = attempts + 1 WHERE user_id = ?", [user.id]);
+    return { ok: false, error: "That code isn't right." };
+  }
+  if (await get("SELECT 1 FROM users WHERE lower(email) = ? AND id <> ?", [pend.new_email, user.id])) {
+    await run("DELETE FROM email_changes WHERE user_id = ?", [user.id]);
+    return { ok: false, error: "That email is already used by another account." };
+  }
+  await tx(async () => {
+    await run("UPDATE users SET email = ?, email_verified_at = ? WHERE id = ?", [pend.new_email, nowIso(), user.id]);
+    await run("DELETE FROM email_changes WHERE user_id = ?", [user.id]);
+  });
+  revalidateAll();
+  return { ok: true, notice: pend.new_email === user.email.toLowerCase() ? "Email verified." : `Email changed to ${pend.new_email}.` };
+}
+
+export async function cancelEmailChangeAction(): Promise<void> {
+  assertActionsEnabled();
+  const user = await userOrRedirect();
+  await run("DELETE FROM email_changes WHERE user_id = ?", [user.id]);
+}
+
+/** Resend the code for the signup verification page (to the account's own email). */
+export async function resendVerificationAction(): Promise<{ ok: boolean; error?: string }> {
+  assertActionsEnabled();
+  const user = await userOrRedirect();
+  return issueEmailCode(user.id, user.email.toLowerCase());
+}
+
+/** Profile: turn "email me when a seat opens" on or off. */
+export async function setNotifyEmailAction(fd: FormData): Promise<void> {
+  assertActionsEnabled();
+  const user = await userOrRedirect();
+  await run("UPDATE users SET notify_email = ? WHERE id = ?", [fd.get("notifyEmail") ? 1 : 0, user.id]);
+  revalidatePath("/profile");
 }
